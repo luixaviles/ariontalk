@@ -107,6 +107,7 @@ export class AISessionService {
       'Rules:',
       `- Always respond in ${langName} (${lang}).`,
       '- Keep responses concise (1-3 sentences) since they will be spoken aloud.',
+      '- Never use emojis, emoticons, or special Unicode symbols — your response will be read by a speech synthesizer.',
       '- If asked about an image, describe what you see based on the provided image.',
       "- If you don't know something or the page content doesn't contain the answer, say so honestly.",
       "- Never make up information that isn't on the page.",

@@ -191,11 +191,19 @@ export class VoiceSessionController implements ReactiveController {
         return;
       }
 
+      // Strip emojis/symbols before speaking — synthesis reads them as descriptions
+      const speakText = fullResponse.replace(/\p{Extended_Pictographic}/gu, '').trim();
+
+      if (!speakText) {
+        this.resumeListening();
+        return;
+      }
+
       // Speak the response
       this.state = { ...this.state, status: 'speaking' };
       this.host.requestUpdate();
 
-      await this.synthesis.speak(fullResponse, this.state.currentLang);
+      await this.synthesis.speak(speakText, this.state.currentLang);
       this.resumeListening();
     } catch (err) {
       this.setError(err instanceof Error ? err.message : 'Conversation error');
