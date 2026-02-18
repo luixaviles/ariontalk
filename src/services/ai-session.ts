@@ -71,13 +71,22 @@ export class AISessionService {
     // Use prompt with streaming
     const stream = this.session.promptStreaming(promptInput);
 
-    let previousText = '';
+    // Handle both accumulated (old API: each chunk = full text so far)
+    // and incremental (new API: each chunk = only new text) streaming modes.
+    let accumulated = '';
     for await (const chunk of stream) {
-      // The Prompt API streams the full accumulated text so far
-      const newText = typeof chunk === 'string' ? chunk : String(chunk);
-      if (newText.length > previousText.length) {
-        yield newText.slice(previousText.length);
-        previousText = newText;
+      const text = typeof chunk === 'string' ? chunk : String(chunk);
+      if (!text) continue;
+
+      if (text.startsWith(accumulated)) {
+        // Accumulated mode: chunk contains full response so far
+        const delta = text.slice(accumulated.length);
+        if (delta) yield delta;
+        accumulated = text;
+      } else {
+        // Incremental mode: chunk is just the new part
+        yield text;
+        accumulated += text;
       }
     }
   }
