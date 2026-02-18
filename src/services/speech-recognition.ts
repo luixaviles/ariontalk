@@ -12,6 +12,8 @@ export class SpeechRecognitionService {
   private recognition: any = null;
   private active = false;
   private currentLang: SupportedLang = 'en';
+  private useLocalProcessing = false;
+  private fatalError = false;
 
   onInterimResult: ((text: string) => void) | null = null;
   onFinalResult: ((text: string) => void) | null = null;
@@ -25,6 +27,7 @@ export class SpeechRecognitionService {
 
   stop(): void {
     this.active = false;
+    this.fatalError = false;
     if (this.recognition) {
       try { this.recognition.abort(); } catch { /* ignore */ }
       this.recognition = null;
@@ -68,8 +71,10 @@ export class SpeechRecognitionService {
     rec.interimResults = true;
     rec.lang = LANG_MAP[this.currentLang];
 
-    // Attempt on-device processing
-    try { (rec as any).processLocally = true; } catch { /* not supported */ }
+    // Attempt on-device processing if not already failed
+    if (this.useLocalProcessing) {
+      try { (rec as any).processLocally = true; } catch { /* not supported */ }
+    }
 
     rec.onresult = (event: any) => {
       let interim = '';
@@ -90,16 +95,19 @@ export class SpeechRecognitionService {
       const error = event.error as string;
       // 'no-speech' and 'aborted' are expected during normal use
       if (error === 'no-speech' || error === 'aborted') return;
+
+      // Fatal error — stop auto-restart
+      this.fatalError = true;
       this.onError?.(error);
     };
 
     rec.onend = () => {
-      // Auto-restart if session is still active (handles unexpected disconnects)
-      if (this.active) {
+      // Auto-restart if session is still active and no fatal error occurred
+      if (this.active && !this.fatalError) {
         try { rec.start(); } catch {
           // If restart fails, create a fresh instance
           setTimeout(() => {
-            if (this.active) this.createAndStart();
+            if (this.active && !this.fatalError) this.createAndStart();
           }, 300);
         }
       }
