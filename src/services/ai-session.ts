@@ -29,11 +29,12 @@ export class AISessionService {
     const lm = (window as any).LanguageModel;
     if (!lm) throw new Error('LanguageModel API not available');
 
-    const systemPrompt = this.buildSystemPrompt(pageContext, lang);
+    const { systemPrompt, initialPrompts } = this.buildPrompts(pageContext, lang);
 
     const langCode = lang === 'en' ? 'en' : 'es';
     const options: Record<string, any> = {
       systemPrompt,
+      initialPrompts,
       expectedInputLanguages: [langCode],
       expectedOutputLanguages: [langCode],
     };
@@ -99,21 +100,29 @@ export class AISessionService {
     }
   }
 
-  private buildSystemPrompt(pageContext: string, lang: SupportedLang): string {
+  private buildPrompts(pageContext: string, lang: SupportedLang) {
     const langName = lang === 'en' ? 'English' : 'Spanish';
-    return [
-      'You are a helpful voice assistant embedded on a website. You answer questions about the current page content.',
-      '',
-      'Rules:',
-      `- Always respond in ${langName} (${lang}).`,
-      '- Keep responses concise (1-3 sentences) since they will be spoken aloud.',
-      '- Never use emojis, emoticons, or special Unicode symbols — your response will be read by a speech synthesizer.',
-      '- If asked about an image, describe what you see based on the provided image.',
-      "- If you don't know something or the page content doesn't contain the answer, say so honestly.",
-      "- Never make up information that isn't on the page.",
-      '',
-      'Current page content:',
-      pageContext,
-    ].join('\n');
+
+    const systemPrompt = [
+      'You are a spoken voice assistant embedded on a webpage. The user is talking to you through a microphone and you reply out loud.',
+      `Respond in ${langName}. MAXIMUM 1-3 short sentences. No bullet points, no lists, no markdown, no emojis. Your response will be read aloud by a speech synthesizer, so write exactly as you would speak.`,
+      'Answer using ONLY the page content the user provided. If the answer is not in the page content, say so briefly.',
+      'For greetings like "hi" or "can you hear me", respond naturally and briefly, e.g. "Yes, I can hear you. Ask me anything about this page."',
+    ].join(' ');
+
+    const initialPrompts = [
+      {
+        role: 'user',
+        content: `Here is the webpage I am on:\n\n${pageContext}`,
+      },
+      {
+        role: 'assistant',
+        content: lang === 'en'
+          ? 'Got it. Ask me anything about this page.'
+          : 'Entendido. Preguntame lo que quieras sobre esta pagina.',
+      },
+    ];
+
+    return { systemPrompt, initialPrompts };
   }
 }

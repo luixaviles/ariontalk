@@ -191,8 +191,9 @@ export class VoiceSessionController implements ReactiveController {
         return;
       }
 
-      // Strip emojis/symbols before speaking — synthesis reads them as descriptions
-      const speakText = fullResponse.replace(/\p{Extended_Pictographic}/gu, '').trim();
+      // console.log('[voice-chat-widget] AI response before sanitization:', fullResponse);
+      const speakText = this.sanitizeForSpeech(fullResponse);
+      // const speakText = fullResponse;
       console.log('[voice-chat-widget] AI response:', speakText);
 
       if (!speakText) {
@@ -245,5 +246,34 @@ export class VoiceSessionController implements ReactiveController {
         } catch { /* ignore */ }
       }
     }, 3000);
+  }
+
+  /** Clean up AI output for speech synthesis: strip markdown, emojis, truncate. */
+  private sanitizeForSpeech(text: string): string {
+    let clean = text
+      // Remove emojis
+      .replace(/\p{Extended_Pictographic}/gu, '')
+      // Remove markdown bold/italic
+      // .replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1')
+      // // Remove markdown headers
+      // .replace(/^#{1,6}\s+/gm, '')
+      // // Remove bullet points and list markers
+      // .replace(/^[\s]*[-*]\s+/gm, '')
+      // .replace(/^[\s]*\d+\.\s+/gm, '')
+      // // Collapse multiple newlines/whitespace into single space
+      // .replace(/\n+/g, ' ')
+      // .replace(/\s{2,}/g, ' ')
+      .trim();
+
+    // Remove trailing filler questions like "Let me know if..." / "Does that help?"
+    // clean = clean.replace(/\s*(Let me know|Does that|Is there anything|Do you want|Would you like|Feel free)[^.!?]*[.!?]?\s*$/i, '');
+
+    // Truncate to first 3 sentences
+    // const sentences = clean.match(/[^.!?]+[.!?]+/g);
+    // if (sentences && sentences.length > 3) {
+    //   clean = sentences.slice(0, 3).join('').trim();
+    // }
+
+    return clean;
   }
 }
