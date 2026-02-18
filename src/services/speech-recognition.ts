@@ -11,6 +11,7 @@ const LANG_MAP: Record<SupportedLang, string> = {
 export class SpeechRecognitionService {
   private recognition: any = null;
   private active = false;
+  private paused = false;
   private currentLang: SupportedLang = 'en';
   private useLocalProcessing = false;
   private fatalError = false;
@@ -22,11 +23,13 @@ export class SpeechRecognitionService {
   start(lang: SupportedLang): void {
     this.currentLang = lang;
     this.active = true;
+    this.paused = false;
     this.createAndStart();
   }
 
   stop(): void {
     this.active = false;
+    this.paused = false;
     this.fatalError = false;
     if (this.recognition) {
       try { this.recognition.abort(); } catch { /* ignore */ }
@@ -35,12 +38,14 @@ export class SpeechRecognitionService {
   }
 
   pause(): void {
+    this.paused = true;
     if (this.recognition) {
       try { this.recognition.stop(); } catch { /* ignore */ }
     }
   }
 
   resume(): void {
+    this.paused = false;
     if (this.active && !this.recognition) {
       this.createAndStart();
     } else if (this.active && this.recognition) {
@@ -102,12 +107,12 @@ export class SpeechRecognitionService {
     };
 
     rec.onend = () => {
-      // Auto-restart if session is still active and no fatal error occurred
-      if (this.active && !this.fatalError) {
+      // Auto-restart if session is still active, not paused, and no fatal error
+      if (this.active && !this.paused && !this.fatalError) {
         try { rec.start(); } catch {
           // If restart fails, create a fresh instance
           setTimeout(() => {
-            if (this.active && !this.fatalError) this.createAndStart();
+            if (this.active && !this.paused && !this.fatalError) this.createAndStart();
           }, 300);
         }
       }
