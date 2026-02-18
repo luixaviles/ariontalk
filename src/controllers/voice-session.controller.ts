@@ -48,11 +48,13 @@ export class VoiceSessionController implements ReactiveController {
 
     // Wire recognition callbacks
     this.recognition.onInterimResult = (text) => {
+      console.log('[voice-chat-widget] interim:', text);
       this.state = { ...this.state, interimTranscript: text };
       this.host.requestUpdate();
     };
 
     this.recognition.onFinalResult = (text) => {
+      console.log('[voice-chat-widget] final transcript:', text);
       this.handleFinalTranscript(text);
     };
 
@@ -181,6 +183,7 @@ export class VoiceSessionController implements ReactiveController {
       let fullResponse = '';
       for await (const chunk of this.ai.prompt(text)) {
         fullResponse += chunk;
+        console.log('[voice-chat-widget] AI stream:', fullResponse);
       }
 
       if (!fullResponse.trim()) {
