@@ -70,7 +70,7 @@ export class VoiceSessionController implements ReactiveController {
     this.sessionActive = true;
 
     this.state = {
-      status: 'thinking',
+      status: 'listening',
       currentLang: lang,
       elapsedSeconds: 0,
       interimTranscript: '',
@@ -78,26 +78,19 @@ export class VoiceSessionController implements ReactiveController {
     };
     this.host.requestUpdate();
 
-    // Extract page content
-    const pageText = this.pageExtractor.extractText();
-
-    // Initialize AI session (non-fatal — widget still works for speech-only preview)
-    try {
-      await this.ai.init(pageText, lang);
-    } catch (err) {
-      console.warn('[voice-chat-widget] AI unavailable:', err);
-    }
-
-    // Start listening (non-fatal — may not be available in all browsers)
+    // Start listening + timer immediately (don't block on AI init)
     try {
       this.recognition.start(lang);
     } catch (err) {
       console.warn('[voice-chat-widget] Speech recognition unavailable:', err);
     }
-
     this.timer.start();
-    this.state = { ...this.state, status: 'listening' };
-    this.host.requestUpdate();
+
+    // Initialize AI session in the background
+    const pageText = this.pageExtractor.extractText();
+    this.ai.init(pageText, lang).catch((err) => {
+      console.warn('[voice-chat-widget] AI unavailable:', err);
+    });
   }
 
   /** End the current session and clean up all services. */
@@ -134,6 +127,11 @@ export class VoiceSessionController implements ReactiveController {
   private async handleFinalTranscript(text: string): Promise<void> {
     if (!text.trim()) return;
 
+    if (!this.ai.isReady) {
+      this.setError('AI model is still loading. Please try again shortly.');
+      return;
+    }
+
     // Pause recognition while AI processes
     this.recognition.pause();
 
@@ -152,10 +150,7 @@ export class VoiceSessionController implements ReactiveController {
       }
 
       if (!fullResponse.trim()) {
-        // No response — resume listening
-        this.state = { ...this.state, status: 'listening' };
-        this.host.requestUpdate();
-        this.recognition.resume();
+        this.resumeListening();
         return;
       }
 
@@ -164,18 +159,17 @@ export class VoiceSessionController implements ReactiveController {
       this.host.requestUpdate();
 
       await this.synthesis.speak(fullResponse, this.state.currentLang);
-
-      // Resume listening
-      this.state = { ...this.state, status: 'listening' };
-      this.host.requestUpdate();
-      this.recognition.resume();
+      this.resumeListening();
     } catch (err) {
       this.setError(err instanceof Error ? err.message : 'Conversation error');
-      // Try to resume listening on error
-      this.state = { ...this.state, status: 'listening' };
-      this.host.requestUpdate();
-      this.recognition.resume();
+      this.resumeListening();
     }
+  }
+
+  private resumeListening(): void {
+    this.state = { ...this.state, status: 'listening' };
+    this.host.requestUpdate();
+    this.recognition.resume();
   }
 
   private async reinitAI(lang: SupportedLang): Promise<void> {

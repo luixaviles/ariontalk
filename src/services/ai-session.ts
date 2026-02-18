@@ -6,6 +6,11 @@ import type { SupportedLang } from '../types.js';
 export class AISessionService {
   private session: any = null;
 
+  /** Whether the AI session is initialized and ready to accept prompts. */
+  get isReady(): boolean {
+    return this.session !== null;
+  }
+
   /** Check if the Prompt API is available and the model is ready. */
   static async checkAvailability(): Promise<'available' | 'downloadable' | 'downloading' | 'unavailable'> {
     try {
@@ -25,9 +30,11 @@ export class AISessionService {
 
     const systemPrompt = this.buildSystemPrompt(pageContext, lang);
 
+    const langCode = lang === 'en' ? 'en' : 'es';
     this.session = await lm.create({
       systemPrompt,
-      expectedInputLanguages: [lang === 'en' ? 'en' : 'es'],
+      expectedInputLanguages: [langCode],
+      expectedOutputLanguages: [langCode],
     });
   }
 
