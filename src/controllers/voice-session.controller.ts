@@ -30,6 +30,7 @@ export class VoiceSessionController implements ReactiveController {
     elapsedSeconds: 0,
     interimTranscript: '',
     error: null,
+    downloadProgress: 0,
   };
 
   get timerDisplay(): string {
@@ -75,6 +76,7 @@ export class VoiceSessionController implements ReactiveController {
       elapsedSeconds: 0,
       interimTranscript: '',
       error: null,
+      downloadProgress: 0,
     };
     this.host.requestUpdate();
 
@@ -86,11 +88,38 @@ export class VoiceSessionController implements ReactiveController {
     }
     this.timer.start();
 
-    // Initialize AI session in the background
+    // Check availability, then init AI with monitor only when download is needed
     const pageText = this.pageExtractor.extractText();
-    this.ai.init(pageText, lang).catch((err) => {
+    try {
+      const availability = await AISessionService.checkAvailability();
+      if (!this.sessionActive) return;
+
+      const needsDownload = availability === 'downloadable' || availability === 'downloading';
+
+      if (needsDownload) {
+        this.state = { ...this.state, status: 'loading' };
+        this.host.requestUpdate();
+      }
+
+      const onProgress = needsDownload
+        ? (loaded: number) => {
+            this.state = {
+              ...this.state,
+              downloadProgress: loaded >= 1 ? -1 : loaded,
+            };
+            this.host.requestUpdate();
+          }
+        : undefined;
+
+      await this.ai.init(pageText, lang, onProgress);
+
+      if (this.state.status === 'loading' && this.sessionActive) {
+        this.state = { ...this.state, status: 'listening', downloadProgress: 0 };
+        this.host.requestUpdate();
+      }
+    } catch (err) {
       console.warn('[voice-chat-widget] AI unavailable:', err);
-    });
+    }
   }
 
   /** End the current session and clean up all services. */
@@ -108,6 +137,7 @@ export class VoiceSessionController implements ReactiveController {
       elapsedSeconds: 0,
       interimTranscript: '',
       error: null,
+      downloadProgress: 0,
     };
     this.host.requestUpdate();
   }
@@ -128,7 +158,11 @@ export class VoiceSessionController implements ReactiveController {
     if (!text.trim()) return;
 
     if (!this.ai.isReady) {
-      this.setError('AI model is still loading. Please try again shortly.');
+      this.setError(
+        this.state.status === 'loading'
+          ? 'AI model is still downloading. Please wait for it to finish.'
+          : 'AI model is still loading. Please try again shortly.',
+      );
       return;
     }
 
@@ -191,6 +225,12 @@ export class VoiceSessionController implements ReactiveController {
       if (this.state.status === 'error' && this.sessionActive) {
         this.state = { ...this.state, status: 'listening', error: null };
         this.host.requestUpdate();
+
+        // Restart recognition in case it died from a fatal error
+        try {
+          this.recognition.stop();
+          this.recognition.start(this.state.currentLang);
+        } catch { /* ignore */ }
       }
     }, 3000);
   }

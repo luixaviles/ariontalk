@@ -1,4 +1,4 @@
-export type WidgetStatus = 'idle' | 'listening' | 'thinking' | 'speaking' | 'error';
+export type WidgetStatus = 'idle' | 'loading' | 'listening' | 'thinking' | 'speaking' | 'error';
 
 export type SupportedLang = 'en' | 'es';
 
@@ -14,4 +14,5 @@ export interface VoiceSessionState {
   elapsedSeconds: number;
   interimTranscript: string;
   error: string | null;
+  downloadProgress: number;
 }

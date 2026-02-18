@@ -86,6 +86,51 @@ export class WidgetSession extends LitElement {
       .wave-bar:nth-child(3) { animation-delay: 0.3s; height: 8px; }
       .wave-bar:nth-child(4) { animation-delay: 0.45s; height: 14px; }
 
+      /* Loading: spinner (same as thinking) */
+      .status-loading .indicator {
+        width: 16px;
+        height: 16px;
+        border: 2px solid #e5e7eb;
+        border-top-color: var(--vcw-primary-color, #4F46E5);
+        border-radius: 50%;
+        animation: vcw-spin 0.8s linear infinite;
+      }
+
+      /* Progress bar */
+      .progress-bar {
+        width: 100%;
+        max-width: 220px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .progress-track {
+        width: 100%;
+        height: 6px;
+        background: #e5e7eb;
+        border-radius: 3px;
+        overflow: hidden;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: var(--vcw-primary-color, #4F46E5);
+        border-radius: 3px;
+        transition: width 0.3s ease;
+      }
+
+      .progress-fill--indeterminate {
+        width: 40%;
+        animation: vcw-indeterminate 1.5s ease-in-out infinite;
+      }
+
+      .progress-text {
+        font-size: 12px;
+        color: #9ca3af;
+      }
+
       /* Error */
       .status-error {
         color: #ef4444;
@@ -155,6 +200,7 @@ export class WidgetSession extends LitElement {
   @property({ type: String }) timerDisplay = '00:00';
   @property({ type: String }) interimTranscript = '';
   @property({ type: String }) error: string | null = null;
+  @property({ type: Number }) downloadProgress = 0;
 
   render() {
     return html`
@@ -165,6 +211,8 @@ export class WidgetSession extends LitElement {
           ${this.renderStatusIndicator()}
           <span>${this.statusLabel}</span>
         </div>
+
+        ${this.status === 'loading' ? this.renderProgressBar() : nothing}
 
         ${this.interimTranscript
           ? html`<div class="transcript">${this.interimTranscript}</div>`
@@ -200,6 +248,7 @@ export class WidgetSession extends LitElement {
 
   private get statusLabel(): string {
     switch (this.status) {
+      case 'loading': return 'Loading AI model...';
       case 'listening': return 'Listening...';
       case 'thinking': return 'Thinking...';
       case 'speaking': return 'Speaking...';
@@ -208,8 +257,28 @@ export class WidgetSession extends LitElement {
     }
   }
 
+  private renderProgressBar() {
+    const indeterminate = this.downloadProgress < 0;
+    const pct = indeterminate ? 0 : Math.round(this.downloadProgress * 100);
+
+    return html`
+      <div class="progress-bar">
+        <div class="progress-track">
+          ${indeterminate
+            ? html`<div class="progress-fill progress-fill--indeterminate"></div>`
+            : html`<div class="progress-fill" style="width: ${pct}%"></div>`}
+        </div>
+        <span class="progress-text">
+          ${indeterminate ? 'Preparing model...' : `${pct}%`}
+        </span>
+      </div>
+    `;
+  }
+
   private renderStatusIndicator() {
     switch (this.status) {
+      case 'loading':
+        return html`<div class="indicator"></div>`;
       case 'listening':
         return html`<div class="indicator"></div>`;
       case 'thinking':

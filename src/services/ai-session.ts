@@ -24,18 +24,28 @@ export class AISessionService {
   }
 
   /** Creates a LanguageModel session with system prompt and page context. */
-  async init(pageContext: string, lang: SupportedLang): Promise<void> {
+  async init(pageContext: string, lang: SupportedLang, onProgress?: (loaded: number) => void): Promise<void> {
     const lm = (window as any).LanguageModel;
     if (!lm) throw new Error('LanguageModel API not available');
 
     const systemPrompt = this.buildSystemPrompt(pageContext, lang);
 
     const langCode = lang === 'en' ? 'en' : 'es';
-    this.session = await lm.create({
+    const options: Record<string, any> = {
       systemPrompt,
       expectedInputLanguages: [langCode],
       expectedOutputLanguages: [langCode],
-    });
+    };
+
+    if (onProgress) {
+      options.monitor = (monitor: EventTarget) => {
+        monitor.addEventListener('downloadprogress', (e: any) => {
+          onProgress(e.loaded / e.total);
+        });
+      };
+    }
+
+    this.session = await lm.create(options);
   }
 
   /** Sends a user message and yields streaming response chunks. */

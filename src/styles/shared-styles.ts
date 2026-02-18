@@ -27,6 +27,11 @@ export const sharedStyles = css`
     to { opacity: 1; transform: scale(1); }
   }
 
+  @keyframes vcw-indeterminate {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(200%); }
+  }
+
   /* Shared button reset */
   button {
     border: none;

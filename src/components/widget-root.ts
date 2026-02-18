@@ -67,6 +67,7 @@ export class VoiceChatWidget extends LitElement {
           .timerDisplay=${this.controller.timerDisplay}
           .interimTranscript=${this.controller.state.interimTranscript}
           .error=${this.controller.state.error}
+          .downloadProgress=${this.controller.state.downloadProgress}
           @lang-toggle=${this.handleLangToggle}
           @session-end=${this.handleEnd}
         ></vcw-session>
