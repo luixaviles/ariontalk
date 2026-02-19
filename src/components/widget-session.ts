@@ -18,9 +18,9 @@ export class WidgetSession extends LitElement {
       }
 
       .panel {
-        background: var(--vcw-bg-color, #FFFFFF);
-        border-radius: var(--vcw-border-radius, 16px);
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+        background: var(--at-bg-color);
+        border-radius: var(--at-border-radius);
+        box-shadow: 0 8px 30px var(--at-shadow-color);
         padding: 24px;
         min-width: 260px;
         animation: vcw-fade-in 0.25s ease-out;
@@ -35,7 +35,7 @@ export class WidgetSession extends LitElement {
         font-size: 28px;
         font-weight: 700;
         font-variant-numeric: tabular-nums;
-        color: var(--vcw-text-color, #1F2937);
+        color: var(--at-text-color);
       }
 
       /* Status indicator */
@@ -44,7 +44,7 @@ export class WidgetSession extends LitElement {
         align-items: center;
         gap: 8px;
         font-size: 13px;
-        color: #6b7280;
+        color: var(--at-text-secondary);
         min-height: 28px;
       }
 
@@ -53,7 +53,7 @@ export class WidgetSession extends LitElement {
         width: 12px;
         height: 12px;
         border-radius: 50%;
-        background: #10b981;
+        background: var(--at-success-color);
         animation: vcw-pulse 1.5s ease-in-out infinite;
       }
 
@@ -61,8 +61,8 @@ export class WidgetSession extends LitElement {
       .status-thinking .indicator {
         width: 16px;
         height: 16px;
-        border: 2px solid #e5e7eb;
-        border-top-color: var(--vcw-primary-color, #4F46E5);
+        border: 2px solid var(--at-border-color);
+        border-top-color: var(--at-primary-color);
         border-radius: 50%;
         animation: vcw-spin 0.8s linear infinite;
       }
@@ -77,7 +77,7 @@ export class WidgetSession extends LitElement {
 
       .wave-bar {
         width: 3px;
-        background: var(--vcw-primary-color, #4F46E5);
+        background: var(--at-primary-color);
         border-radius: 999px;
         animation: vcw-wave 0.8s ease-in-out infinite;
       }
@@ -91,8 +91,8 @@ export class WidgetSession extends LitElement {
       .status-loading .indicator {
         width: 16px;
         height: 16px;
-        border: 2px solid #e5e7eb;
-        border-top-color: var(--vcw-primary-color, #4F46E5);
+        border: 2px solid var(--at-border-color);
+        border-top-color: var(--at-primary-color);
         border-radius: 50%;
         animation: vcw-spin 0.8s linear infinite;
       }
@@ -110,14 +110,14 @@ export class WidgetSession extends LitElement {
       .progress-track {
         width: 100%;
         height: 6px;
-        background: #e5e7eb;
+        background: var(--at-border-color);
         border-radius: 3px;
         overflow: hidden;
       }
 
       .progress-fill {
         height: 100%;
-        background: var(--vcw-primary-color, #4F46E5);
+        background: var(--at-primary-color);
         border-radius: 3px;
         transition: width 0.3s ease;
       }
@@ -129,18 +129,18 @@ export class WidgetSession extends LitElement {
 
       .progress-text {
         font-size: 12px;
-        color: #9ca3af;
+        color: var(--at-text-muted);
       }
 
       /* Error */
       .status-error {
-        color: #ef4444;
+        color: var(--at-error-color);
       }
 
       /* Transcript */
       .transcript {
         font-size: 13px;
-        color: #9ca3af;
+        color: var(--at-text-muted);
         font-style: italic;
         text-align: center;
         min-height: 20px;
@@ -159,8 +159,8 @@ export class WidgetSession extends LitElement {
 
       /* Language toggle */
       .lang-toggle {
-        background: #f3f4f6;
-        color: var(--vcw-text-color, #1F2937);
+        background: var(--at-surface-color);
+        color: var(--at-text-color);
         padding: 6px 14px;
         border-radius: 999px;
         font-size: 13px;
@@ -169,7 +169,7 @@ export class WidgetSession extends LitElement {
       }
 
       .lang-toggle:hover {
-        background: #e5e7eb;
+        background: var(--at-surface-hover);
       }
 
       /* End call button */
@@ -177,7 +177,7 @@ export class WidgetSession extends LitElement {
         width: 48px;
         height: 48px;
         border-radius: 50%;
-        background: #ef4444;
+        background: var(--at-error-color);
         color: #fff;
         display: flex;
         align-items: center;
@@ -186,7 +186,7 @@ export class WidgetSession extends LitElement {
       }
 
       .end-btn:hover {
-        background: #dc2626;
+        background: var(--at-error-hover);
       }
 
       .end-btn svg {
@@ -199,14 +199,14 @@ export class WidgetSession extends LitElement {
         width: 36px;
         height: 36px;
         border-radius: 50%;
-        background: #f3f4f6;
-        color: var(--vcw-text-color, #1F2937);
+        background: var(--at-surface-color);
+        color: var(--at-text-color);
         display: flex;
         align-items: center;
         justify-content: center;
         transition: background 0.15s;
       }
-      .gear-btn:hover { background: #e5e7eb; }
+      .gear-btn:hover { background: var(--at-surface-hover); }
       .gear-btn svg { width: 18px; height: 18px; }
     `,
   ];

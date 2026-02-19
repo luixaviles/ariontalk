@@ -19,19 +19,19 @@ export class WidgetFab extends LitElement {
         display: flex;
         align-items: center;
         gap: 8px;
-        background: var(--vcw-primary-color, #4F46E5);
-        color: #fff;
+        background: var(--at-primary-color);
+        color: var(--at-primary-text);
         padding: 12px 20px;
         border-radius: 999px;
         font-size: 14px;
         font-weight: 600;
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+        box-shadow: 0 4px 14px var(--at-shadow-color);
         transition: transform 0.2s ease, box-shadow 0.2s ease;
       }
 
       .fab:hover {
         transform: translateY(-1px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 6px 20px var(--at-shadow-hover);
       }
 
       .fab:active {

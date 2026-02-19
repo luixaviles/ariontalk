@@ -2,8 +2,8 @@ import { css } from 'lit';
 
 export const sharedStyles = css`
   :host {
-    font-family: var(--vcw-font-family, system-ui, sans-serif);
-    color: var(--vcw-text-color, #1F2937);
+    font-family: var(--at-font-family, system-ui, sans-serif);
+    color: var(--at-text-color, #1F2937);
   }
 
   /* Animations */
@@ -36,13 +36,13 @@ export const sharedStyles = css`
   button {
     border: none;
     cursor: pointer;
-    font-family: var(--vcw-font-family, system-ui, sans-serif);
+    font-family: var(--at-font-family, system-ui, sans-serif);
     outline: none;
     -webkit-tap-highlight-color: transparent;
   }
 
   button:focus-visible {
-    outline: 2px solid var(--vcw-primary-color, #4F46E5);
+    outline: 2px solid var(--at-primary-color, #111827);
     outline-offset: 2px;
   }
 `;

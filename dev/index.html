@@ -13,19 +13,84 @@
       padding: 2rem;
       line-height: 1.6;
       color: #1f2937;
+      transition: background 0.3s, color 0.3s;
     }
-    h1 { color: #4F46E5; }
+    body.dark {
+      background: #111827;
+      color: #f3f4f6;
+    }
+    h1 { color: #111827; }
+    body.dark h1 { color: #fafafa; }
     img { max-width: 100%; border-radius: 8px; margin: 1rem 0; }
     .note {
       background: #f3f4f6;
-      border-left: 4px solid #4F46E5;
+      border-left: 4px solid #111827;
       padding: 1rem;
       margin: 1rem 0;
       border-radius: 0 8px 8px 0;
     }
+    body.dark .note {
+      background: #1f2937;
+      border-left-color: #fafafa;
+    }
+
+    /* Theme controls */
+    .theme-controls {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      display: flex;
+      gap: 8px;
+      z-index: 1000;
+    }
+    .theme-controls button {
+      padding: 8px 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background: #fff;
+      color: #1f2937;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .theme-controls button:hover {
+      background: #f3f4f6;
+    }
+    .theme-controls button.active {
+      background: #111827;
+      color: #fff;
+      border-color: #111827;
+    }
+    body.dark .theme-controls button {
+      background: #27272a;
+      color: #fafafa;
+      border-color: #3f3f46;
+    }
+    body.dark .theme-controls button:hover {
+      background: #3f3f46;
+    }
+    body.dark .theme-controls button.active {
+      background: #fafafa;
+      color: #18181b;
+      border-color: #fafafa;
+    }
+
+    /* Custom brand theme overrides */
+    voicezero-ariontalk.brand-theme {
+      --at-primary-color: #7C3AED;
+      --at-primary-text: #FFFFFF;
+      --at-success-color: #8B5CF6;
+    }
   </style>
 </head>
 <body>
+  <div class="theme-controls">
+    <button id="btn-light" class="active" onclick="setTheme('light')">Light</button>
+    <button id="btn-dark" onclick="setTheme('dark')">Dark</button>
+    <button id="btn-brand" onclick="toggleBrand()">Brand</button>
+  </div>
+
   <main>
     <h1>Sample Article: The Future of Web Components</h1>
     <p>Published on January 15, 2026 by Jane Smith</p>
@@ -74,7 +139,8 @@
       <div class="note">
         <strong>Note:</strong> This is a sample page for testing ArionTalk.
         Try clicking the microphone button in the bottom-right corner to start a voice
-        conversation about this page's content.
+        conversation about this page's content. Use the buttons in the top-right to
+        switch between light, dark, and brand themes.
       </div>
 
       <h2>Conclusion</h2>
@@ -86,7 +152,27 @@
     </article>
   </main>
 
-  <voicezero-ariontalk lang="en" force settings></voicezero-ariontalk>
+  <voicezero-ariontalk id="widget" lang="en" force settings></voicezero-ariontalk>
   <script type="module" src="/src/ariontalk.ts"></script>
+  <script>
+    function setTheme(theme) {
+      const widget = document.getElementById('widget');
+      widget.setAttribute('theme', theme);
+
+      // Update page background to match
+      document.body.classList.toggle('dark', theme === 'dark');
+
+      // Update button active states
+      document.getElementById('btn-light').classList.toggle('active', theme === 'light');
+      document.getElementById('btn-dark').classList.toggle('active', theme === 'dark');
+    }
+
+    function toggleBrand() {
+      const widget = document.getElementById('widget');
+      const btn = document.getElementById('btn-brand');
+      widget.classList.toggle('brand-theme');
+      btn.classList.toggle('active');
+    }
+  </script>
 </body>
 </html>

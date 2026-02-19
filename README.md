@@ -50,20 +50,64 @@ import 'ariontalk';
 | `lang` | `string` | `"en"` | Language (`"en"` or `"es"`) |
 | `position` | `string` | `"bottom-right"` | Widget position on screen |
 | `theme` | `string` | `"light"` | `"light"` or `"dark"` |
+| `settings` | `boolean` | `false` | Show voice settings gear icon |
+| `force` | `boolean` | `false` | Skip browser support check |
 
 ### Theming
 
-Customize the look with CSS custom properties:
+ArionTalk ships with light (default) and dark themes using a neutral gray/black/white palette.
+
+#### Dark Theme
+
+```html
+<voicezero-ariontalk theme="dark"></voicezero-ariontalk>
+```
+
+#### CSS Custom Properties
+
+All colors flow through `--at-*` CSS custom properties. Override any of them to customize the look:
+
+| Property | Light Default | Dark Default | Description |
+|----------|--------------|--------------|-------------|
+| `--at-primary-color` | `#111827` | `#FAFAFA` | Accent / FAB background |
+| `--at-primary-text` | `#FFFFFF` | `#18181B` | Text on accent backgrounds |
+| `--at-text-color` | `#1F2937` | `#FAFAFA` | Primary text |
+| `--at-text-secondary` | `#6B7280` | `#A1A1AA` | Medium emphasis text |
+| `--at-text-muted` | `#9CA3AF` | `#71717A` | Low emphasis text |
+| `--at-bg-color` | `#FFFFFF` | `#18181B` | Panel backgrounds |
+| `--at-surface-color` | `#F3F4F6` | `#27272A` | Button / chip backgrounds |
+| `--at-surface-hover` | `#E5E7EB` | `#3F3F46` | Hover states |
+| `--at-border-color` | `#D1D5DB` | `#3F3F46` | Input borders, progress tracks |
+| `--at-border-radius` | `16px` | `16px` | Panel border radius |
+| `--at-font-family` | `system-ui, sans-serif` | `system-ui, sans-serif` | Font stack |
+| `--at-shadow-color` | `rgba(0,0,0,0.12)` | `rgba(0,0,0,0.4)` | Box shadows |
+| `--at-shadow-hover` | `rgba(0,0,0,0.18)` | `rgba(0,0,0,0.5)` | Hover shadows |
+| `--at-focus-ring` | `rgba(17,24,39,0.2)` | `rgba(250,250,250,0.25)` | Focus outlines |
+| `--at-success-color` | `#10B981` | `#34D399` | Listening indicator |
+| `--at-error-color` | `#EF4444` | `#F87171` | Error text, end button |
+| `--at-error-hover` | `#DC2626` | `#EF4444` | End button hover |
+
+#### Custom Theming
+
+Override any `--at-*` property via CSS — no special `theme` value needed:
 
 ```css
+/* Full custom theme */
 voicezero-ariontalk {
-  --at-primary-color: #4F46E5;
-  --at-text-color: #1F2937;
-  --at-bg-color: #FFFFFF;
-  --at-font-family: system-ui, sans-serif;
-  --at-border-radius: 16px;
+  --at-primary-color: #7C3AED;
+  --at-primary-text: #FFFFFF;
+  --at-bg-color: #1A1A2E;
+  --at-text-color: #E0E0E0;
+}
+
+/* Partial override — change just the accent, keep the rest from light/dark */
+voicezero-ariontalk {
+  --at-primary-color: #7C3AED;
+  --at-primary-text: #FFFFFF;
 }
 ```
+
+This works because external CSS custom properties take precedence over `:host()` rules inside Shadow DOM. You can combine overrides with `theme="dark"` to use dark as a base and tweak specific tokens.
 
 ### Events
 

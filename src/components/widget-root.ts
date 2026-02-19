@@ -22,6 +22,49 @@ export class ArionTalk extends LitElement {
         z-index: 999999;
       }
 
+      /* Light theme (default) */
+      :host([theme="light"]),
+      :host(:not([theme])) {
+        --at-primary-color: #111827;
+        --at-primary-text: #FFFFFF;
+        --at-text-color: #1F2937;
+        --at-text-secondary: #6B7280;
+        --at-text-muted: #9CA3AF;
+        --at-bg-color: #FFFFFF;
+        --at-surface-color: #F3F4F6;
+        --at-surface-hover: #E5E7EB;
+        --at-border-color: #D1D5DB;
+        --at-border-radius: 16px;
+        --at-font-family: system-ui, sans-serif;
+        --at-shadow-color: rgba(0, 0, 0, 0.12);
+        --at-shadow-hover: rgba(0, 0, 0, 0.18);
+        --at-focus-ring: rgba(17, 24, 39, 0.2);
+        --at-success-color: #10B981;
+        --at-error-color: #EF4444;
+        --at-error-hover: #DC2626;
+      }
+
+      /* Dark theme */
+      :host([theme="dark"]) {
+        --at-primary-color: #FAFAFA;
+        --at-primary-text: #18181B;
+        --at-text-color: #FAFAFA;
+        --at-text-secondary: #A1A1AA;
+        --at-text-muted: #71717A;
+        --at-bg-color: #18181B;
+        --at-surface-color: #27272A;
+        --at-surface-hover: #3F3F46;
+        --at-border-color: #3F3F46;
+        --at-border-radius: 16px;
+        --at-font-family: system-ui, sans-serif;
+        --at-shadow-color: rgba(0, 0, 0, 0.4);
+        --at-shadow-hover: rgba(0, 0, 0, 0.5);
+        --at-focus-ring: rgba(250, 250, 250, 0.25);
+        --at-success-color: #34D399;
+        --at-error-color: #F87171;
+        --at-error-hover: #EF4444;
+      }
+
       :host([position="bottom-right"]),
       :host(:not([position])) {
         bottom: 24px;
@@ -42,7 +85,7 @@ export class ArionTalk extends LitElement {
   /** Initial language: "en" or "es" */
   @property({ type: String }) lang: SupportedLang = 'en';
   @property({ type: String, reflect: true }) position = 'bottom-right';
-  @property({ type: String }) theme = 'light';
+  @property({ type: String, reflect: true }) theme = 'light';
   /** When set, skips browser support check and always shows the widget UI. */
   @property({ type: Boolean }) force = false;
   /** When set, shows the voice settings gear icon in the session panel. */

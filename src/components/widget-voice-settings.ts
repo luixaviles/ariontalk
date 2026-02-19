@@ -21,9 +21,9 @@ export class WidgetVoiceSettings extends LitElement {
       }
 
       .panel {
-        background: var(--vcw-bg-color, #FFFFFF);
-        border-radius: var(--vcw-border-radius, 16px);
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+        background: var(--at-bg-color);
+        border-radius: var(--at-border-radius);
+        box-shadow: 0 8px 30px var(--at-shadow-color);
         padding: 24px;
         min-width: 260px;
         animation: vcw-fade-in 0.25s ease-out;
@@ -42,8 +42,8 @@ export class WidgetVoiceSettings extends LitElement {
         width: 32px;
         height: 32px;
         border-radius: 50%;
-        background: #f3f4f6;
-        color: var(--vcw-text-color, #1F2937);
+        background: var(--at-surface-color);
+        color: var(--at-text-color);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -52,7 +52,7 @@ export class WidgetVoiceSettings extends LitElement {
       }
 
       .back-btn:hover {
-        background: #e5e7eb;
+        background: var(--at-surface-hover);
       }
 
       .back-btn svg {
@@ -63,7 +63,7 @@ export class WidgetVoiceSettings extends LitElement {
       .header-title {
         font-size: 16px;
         font-weight: 700;
-        color: var(--vcw-text-color, #1F2937);
+        color: var(--at-text-color);
       }
 
       .field {
@@ -75,37 +75,37 @@ export class WidgetVoiceSettings extends LitElement {
       .field-label {
         font-size: 13px;
         font-weight: 600;
-        color: var(--vcw-text-color, #1F2937);
+        color: var(--at-text-color);
       }
 
       select {
         width: 100%;
         padding: 8px 12px;
-        border: 1px solid #d1d5db;
+        border: 1px solid var(--at-border-color);
         border-radius: 8px;
         font-size: 13px;
-        font-family: var(--vcw-font-family, system-ui, sans-serif);
-        color: var(--vcw-text-color, #1F2937);
-        background: var(--vcw-bg-color, #FFFFFF);
+        font-family: var(--at-font-family);
+        color: var(--at-text-color);
+        background: var(--at-bg-color);
         outline: none;
       }
 
       select:focus {
-        border-color: var(--vcw-primary-color, #4F46E5);
-        box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+        border-color: var(--at-primary-color);
+        box-shadow: 0 0 0 2px var(--at-focus-ring);
       }
 
       input[type="range"] {
         width: 100%;
-        accent-color: var(--vcw-primary-color, #4F46E5);
+        accent-color: var(--at-primary-color);
       }
 
       .apply-btn {
         width: 100%;
         padding: 10px;
         border-radius: 999px;
-        background: var(--vcw-primary-color, #4F46E5);
-        color: #fff;
+        background: var(--at-primary-color);
+        color: var(--at-primary-text);
         font-size: 14px;
         font-weight: 600;
         transition: opacity 0.15s;
