@@ -15,6 +15,9 @@ export class SpeechRecognitionService {
   private currentLang: SupportedLang = 'en';
   private useLocalProcessing = false;
   private fatalError = false;
+  private consecutiveAborts = 0;
+  private static readonly MAX_CONSECUTIVE_ABORTS = 3;
+  private static readonly RESTART_BASE_DELAY_MS = 300;
 
   onInterimResult: ((text: string) => void) | null = null;
   onFinalResult: ((text: string) => void) | null = null;
@@ -24,6 +27,7 @@ export class SpeechRecognitionService {
     this.currentLang = lang;
     this.active = true;
     this.paused = false;
+    this.consecutiveAborts = 0;
     this.createAndStart();
   }
 
@@ -31,6 +35,7 @@ export class SpeechRecognitionService {
     this.active = false;
     this.paused = false;
     this.fatalError = false;
+    this.consecutiveAborts = 0;
     if (this.recognition) {
       try { this.recognition.abort(); } catch { /* ignore */ }
       this.recognition = null;
@@ -82,6 +87,7 @@ export class SpeechRecognitionService {
     }
 
     rec.onresult = (event: any) => {
+      this.consecutiveAborts = 0;
       let interim = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript;
@@ -99,8 +105,18 @@ export class SpeechRecognitionService {
     rec.onerror = (event: any) => {
       const error = event.error as string;
       console.log('[voice-chat-widget] SpeechRecognition error:', error);
-      // 'no-speech' and 'aborted' are expected during normal use
-      if (error === 'no-speech' || error === 'aborted') return;
+
+      if (error === 'no-speech') return;
+
+      if (error === 'aborted') {
+        this.consecutiveAborts++;
+        if (this.consecutiveAborts >= SpeechRecognitionService.MAX_CONSECUTIVE_ABORTS) {
+          console.warn('[voice-chat-widget] SpeechRecognition aborted repeatedly, stopping restarts');
+          this.fatalError = true;
+          this.onError?.('speech-recognition-unavailable');
+        }
+        return;
+      }
 
       // Fatal error — stop auto-restart
       this.fatalError = true;
@@ -111,12 +127,11 @@ export class SpeechRecognitionService {
       console.log('[voice-chat-widget] SpeechRecognition ended, active:', this.active, 'paused:', this.paused, 'fatalError:', this.fatalError);
       // Auto-restart if session is still active, not paused, and no fatal error
       if (this.active && !this.paused && !this.fatalError) {
-        try { rec.start(); } catch {
-          // If restart fails, create a fresh instance
-          setTimeout(() => {
-            if (this.active && !this.paused && !this.fatalError) this.createAndStart();
-          }, 300);
-        }
+        const delay = SpeechRecognitionService.RESTART_BASE_DELAY_MS * Math.pow(2, this.consecutiveAborts);
+        setTimeout(() => {
+          if (!this.active || this.paused || this.fatalError) return;
+          this.createAndStart();
+        }, delay);
       }
     };
 
