@@ -119,10 +119,15 @@ export class PageExtractorService {
           return NodeFilter.FILTER_REJECT;
         }
 
-        // Skip ad containers (common class patterns)
+        // Skip hidden classes and ad containers (common class patterns)
         const cls = parent.className;
-        if (typeof cls === 'string' && /\b(ad[s-]?|sponsor|promo)\b/i.test(cls)) {
-          return NodeFilter.FILTER_REJECT;
+        if (typeof cls === 'string') {
+           if (/\b(hidden|invisible|d-none)\b/i.test(cls)) {
+             return NodeFilter.FILTER_REJECT;
+           }
+           if (/\b(ad[s-]?|sponsor|promo)\b/i.test(cls)) {
+             return NodeFilter.FILTER_REJECT;
+           }
         }
 
         return NodeFilter.FILTER_ACCEPT;
