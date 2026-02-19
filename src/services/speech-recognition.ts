@@ -98,6 +98,7 @@ export class SpeechRecognitionService {
 
     rec.onerror = (event: any) => {
       const error = event.error as string;
+      console.log('[voice-chat-widget] SpeechRecognition error:', error);
       // 'no-speech' and 'aborted' are expected during normal use
       if (error === 'no-speech' || error === 'aborted') return;
 
@@ -107,6 +108,7 @@ export class SpeechRecognitionService {
     };
 
     rec.onend = () => {
+      console.log('[voice-chat-widget] SpeechRecognition ended, active:', this.active, 'paused:', this.paused, 'fatalError:', this.fatalError);
       // Auto-restart if session is still active, not paused, and no fatal error
       if (this.active && !this.paused && !this.fatalError) {
         try { rec.start(); } catch {
@@ -119,6 +121,11 @@ export class SpeechRecognitionService {
     };
 
     this.recognition = rec;
-    try { rec.start(); } catch { /* ignore double-start */ }
+    try {
+      rec.start();
+      console.log('[voice-chat-widget] SpeechRecognition started, lang:', rec.lang);
+    } catch (err) {
+      console.warn('[voice-chat-widget] SpeechRecognition start failed:', err);
+    }
   }
 }
