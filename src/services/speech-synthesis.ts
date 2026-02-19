@@ -11,7 +11,7 @@ const LANG_MAP: Record<SupportedLang, string> = {
  */
 export class SpeechSynthesisService {
   private voiceCache: Map<string, SpeechSynthesisVoice> = new Map();
-  private speaking = false;
+  private activeUtterances = new Set<SpeechSynthesisUtterance>();
   private overrides: VoiceSettings | null = null;
 
   constructor() {
@@ -49,15 +49,15 @@ export class SpeechSynthesisService {
       utterance.pitch = this.overrides?.pitch ?? 1.0;
       utterance.volume = this.overrides?.volume ?? 1.0;
 
-      this.speaking = true;
+      this.activeUtterances.add(utterance);
 
       utterance.onend = () => {
-        this.speaking = false;
+        this.activeUtterances.delete(utterance);
         resolve();
       };
 
       utterance.onerror = (event) => {
-        this.speaking = false;
+        this.activeUtterances.delete(utterance);
         if (event.error === 'canceled' || event.error === 'interrupted') {
           resolve();
         } else {
@@ -93,19 +93,15 @@ export class SpeechSynthesisService {
       utterance.pitch = this.overrides?.pitch ?? 1.0;
       utterance.volume = this.overrides?.volume ?? 1.0;
 
-      this.speaking = true;
+      this.activeUtterances.add(utterance);
 
       utterance.onend = () => {
-        if (!speechSynthesis.speaking && !speechSynthesis.pending) {
-          this.speaking = false;
-        }
+        this.activeUtterances.delete(utterance);
         resolve();
       };
 
       utterance.onerror = (event) => {
-        if (!speechSynthesis.speaking && !speechSynthesis.pending) {
-          this.speaking = false;
-        }
+        this.activeUtterances.delete(utterance);
         if (event.error === 'canceled' || event.error === 'interrupted') {
           resolve();
         } else {
@@ -121,7 +117,7 @@ export class SpeechSynthesisService {
   cancel(): void {
     if (window.speechSynthesis) {
       speechSynthesis.cancel();
-      this.speaking = false;
+      this.activeUtterances.clear();
     }
   }
 

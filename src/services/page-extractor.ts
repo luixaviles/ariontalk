@@ -114,8 +114,8 @@ export class PageExtractorService {
         if (!parent) return NodeFilter.FILTER_REJECT;
         if (SKIP_TAGS.has(parent.tagName)) return NodeFilter.FILTER_REJECT;
 
-        const style = getComputedStyle(parent);
-        if (style.display === 'none' || style.visibility === 'hidden') {
+        // Check for hidden attributes (faster than getComputedStyle)
+        if (parent.hasAttribute('hidden') || parent.getAttribute('aria-hidden') === 'true') {
           return NodeFilter.FILTER_REJECT;
         }
 
