@@ -21,7 +21,7 @@ export class SpeechSynthesisService {
     }
   }
 
-  /** Speaks text and resolves when finished. */
+  /** Speaks text and resolves when finished. Cancels any ongoing speech first. */
   speak(text: string, lang: SupportedLang): Promise<void> {
     return new Promise((resolve, reject) => {
       if (!window.speechSynthesis) {
@@ -51,7 +51,48 @@ export class SpeechSynthesisService {
       utterance.onerror = (event) => {
         this.speaking = false;
         if (event.error === 'canceled' || event.error === 'interrupted') {
-          resolve(); // Treat cancellation as normal completion
+          resolve();
+        } else {
+          reject(new Error(`Speech synthesis error: ${event.error}`));
+        }
+      };
+
+      speechSynthesis.speak(utterance);
+    });
+  }
+
+  /** Queues a single utterance without canceling prior speech. */
+  enqueue(text: string, lang: SupportedLang): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (!window.speechSynthesis) {
+        reject(new Error('Speech synthesis not supported'));
+        return;
+      }
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = LANG_MAP[lang];
+
+      const voice = this.getVoiceForLang(lang);
+      if (voice) utterance.voice = voice;
+
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+
+      this.speaking = true;
+
+      utterance.onend = () => {
+        if (!speechSynthesis.speaking && !speechSynthesis.pending) {
+          this.speaking = false;
+        }
+        resolve();
+      };
+
+      utterance.onerror = (event) => {
+        if (!speechSynthesis.speaking && !speechSynthesis.pending) {
+          this.speaking = false;
+        }
+        if (event.error === 'canceled' || event.error === 'interrupted') {
+          resolve();
         } else {
           reject(new Error(`Speech synthesis error: ${event.error}`));
         }

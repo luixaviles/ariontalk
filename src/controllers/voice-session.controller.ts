@@ -178,39 +178,94 @@ export class VoiceSessionController implements ReactiveController {
     };
     this.host.requestUpdate();
 
+    // Clear any prior speech before streaming new response
+    this.synthesis.cancel();
+
+    const speechQueue: Promise<void>[] = [];
+    const lang = this.state.currentLang;
+
     try {
-      // Stream AI response
-      let fullResponse = '';
+      let buffer = '';
+      let firstSentenceEnqueued = false;
+
       for await (const chunk of this.ai.prompt(text)) {
-        fullResponse += chunk;
-        // console.log('[voice-chat-widget] AI stream:', fullResponse);
+        buffer += chunk;
+
+        const { sentences, remainder } = this.extractSentences(buffer);
+        buffer = remainder;
+
+        for (const sentence of sentences) {
+          const clean = this.sanitizeForSpeech(sentence);
+          if (!clean) continue;
+
+          console.log('[voice-chat-widget] Streaming sentence to TTS:', clean);
+
+          if (!firstSentenceEnqueued) {
+            firstSentenceEnqueued = true;
+            this.state = { ...this.state, status: 'speaking' };
+            this.host.requestUpdate();
+          }
+
+          speechQueue.push(this.synthesis.enqueue(clean, lang));
+        }
       }
 
-      if (!fullResponse.trim()) {
+      // Flush any remaining buffer as a final utterance
+      const remainingText = this.sanitizeForSpeech(buffer.trim());
+      if (remainingText) {
+        console.log('[voice-chat-widget] Streaming sentence to TTS:', remainingText);
+
+        if (!firstSentenceEnqueued) {
+          this.state = { ...this.state, status: 'speaking' };
+          this.host.requestUpdate();
+        }
+
+        speechQueue.push(this.synthesis.enqueue(remainingText, lang));
+      }
+
+      // Wait for all queued speech to finish
+      await Promise.all(speechQueue);
+
+      if (this.sessionActive) {
         this.resumeListening();
-        return;
       }
-
-      // console.log('[voice-chat-widget] AI response before sanitization:', fullResponse);
-      const speakText = this.sanitizeForSpeech(fullResponse);
-      // const speakText = fullResponse;
-      console.log('[voice-chat-widget] AI response:', speakText);
-
-      if (!speakText) {
-        this.resumeListening();
-        return;
-      }
-
-      // Speak the response
-      this.state = { ...this.state, status: 'speaking' };
-      this.host.requestUpdate();
-
-      await this.synthesis.speak(speakText, this.state.currentLang);
-      this.resumeListening();
     } catch (err) {
-      this.setError(err instanceof Error ? err.message : 'Conversation error');
-      this.resumeListening();
+      // Cancel remaining queued utterances on error
+      this.synthesis.cancel();
+
+      if (this.sessionActive) {
+        this.setError(err instanceof Error ? err.message : 'Conversation error');
+        this.resumeListening();
+      }
     }
+  }
+
+  /** Extract complete sentences from a text buffer, returning unmatched remainder. */
+  private extractSentences(buffer: string): { sentences: string[]; remainder: string } {
+    const pattern = /([^.!?]*[.!?]+[\s]*)/g;
+    const sentences: string[] = [];
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = pattern.exec(buffer)) !== null) {
+      sentences.push(match[1]);
+      lastIndex = pattern.lastIndex;
+    }
+
+    // Merge short fragments with previous sentence
+    const merged: string[] = [];
+    for (const s of sentences) {
+      if (merged.length > 0 && s.trim().length < 20) {
+        merged[merged.length - 1] += s;
+      } else {
+        merged.push(s);
+      }
+    }
+
+    return {
+      sentences: merged.map(s => s.trim()).filter(Boolean),
+      remainder: buffer.slice(lastIndex),
+    };
   }
 
   private resumeListening(): void {
