@@ -48,13 +48,13 @@ export class VoiceSessionController implements ReactiveController {
 
     // Wire recognition callbacks
     this.recognition.onInterimResult = (text) => {
-      // console.log('[voice-chat-widget] interim:', text);
+      // console.log('[ariontalk] interim:', text);
       this.state = { ...this.state, interimTranscript: text };
       this.host.requestUpdate();
     };
 
     this.recognition.onFinalResult = (text) => {
-      console.log('[voice-chat-widget] final transcript:', text);
+      console.log('[ariontalk] final transcript:', text);
       this.handleFinalTranscript(text);
     };
 
@@ -86,7 +86,7 @@ export class VoiceSessionController implements ReactiveController {
     try {
       this.recognition.start(lang);
     } catch (err) {
-      console.warn('[voice-chat-widget] Speech recognition unavailable:', err);
+      console.warn('[ariontalk] Speech recognition unavailable:', err);
     }
     this.timer.start();
 
@@ -120,7 +120,7 @@ export class VoiceSessionController implements ReactiveController {
         this.host.requestUpdate();
       }
     } catch (err) {
-      console.warn('[voice-chat-widget] AI unavailable:', err);
+      console.warn('[ariontalk] AI unavailable:', err);
     }
   }
 
@@ -210,7 +210,7 @@ export class VoiceSessionController implements ReactiveController {
           const clean = this.sanitizeForSpeech(sentence);
           if (!clean) continue;
 
-          console.log('[voice-chat-widget] Streaming sentence to TTS:', clean);
+          console.log('[ariontalk] Streaming sentence to TTS:', clean);
 
           if (!firstSentenceEnqueued) {
             firstSentenceEnqueued = true;
@@ -225,7 +225,7 @@ export class VoiceSessionController implements ReactiveController {
       // Flush any remaining buffer as a final utterance
       const remainingText = this.sanitizeForSpeech(buffer.trim());
       if (remainingText) {
-        console.log('[voice-chat-widget] Streaming sentence to TTS:', remainingText);
+        console.log('[ariontalk] Streaming sentence to TTS:', remainingText);
 
         if (!firstSentenceEnqueued) {
           this.state = { ...this.state, status: 'speaking' };

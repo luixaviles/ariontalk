@@ -8,11 +8,11 @@ import './widget-fab.js';
 import './widget-session.js';
 
 /**
- * <voice-chat-widget> — Root component that embeds the full voice chat experience.
+ * <ariontalk> — Root component that embeds the full voice chat experience.
  * Toggles between a FAB (idle) and session panel (active).
  */
-@customElement('voice-chat-widget')
-export class VoiceChatWidget extends LitElement {
+@customElement('voicezero-ariontalk')
+export class ArionTalk extends LitElement {
   static styles = [
     sharedStyles,
     css`
@@ -92,7 +92,7 @@ export class VoiceChatWidget extends LitElement {
   private async handleFabClick() {
     this.active = true;
     this.dispatchEvent(
-      new CustomEvent('vcw-session-start', {
+      new CustomEvent('at-session-start', {
         detail: { lang: this.lang },
         bubbles: true,
         composed: true,
@@ -114,7 +114,7 @@ export class VoiceChatWidget extends LitElement {
     this.controller.endSession();
     this.active = false;
     this.dispatchEvent(
-      new CustomEvent('vcw-session-end', {
+      new CustomEvent('at-session-end', {
         detail: { duration, messageCount: 0 },
         bubbles: true,
         composed: true,
@@ -125,6 +125,6 @@ export class VoiceChatWidget extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'voice-chat-widget': VoiceChatWidget;
+    'voicezero-ariontalk': ArionTalk;
   }
 }

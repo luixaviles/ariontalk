@@ -17,7 +17,7 @@ export class AISessionService {
       const lm = (window as any).LanguageModel;
       if (!lm) return 'unavailable';
       const result = await lm.availability();
-      console.log('[voice-chat-widget] availability:', result);
+      console.log('[ariontalk] availability:', result);
       return result as 'available' | 'downloadable' | 'downloading' | 'unavailable';
     } catch {
       return 'unavailable';
@@ -47,9 +47,9 @@ export class AISessionService {
       };
     }
 
-    console.log('[voice-chat-widget] lm.create() systemPrompt:', systemPrompt);
+    console.log('[ariontalk] lm.create() systemPrompt:', systemPrompt);
     this.session = await lm.create(options);
-    console.log('[voice-chat-widget] lm.create() session ready');
+    console.log('[ariontalk] lm.create() session ready');
   }
 
   /** Sends a user message and yields streaming response chunks. */
@@ -67,7 +67,7 @@ export class AISessionService {
     }
 
     const promptInput = content.length === 1 ? userMessage : content;
-    console.log('[voice-chat-widget] promptStreaming() input:', promptInput);
+    console.log('[ariontalk] promptStreaming() input:', promptInput);
 
     // Use prompt with streaming
     const stream = this.session.promptStreaming(promptInput);

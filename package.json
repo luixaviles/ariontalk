@@ -1,14 +1,15 @@
 {
-  "name": "voice-chat-widget",
+  "name": "ariontalk",
   "version": "0.1.0",
+  "description": "A lightweight, offline-first, privacy-focused voice chat widget powered by Chrome's built-in APIs (Gemini Nano, WebSpeech)",
   "type": "module",
-  "main": "./dist/voice-chat-widget.js",
-  "module": "./dist/voice-chat-widget.js",
-  "types": "./dist/voice-chat-widget.d.ts",
+  "main": "./dist/ariontalk.js",
+  "module": "./dist/ariontalk.js",
+  "types": "./dist/ariontalk.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/voice-chat-widget.d.ts",
-      "default": "./dist/voice-chat-widget.js"
+      "types": "./dist/ariontalk.d.ts",
+      "default": "./dist/ariontalk.js"
     }
   },
   "scripts": {

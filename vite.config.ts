@@ -4,15 +4,15 @@ import { resolve } from 'path';
 export default defineConfig({
   build: {
     lib: {
-      entry: resolve(__dirname, 'src/voice-chat-widget.ts'),
+      entry: resolve(__dirname, 'src/ariontalk.ts'),
       formats: ['es'],
-      fileName: 'voice-chat-widget',
+      fileName: 'ariontalk',
     },
     target: 'es2021',
     minify: 'terser',
     rollupOptions: {
       output: {
-        entryFileNames: 'voice-chat-widget.js',
+        entryFileNames: 'ariontalk.js',
       },
     },
   },
