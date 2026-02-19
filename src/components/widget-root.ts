@@ -45,6 +45,8 @@ export class VoiceChatWidget extends LitElement {
   @property({ type: String }) theme = 'light';
   /** When set, skips browser support check and always shows the widget UI. */
   @property({ type: Boolean }) force = false;
+  /** When set, shows the voice settings gear icon in the session panel. */
+  @property({ type: Boolean }) settings = false;
 
   @state() private supported = false;
   @state() private active = false;
@@ -68,6 +70,7 @@ export class VoiceChatWidget extends LitElement {
           .interimTranscript=${this.controller.state.interimTranscript}
           .error=${this.controller.state.error}
           .downloadProgress=${this.controller.state.downloadProgress}
+          .settingsEnabled=${this.settings}
           .voices=${this.controller.getAllVoices()}
           .currentVoiceSettings=${this.controller.getVoiceOverrides()}
           @lang-toggle=${this.handleLangToggle}
