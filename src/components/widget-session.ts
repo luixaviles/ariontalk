@@ -237,9 +237,9 @@ export class WidgetSession extends LitElement {
 
     return html`
       <div class="panel">
-        <div class="timer">${this.timerDisplay}</div>
+        <div class="timer" role="timer" aria-label="Session duration">${this.timerDisplay}</div>
 
-        <div class="status status-${this.status}">
+        <div class="status status-${this.status}" aria-live="polite" aria-atomic="true">
           ${this.renderStatusIndicator()}
           <span>${this.statusLabel}</span>
         </div>
@@ -247,11 +247,11 @@ export class WidgetSession extends LitElement {
         ${this.status === 'loading' ? this.renderProgressBar() : nothing}
 
         ${this.interimTranscript
-          ? html`<div class="transcript">${this.interimTranscript}</div>`
+          ? html`<div class="transcript" aria-live="polite">${this.interimTranscript}</div>`
           : nothing}
 
         ${this.status === 'error' && this.error
-          ? html`<div class="status status-error">${this.error}</div>`
+          ? html`<div class="status status-error" role="alert">${this.error}</div>`
           : nothing}
 
         <div class="controls">

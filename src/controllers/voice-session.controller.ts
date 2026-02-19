@@ -321,25 +321,19 @@ export class VoiceSessionController implements ReactiveController {
       // Remove emojis
       .replace(/\p{Extended_Pictographic}/gu, '')
       // Remove markdown bold/italic
-      // .replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1')
-      // // Remove markdown headers
-      // .replace(/^#{1,6}\s+/gm, '')
-      // // Remove bullet points and list markers
-      // .replace(/^[\s]*[-*]\s+/gm, '')
-      // .replace(/^[\s]*\d+\.\s+/gm, '')
-      // // Collapse multiple newlines/whitespace into single space
-      // .replace(/\n+/g, ' ')
-      // .replace(/\s{2,}/g, ' ')
+      .replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1')
+      // Remove markdown headers
+      .replace(/^#{1,6}\s+/gm, '')
+      // Remove bullet points and list markers
+      .replace(/^[\s]*[-*]\s+/gm, '')
+      .replace(/^[\s]*\d+\.\s+/gm, '')
+      // Collapse multiple newlines/whitespace into single space
+      .replace(/\n+/g, ' ')
+      .replace(/\s{2,}/g, ' ')
       .trim();
 
     // Remove trailing filler questions like "Let me know if..." / "Does that help?"
     // clean = clean.replace(/\s*(Let me know|Does that|Is there anything|Do you want|Would you like|Feel free)[^.!?]*[.!?]?\s*$/i, '');
-
-    // Truncate to first 3 sentences
-    // const sentences = clean.match(/[^.!?]+[.!?]+/g);
-    // if (sentences && sentences.length > 3) {
-    //   clean = sentences.slice(0, 3).join('').trim();
-    // }
 
     return clean;
   }
