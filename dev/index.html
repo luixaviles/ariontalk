@@ -6,77 +6,213 @@
   <title>ArionTalk - Dev</title>
   <meta name="description" content="Development page for testing ArionTalk" />
   <style>
+    * { box-sizing: border-box; margin: 0; }
+
     body {
-      font-family: system-ui, sans-serif;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 2rem;
+      font-family: system-ui, -apple-system, sans-serif;
       line-height: 1.6;
       color: #1f2937;
+      background: #fff;
       transition: background 0.3s, color 0.3s;
     }
     body.dark {
       background: #111827;
       color: #f3f4f6;
     }
-    h1 { color: #111827; }
-    body.dark h1 { color: #fafafa; }
-    img { max-width: 100%; border-radius: 8px; margin: 1rem 0; }
-    .note {
+
+    /* ── Toolbar ── */
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 24px;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid #e5e7eb;
+      transition: background 0.3s, border-color 0.3s;
+    }
+    body.dark .toolbar {
+      background: rgba(17, 24, 39, 0.85);
+      border-bottom-color: #27272a;
+    }
+
+    .toolbar-brand {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: #111827;
+    }
+    body.dark .toolbar-brand {
+      color: #fafafa;
+    }
+    .toolbar-brand span {
+      font-weight: 400;
+      color: #9ca3af;
+      margin-left: 6px;
+    }
+    body.dark .toolbar-brand span {
+      color: #71717a;
+    }
+
+    .toolbar-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .toolbar-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    body.dark .toolbar-label {
+      color: #71717a;
+    }
+
+    /* ── Segmented control ── */
+    .segmented {
+      display: flex;
       background: #f3f4f6;
-      border-left: 4px solid #111827;
-      padding: 1rem;
-      margin: 1rem 0;
-      border-radius: 0 8px 8px 0;
+      border-radius: 8px;
+      padding: 3px;
+      gap: 2px;
+      transition: background 0.3s;
+    }
+    body.dark .segmented {
+      background: #27272a;
+    }
+
+    .segmented button {
+      padding: 6px 14px;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: #6b7280;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .segmented button:hover {
+      color: #1f2937;
+    }
+    body.dark .segmented button {
+      color: #a1a1aa;
+    }
+    body.dark .segmented button:hover {
+      color: #fafafa;
+    }
+
+    .segmented button.active {
+      background: #fff;
+      color: #111827;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+    body.dark .segmented button.active {
+      background: #3f3f46;
+      color: #fafafa;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    /* ── Brand toggle (pill) ── */
+    .toggle-btn {
+      padding: 6px 14px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: transparent;
+      color: #6b7280;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .toggle-btn:hover {
+      border-color: #d1d5db;
+      color: #1f2937;
+    }
+    .toggle-btn.active {
+      background: #7C3AED;
+      color: #fff;
+      border-color: #7C3AED;
+    }
+    body.dark .toggle-btn {
+      border-color: #3f3f46;
+      color: #a1a1aa;
+    }
+    body.dark .toggle-btn:hover {
+      border-color: #52525b;
+      color: #fafafa;
+    }
+    body.dark .toggle-btn.active {
+      background: #7C3AED;
+      color: #fff;
+      border-color: #7C3AED;
+    }
+
+    /* ── Content ── */
+    main {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem 4rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      color: #111827;
+      margin-bottom: 0.25rem;
+    }
+    body.dark h1 { color: #fafafa; }
+
+    h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-top: 2rem;
+      margin-bottom: 0.5rem;
+      color: #111827;
+    }
+    body.dark h2 { color: #fafafa; }
+
+    .byline {
+      font-size: 14px;
+      color: #9ca3af;
+      margin-bottom: 2rem;
+    }
+    body.dark .byline { color: #71717a; }
+
+    p {
+      margin-bottom: 1rem;
+    }
+
+    img {
+      max-width: 100%;
+      border-radius: 10px;
+      margin: 1.25rem 0;
+    }
+
+    .note {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+      border-radius: 10px;
+      font-size: 14px;
     }
     body.dark .note {
-      background: #1f2937;
-      border-left-color: #fafafa;
+      background: #1e1e22;
+      border-color: #27272a;
     }
 
-    /* Theme controls */
-    .theme-controls {
-      position: fixed;
-      top: 16px;
-      right: 16px;
-      display: flex;
-      gap: 8px;
-      z-index: 1000;
-    }
-    .theme-controls button {
-      padding: 8px 14px;
-      border: 1px solid #d1d5db;
-      border-radius: 8px;
-      background: #fff;
-      color: #1f2937;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.15s, border-color 0.15s;
-    }
-    .theme-controls button:hover {
-      background: #f3f4f6;
-    }
-    .theme-controls button.active {
-      background: #111827;
-      color: #fff;
-      border-color: #111827;
-    }
-    body.dark .theme-controls button {
-      background: #27272a;
-      color: #fafafa;
-      border-color: #3f3f46;
-    }
-    body.dark .theme-controls button:hover {
-      background: #3f3f46;
-    }
-    body.dark .theme-controls button.active {
-      background: #fafafa;
-      color: #18181b;
-      border-color: #fafafa;
-    }
-
-    /* Custom brand theme overrides */
+    /* ── Custom brand theme overrides ── */
     voicezero-ariontalk.brand-theme {
       --at-primary-color: #7C3AED;
       --at-primary-text: #FFFFFF;
@@ -85,15 +221,21 @@
   </style>
 </head>
 <body>
-  <div class="theme-controls">
-    <button id="btn-light" class="active" onclick="setTheme('light')">Light</button>
-    <button id="btn-dark" onclick="setTheme('dark')">Dark</button>
-    <button id="btn-brand" onclick="toggleBrand()">Brand</button>
-  </div>
+  <header class="toolbar">
+    <div class="toolbar-brand">ArionTalk<span>Dev</span></div>
+    <div class="toolbar-controls">
+      <span class="toolbar-label">Theme</span>
+      <div class="segmented">
+        <button id="btn-light" class="active" onclick="setTheme('light')">Light</button>
+        <button id="btn-dark" onclick="setTheme('dark')">Dark</button>
+      </div>
+      <button id="btn-brand" class="toggle-btn" onclick="toggleBrand()">Brand</button>
+    </div>
+  </header>
 
   <main>
     <h1>Sample Article: The Future of Web Components</h1>
-    <p>Published on January 15, 2026 by Jane Smith</p>
+    <p class="byline">Published on January 15, 2026 by Jane Smith</p>
 
     <article>
       <h2>Introduction</h2>
@@ -139,8 +281,8 @@
       <div class="note">
         <strong>Note:</strong> This is a sample page for testing ArionTalk.
         Try clicking the microphone button in the bottom-right corner to start a voice
-        conversation about this page's content. Use the buttons in the top-right to
-        switch between light, dark, and brand themes.
+        conversation about this page's content. Use the toolbar above to switch
+        between light and dark themes, or toggle the brand override.
       </div>
 
       <h2>Conclusion</h2>
@@ -159,10 +301,8 @@
       const widget = document.getElementById('widget');
       widget.setAttribute('theme', theme);
 
-      // Update page background to match
       document.body.classList.toggle('dark', theme === 'dark');
 
-      // Update button active states
       document.getElementById('btn-light').classList.toggle('active', theme === 'light');
       document.getElementById('btn-dark').classList.toggle('active', theme === 'dark');
     }
