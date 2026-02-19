@@ -1,5 +1,5 @@
 import type { ReactiveController, ReactiveControllerHost } from 'lit';
-import type { VoiceSessionState, SupportedLang } from '../types.js';
+import type { VoiceSessionState, SupportedLang, VoiceSettings } from '../types.js';
 import { PageExtractorService } from '../services/page-extractor.js';
 import { SpeechRecognitionService } from '../services/speech-recognition.js';
 import { SpeechSynthesisService } from '../services/speech-synthesis.js';
@@ -142,6 +142,18 @@ export class VoiceSessionController implements ReactiveController {
       downloadProgress: 0,
     };
     this.host.requestUpdate();
+  }
+
+  applyVoiceSettings(settings: VoiceSettings): void {
+    this.synthesis.setVoiceOverrides(settings);
+  }
+
+  getVoiceOverrides(): VoiceSettings | null {
+    return this.synthesis.getVoiceOverrides();
+  }
+
+  getAllVoices(): SpeechSynthesisVoice[] {
+    return this.synthesis.getAllVoices();
   }
 
   /** Switch recognition + synthesis + AI language mid-session. */

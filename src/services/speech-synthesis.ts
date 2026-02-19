@@ -1,4 +1,4 @@
-import type { SupportedLang } from '../types.js';
+import type { SupportedLang, VoiceSettings } from '../types.js';
 
 const LANG_MAP: Record<SupportedLang, string> = {
   en: 'en',
@@ -12,6 +12,7 @@ const LANG_MAP: Record<SupportedLang, string> = {
 export class SpeechSynthesisService {
   private voiceCache: Map<string, SpeechSynthesisVoice> = new Map();
   private speaking = false;
+  private overrides: VoiceSettings | null = null;
 
   constructor() {
     this.loadVoices();
@@ -35,11 +36,18 @@ export class SpeechSynthesisService {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = LANG_MAP[lang];
 
-      const voice = this.getVoiceForLang(lang);
-      if (voice) utterance.voice = voice;
-
-      utterance.rate = 1.0;
-      utterance.pitch = 1.0;
+      if (this.overrides?.voice) {
+        const match = speechSynthesis.getVoices().find(
+          v => v.voiceURI === this.overrides!.voice!.voiceURI
+        );
+        if (match) utterance.voice = match;
+      } else {
+        const voice = this.getVoiceForLang(lang);
+        if (voice) utterance.voice = voice;
+      }
+      utterance.rate = this.overrides?.rate ?? 1.0;
+      utterance.pitch = this.overrides?.pitch ?? 1.0;
+      utterance.volume = this.overrides?.volume ?? 1.0;
 
       this.speaking = true;
 
@@ -72,11 +80,18 @@ export class SpeechSynthesisService {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = LANG_MAP[lang];
 
-      const voice = this.getVoiceForLang(lang);
-      if (voice) utterance.voice = voice;
-
-      utterance.rate = 1.0;
-      utterance.pitch = 1.0;
+      if (this.overrides?.voice) {
+        const match = speechSynthesis.getVoices().find(
+          v => v.voiceURI === this.overrides!.voice!.voiceURI
+        );
+        if (match) utterance.voice = match;
+      } else {
+        const voice = this.getVoiceForLang(lang);
+        if (voice) utterance.voice = voice;
+      }
+      utterance.rate = this.overrides?.rate ?? 1.0;
+      utterance.pitch = this.overrides?.pitch ?? 1.0;
+      utterance.volume = this.overrides?.volume ?? 1.0;
 
       this.speaking = true;
 
@@ -115,6 +130,19 @@ export class SpeechSynthesisService {
     if (!window.speechSynthesis) return [];
     const prefix = LANG_MAP[lang];
     return speechSynthesis.getVoices().filter((v) => v.lang.startsWith(prefix));
+  }
+
+  setVoiceOverrides(settings: VoiceSettings | null): void {
+    this.overrides = settings;
+  }
+
+  getVoiceOverrides(): VoiceSettings | null {
+    return this.overrides;
+  }
+
+  getAllVoices(): SpeechSynthesisVoice[] {
+    if (!window.speechSynthesis) return [];
+    return speechSynthesis.getVoices();
   }
 
   private getVoiceForLang(lang: SupportedLang): SpeechSynthesisVoice | null {

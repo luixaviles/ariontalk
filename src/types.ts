@@ -8,6 +8,13 @@ export interface ImageContext {
   src: string;
 }
 
+export interface VoiceSettings {
+  voice: SpeechSynthesisVoice | null; // null = automatic selection
+  rate: number;   // 0.5–2.0, default 1.0
+  pitch: number;  // 0.0–2.0, default 1.0
+  volume: number; // 0.0–1.0, default 1.0
+}
+
 export interface VoiceSessionState {
   status: WidgetStatus;
   currentLang: SupportedLang;

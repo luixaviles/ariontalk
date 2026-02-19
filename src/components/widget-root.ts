@@ -3,7 +3,7 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { sharedStyles } from '../styles/shared-styles.js';
 import { isVoiceChatSupported } from '../utils/browser-support.js';
 import { VoiceSessionController } from '../controllers/voice-session.controller.js';
-import type { SupportedLang } from '../types.js';
+import type { SupportedLang, VoiceSettings } from '../types.js';
 import './widget-fab.js';
 import './widget-session.js';
 
@@ -68,8 +68,11 @@ export class VoiceChatWidget extends LitElement {
           .interimTranscript=${this.controller.state.interimTranscript}
           .error=${this.controller.state.error}
           .downloadProgress=${this.controller.state.downloadProgress}
+          .voices=${this.controller.getAllVoices()}
+          .currentVoiceSettings=${this.controller.getVoiceOverrides()}
           @lang-toggle=${this.handleLangToggle}
           @session-end=${this.handleEnd}
+          @voice-settings-apply=${this.handleVoiceSettingsApply}
         ></vcw-session>
       `;
     }
@@ -97,6 +100,10 @@ export class VoiceChatWidget extends LitElement {
 
   private handleLangToggle(e: CustomEvent<{ lang: SupportedLang }>) {
     this.controller.switchLanguage(e.detail.lang);
+  }
+
+  private handleVoiceSettingsApply(e: CustomEvent<VoiceSettings>) {
+    this.controller.applyVoiceSettings(e.detail);
   }
 
   private handleEnd() {

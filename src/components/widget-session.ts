@@ -1,7 +1,8 @@
 import { LitElement, html, css, nothing } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 import { sharedStyles } from '../styles/shared-styles.js';
-import type { WidgetStatus, SupportedLang } from '../types.js';
+import './widget-voice-settings.js';
+import type { WidgetStatus, SupportedLang, VoiceSettings } from '../types.js';
 
 /**
  * Expanded session panel showing timer, status indicator, language toggle,
@@ -192,8 +193,27 @@ export class WidgetSession extends LitElement {
         width: 22px;
         height: 22px;
       }
+
+      /* Gear button */
+      .gear-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: #f3f4f6;
+        color: var(--vcw-text-color, #1F2937);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.15s;
+      }
+      .gear-btn:hover { background: #e5e7eb; }
+      .gear-btn svg { width: 18px; height: 18px; }
     `,
   ];
+
+  @state() private showSettings = false;
+  @property({ type: Array }) voices: SpeechSynthesisVoice[] = [];
+  @property({ type: Object }) currentVoiceSettings: VoiceSettings | null = null;
 
   @property({ type: String }) status: WidgetStatus = 'listening';
   @property({ type: String }) lang: SupportedLang = 'en';
@@ -203,6 +223,17 @@ export class WidgetSession extends LitElement {
   @property({ type: Number }) downloadProgress = 0;
 
   render() {
+    if (this.showSettings) {
+      return html`
+        <vcw-voice-settings
+          .voices=${this.voices}
+          .currentSettings=${this.currentVoiceSettings}
+          @voice-settings-apply=${this.handleSettingsApply}
+          @voice-settings-back=${this.handleSettingsBack}
+        ></vcw-voice-settings>
+      `;
+    }
+
     return html`
       <div class="panel">
         <div class="timer">${this.timerDisplay}</div>
@@ -223,6 +254,14 @@ export class WidgetSession extends LitElement {
           : nothing}
 
         <div class="controls">
+          <button class="gear-btn" @click=${this.handleGearClick} aria-label="Voice settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+          </button>
+
           <button
             class="lang-toggle"
             @click=${this.handleLangToggle}
@@ -295,6 +334,21 @@ export class WidgetSession extends LitElement {
       default:
         return nothing;
     }
+  }
+
+  private handleGearClick() {
+    this.showSettings = true;
+  }
+
+  private handleSettingsBack() {
+    this.showSettings = false;
+  }
+
+  private handleSettingsApply(e: CustomEvent<VoiceSettings>) {
+    this.showSettings = false;
+    this.dispatchEvent(new CustomEvent('voice-settings-apply', {
+      detail: e.detail, bubbles: true, composed: true,
+    }));
   }
 
   private handleLangToggle() {
