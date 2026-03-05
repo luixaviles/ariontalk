@@ -3,7 +3,7 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { sharedStyles } from '../styles/shared-styles.js';
 import { isVoiceChatSupported } from '@ariontalk/core';
 import { VoiceSessionController } from '../controllers/voice-session.controller.js';
-import type { SupportedLang, VoiceSettings } from '../types.js';
+import type { SupportedLang, VoiceSettings, BargeInMode } from '../types.js';
 import './widget-fab.js';
 import './widget-session.js';
 import './widget-voice-settings.js';
@@ -16,6 +16,7 @@ interface SavedSettings {
   rate: number;
   pitch: number;
   volume: number;
+  bargeIn: BargeInMode;
 }
 
 /**
@@ -202,6 +203,7 @@ export class ArionTalk extends LitElement {
       rate: 1.0,
       pitch: 1.0,
       volume: 1.0,
+      bargeIn: 'off',
     };
   }
 
@@ -228,6 +230,7 @@ export class ArionTalk extends LitElement {
     const voice = s.voiceURI
       ? this.controller.getAllVoices().find(v => v.voiceURI === s.voiceURI) ?? null
       : null;
+    this.controller.setBargeInMode(s.bargeIn);
     this.controller.applyVoiceSettings({ voice, rate: s.rate, pitch: s.pitch, volume: s.volume });
 
     this.active = true;

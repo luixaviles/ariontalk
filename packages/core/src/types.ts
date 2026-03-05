@@ -13,6 +13,8 @@ export interface VoiceSettings {
   volume: number;
 }
 
+export type BargeInMode = 'off' | 'energy';
+
 export type EngineStatus = 'idle' | 'loading' | 'listening' | 'thinking' | 'speaking' | 'error';
 
 export interface VoiceEngineState {
