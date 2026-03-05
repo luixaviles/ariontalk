@@ -12,6 +12,7 @@ const LANG_MAP: Record<SupportedLang, string> = {
 export class SpeechSynthesisService {
   private voiceCache: Map<string, SpeechSynthesisVoice> = new Map();
   private activeUtterances = new Set<SpeechSynthesisUtterance>();
+  private pendingResolves = new Set<() => void>();
   private overrides: VoiceSettings | null = null;
 
   constructor() {
@@ -50,14 +51,17 @@ export class SpeechSynthesisService {
       utterance.volume = this.overrides?.volume ?? 1.0;
 
       this.activeUtterances.add(utterance);
+      this.pendingResolves.add(resolve);
 
       utterance.onend = () => {
         this.activeUtterances.delete(utterance);
+        this.pendingResolves.delete(resolve);
         resolve();
       };
 
       utterance.onerror = (event) => {
         this.activeUtterances.delete(utterance);
+        this.pendingResolves.delete(resolve);
         if (event.error === 'canceled' || event.error === 'interrupted') {
           resolve();
         } else {
@@ -94,14 +98,17 @@ export class SpeechSynthesisService {
       utterance.volume = this.overrides?.volume ?? 1.0;
 
       this.activeUtterances.add(utterance);
+      this.pendingResolves.add(resolve);
 
       utterance.onend = () => {
         this.activeUtterances.delete(utterance);
+        this.pendingResolves.delete(resolve);
         resolve();
       };
 
       utterance.onerror = (event) => {
         this.activeUtterances.delete(utterance);
+        this.pendingResolves.delete(resolve);
         if (event.error === 'canceled' || event.error === 'interrupted') {
           resolve();
         } else {
@@ -117,8 +124,15 @@ export class SpeechSynthesisService {
   cancel(): void {
     if (window.speechSynthesis) {
       speechSynthesis.cancel();
-      this.activeUtterances.clear();
     }
+    // Resolve all pending promises — browser only fires onerror on the
+    // currently speaking utterance; queued ones are silently dropped.
+    // Double-resolve is safe (JS promises ignore subsequent resolve calls).
+    for (const resolve of this.pendingResolves) {
+      resolve();
+    }
+    this.pendingResolves.clear();
+    this.activeUtterances.clear();
   }
 
   /** Returns available voices for a given language. */

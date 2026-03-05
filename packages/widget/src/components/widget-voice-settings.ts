@@ -1,7 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { sharedStyles } from '../styles/shared-styles.js';
-import type { SupportedLang } from '../types.js';
+import type { SupportedLang, BargeInMode } from '../types.js';
 
 interface VoiceTier {
   label: string;
@@ -14,6 +14,7 @@ interface SettingsData {
   rate: number;
   pitch: number;
   volume: number;
+  bargeIn: BargeInMode;
 }
 
 /**
@@ -90,7 +91,14 @@ export class WidgetVoiceSettings extends LitElement {
         display: flex;
         border: 1px solid var(--at-border-color);
         border-radius: 8px;
-        overflow: hidden;
+      }
+
+      .lang-option:first-child {
+        border-radius: 7px 0 0 7px;
+      }
+
+      .lang-option:last-child {
+        border-radius: 0 7px 7px 0;
       }
 
       .lang-option {
@@ -148,6 +156,59 @@ export class WidgetVoiceSettings extends LitElement {
       .apply-btn:hover {
         opacity: 0.9;
       }
+
+      /* Help icon */
+      .help-label {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .help-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 1px solid var(--at-border-color);
+        color: var(--at-text-muted);
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 1;
+        cursor: help;
+        flex-shrink: 0;
+      }
+
+      /* Tooltips */
+      [data-tooltip] {
+        position: relative;
+      }
+
+      [data-tooltip]:hover::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: calc(100% + 6px);
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 6px 10px;
+        border-radius: 6px;
+        background: var(--at-text-color);
+        color: var(--at-bg-color);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.4;
+        white-space: nowrap;
+        pointer-events: none;
+        z-index: 10;
+        animation: vcw-fade-in 0.15s ease-out;
+      }
+
+      .lang-option:last-child[data-tooltip]:hover::after {
+        left: auto;
+        right: 0;
+        transform: none;
+      }
     `,
   ];
 
@@ -159,6 +220,7 @@ export class WidgetVoiceSettings extends LitElement {
   @state() private rate = 1.0;
   @state() private pitch = 1.0;
   @state() private volume = 1.0;
+  @state() private bargeIn: BargeInMode = 'off';
 
   private initialized = false;
 
@@ -176,6 +238,7 @@ export class WidgetVoiceSettings extends LitElement {
         this.rate = this.currentSettings.rate;
         this.pitch = this.currentSettings.pitch;
         this.volume = this.currentSettings.volume;
+        this.bargeIn = this.currentSettings.bargeIn ?? 'off';
       }
     }
   }
@@ -243,6 +306,23 @@ export class WidgetVoiceSettings extends LitElement {
                  @input=${this.handleVolumeChange} />
         </div>
 
+        <div class="field">
+          <label class="field-label help-label">
+            Interruption
+            <span class="help-icon"
+              data-tooltip="Controls whether you can interrupt the assistant while it speaks"
+              >?</span>
+          </label>
+          <div class="lang-selector">
+            <button class="lang-option ${this.bargeIn === 'off' ? 'active' : ''}"
+              data-tooltip="Wait for the response to finish"
+              @click=${() => { this.bargeIn = 'off'; }}>Off</button>
+            <button class="lang-option ${this.bargeIn === 'energy' ? 'active' : ''}"
+              data-tooltip="Interrupt by speaking — uses mic energy detection"
+              @click=${() => { this.bargeIn = 'energy'; }}>Energy</button>
+          </div>
+        </div>
+
         <button class="apply-btn" @click=${this.handleApply}>Apply</button>
       </div>
     `;
@@ -307,6 +387,7 @@ export class WidgetVoiceSettings extends LitElement {
         rate: this.rate,
         pitch: this.pitch,
         volume: this.volume,
+        bargeIn: this.bargeIn,
       } satisfies SettingsData,
       bubbles: true,
       composed: true,
