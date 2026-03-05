@@ -69,7 +69,7 @@ import { VoiceEngine, isVoiceChatSupported } from '@ariontalk/core';
 | `lang` | `string` | `"en"` | Language (`"en"` or `"es"`) |
 | `position` | `string` | `"bottom-right"` | Widget position on screen |
 | `theme` | `string` | `"light"` | `"light"` or `"dark"` |
-| `settings` | `boolean` | `false` | Show voice settings gear icon |
+| `settings` | `boolean` | `false` | Show settings gear icon next to FAB (pre-session) |
 | `force` | `boolean` | `false` | Skip browser support check |
 
 ### Theming

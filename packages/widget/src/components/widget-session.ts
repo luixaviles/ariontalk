@@ -1,11 +1,10 @@
 import { LitElement, html, css, nothing } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { customElement, property } from 'lit/decorators.js';
 import { sharedStyles } from '../styles/shared-styles.js';
-import './widget-voice-settings.js';
-import type { WidgetStatus, SupportedLang, VoiceSettings } from '../types.js';
+import type { WidgetStatus } from '../types.js';
 
 /**
- * Expanded session panel showing timer, status indicator, language toggle,
+ * Expanded session panel showing timer, status indicator,
  * end-call button, and interim transcript.
  */
 @customElement('vcw-session')
@@ -157,21 +156,6 @@ export class WidgetSession extends LitElement {
         gap: 16px;
       }
 
-      /* Language toggle */
-      .lang-toggle {
-        background: var(--at-surface-color);
-        color: var(--at-text-color);
-        padding: 6px 14px;
-        border-radius: 999px;
-        font-size: 13px;
-        font-weight: 600;
-        transition: background 0.15s;
-      }
-
-      .lang-toggle:hover {
-        background: var(--at-surface-hover);
-      }
-
       /* End call button */
       .end-btn {
         width: 48px;
@@ -193,48 +177,16 @@ export class WidgetSession extends LitElement {
         width: 22px;
         height: 22px;
       }
-
-      /* Gear button */
-      .gear-btn {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        background: var(--at-surface-color);
-        color: var(--at-text-color);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: background 0.15s;
-      }
-      .gear-btn:hover { background: var(--at-surface-hover); }
-      .gear-btn svg { width: 18px; height: 18px; }
     `,
   ];
 
-  @state() private showSettings = false;
-  @property({ type: Boolean }) settingsEnabled = false;
-  @property({ type: Array }) voices: SpeechSynthesisVoice[] = [];
-  @property({ type: Object }) currentVoiceSettings: VoiceSettings | null = null;
-
   @property({ type: String }) status: WidgetStatus = 'listening';
-  @property({ type: String }) lang: SupportedLang = 'en';
   @property({ type: String }) timerDisplay = '00:00';
   @property({ type: String }) interimTranscript = '';
   @property({ type: String }) error: string | null = null;
   @property({ type: Number }) downloadProgress = 0;
 
   render() {
-    if (this.settingsEnabled && this.showSettings) {
-      return html`
-        <vcw-voice-settings
-          .voices=${this.voices}
-          .currentSettings=${this.currentVoiceSettings}
-          @voice-settings-apply=${this.handleSettingsApply}
-          @voice-settings-back=${this.handleSettingsBack}
-        ></vcw-voice-settings>
-      `;
-    }
-
     return html`
       <div class="panel">
         <div class="timer" role="timer" aria-label="Session duration">${this.timerDisplay}</div>
@@ -255,24 +207,6 @@ export class WidgetSession extends LitElement {
           : nothing}
 
         <div class="controls">
-          ${this.settingsEnabled ? html`
-            <button class="gear-btn" @click=${this.handleGearClick} aria-label="Voice settings">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                   stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="3"/>
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-              </svg>
-            </button>
-          ` : nothing}
-
-          <button
-            class="lang-toggle"
-            @click=${this.handleLangToggle}
-            aria-label="Switch language"
-          >
-            ${this.lang === 'en' ? 'EN' : 'ES'}
-          </button>
-
           <button
             class="end-btn"
             @click=${this.handleEnd}
@@ -337,28 +271,6 @@ export class WidgetSession extends LitElement {
       default:
         return nothing;
     }
-  }
-
-  private handleGearClick() {
-    this.showSettings = true;
-  }
-
-  private handleSettingsBack() {
-    this.showSettings = false;
-  }
-
-  private handleSettingsApply(e: CustomEvent<VoiceSettings>) {
-    this.showSettings = false;
-    this.dispatchEvent(new CustomEvent('voice-settings-apply', {
-      detail: e.detail, bubbles: true, composed: true,
-    }));
-  }
-
-  private handleLangToggle() {
-    const newLang: SupportedLang = this.lang === 'en' ? 'es' : 'en';
-    this.dispatchEvent(
-      new CustomEvent('lang-toggle', { detail: { lang: newLang }, bubbles: true, composed: true }),
-    );
   }
 
   private handleEnd() {
