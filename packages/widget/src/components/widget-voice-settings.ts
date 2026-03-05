@@ -1,15 +1,23 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { sharedStyles } from '../styles/shared-styles.js';
-import type { VoiceSettings } from '../types.js';
+import type { SupportedLang } from '../types.js';
 
 interface VoiceTier {
   label: string;
   voices: SpeechSynthesisVoice[];
 }
 
+interface SettingsData {
+  lang: SupportedLang;
+  voiceURI: string;
+  rate: number;
+  pitch: number;
+  volume: number;
+}
+
 /**
- * Voice settings panel with voice selection dropdown and rate/pitch/volume sliders.
+ * Settings panel with language selection, voice dropdown, and rate/pitch/volume sliders.
  */
 @customElement('vcw-voice-settings')
 export class WidgetVoiceSettings extends LitElement {
@@ -78,6 +86,32 @@ export class WidgetVoiceSettings extends LitElement {
         color: var(--at-text-color);
       }
 
+      .lang-selector {
+        display: flex;
+        border: 1px solid var(--at-border-color);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .lang-option {
+        flex: 1;
+        padding: 8px 16px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--at-text-secondary);
+        background: var(--at-bg-color);
+        transition: background 0.15s, color 0.15s;
+      }
+
+      .lang-option:not(:last-child) {
+        border-right: 1px solid var(--at-border-color);
+      }
+
+      .lang-option.active {
+        background: var(--at-primary-color);
+        color: var(--at-primary-text);
+      }
+
       select {
         width: 100%;
         padding: 8px 12px;
@@ -118,8 +152,9 @@ export class WidgetVoiceSettings extends LitElement {
   ];
 
   @property({ type: Array }) voices: SpeechSynthesisVoice[] = [];
-  @property({ type: Object }) currentSettings: VoiceSettings | null = null;
+  @property({ type: Object }) currentSettings: SettingsData | null = null;
 
+  @state() private selectedLang: SupportedLang = 'en';
   @state() private selectedVoiceURI = '';
   @state() private rate = 1.0;
   @state() private pitch = 1.0;
@@ -127,11 +162,17 @@ export class WidgetVoiceSettings extends LitElement {
 
   private initialized = false;
 
+  connectedCallback() {
+    super.connectedCallback();
+    this.initialized = false;
+  }
+
   willUpdate() {
     if (!this.initialized) {
       this.initialized = true;
       if (this.currentSettings) {
-        this.selectedVoiceURI = this.currentSettings.voice?.voiceURI ?? '';
+        this.selectedLang = this.currentSettings.lang;
+        this.selectedVoiceURI = this.currentSettings.voiceURI;
         this.rate = this.currentSettings.rate;
         this.pitch = this.currentSettings.pitch;
         this.volume = this.currentSettings.volume;
@@ -152,7 +193,17 @@ export class WidgetVoiceSettings extends LitElement {
               <polyline points="12 19 5 12 12 5"/>
             </svg>
           </button>
-          <span class="header-title">Voice Settings</span>
+          <span class="header-title">Settings</span>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Language</label>
+          <div class="lang-selector">
+            <button class="lang-option ${this.selectedLang === 'en' ? 'active' : ''}"
+              @click=${() => { this.selectedLang = 'en'; }}>English</button>
+            <button class="lang-option ${this.selectedLang === 'es' ? 'active' : ''}"
+              @click=${() => { this.selectedLang = 'es'; }}>Español</button>
+          </div>
         </div>
 
         <div class="field">
@@ -243,25 +294,20 @@ export class WidgetVoiceSettings extends LitElement {
   }
 
   private handleBack() {
-    this.dispatchEvent(new CustomEvent('voice-settings-back', {
+    this.dispatchEvent(new CustomEvent('settings-back', {
       bubbles: true, composed: true,
     }));
   }
 
   private handleApply() {
-    const voice = this.selectedVoiceURI
-      ? this.voices.find(v => v.voiceURI === this.selectedVoiceURI) ?? null
-      : null;
-
-    const settings: VoiceSettings = {
-      voice,
-      rate: this.rate,
-      pitch: this.pitch,
-      volume: this.volume,
-    };
-
-    this.dispatchEvent(new CustomEvent('voice-settings-apply', {
-      detail: settings,
+    this.dispatchEvent(new CustomEvent('settings-apply', {
+      detail: {
+        lang: this.selectedLang,
+        voiceURI: this.selectedVoiceURI,
+        rate: this.rate,
+        pitch: this.pitch,
+        volume: this.volume,
+      } satisfies SettingsData,
       bubbles: true,
       composed: true,
     }));

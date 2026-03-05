@@ -6,10 +6,21 @@ import { VoiceSessionController } from '../controllers/voice-session.controller.
 import type { SupportedLang, VoiceSettings } from '../types.js';
 import './widget-fab.js';
 import './widget-session.js';
+import './widget-voice-settings.js';
+
+const STORAGE_KEY = 'ariontalk:settings';
+
+interface SavedSettings {
+  lang: SupportedLang;
+  voiceURI: string;
+  rate: number;
+  pitch: number;
+  volume: number;
+}
 
 /**
- * <ariontalk> — Root component that embeds the full voice chat experience.
- * Toggles between a FAB (idle) and session panel (active).
+ * <ariontalk-widget> — Root component that embeds the full voice chat experience.
+ * Toggles between a FAB (idle), settings panel, and session panel (active).
  */
 @customElement('ariontalk-widget')
 export class ArionTalk extends LitElement {
@@ -79,6 +90,39 @@ export class ArionTalk extends LitElement {
       .hidden {
         display: none;
       }
+
+      .fab-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .gear-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: var(--at-surface-color);
+        color: var(--at-text-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 14px var(--at-shadow-color);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .gear-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px var(--at-shadow-hover);
+      }
+
+      .gear-btn:active {
+        transform: translateY(0);
+      }
+
+      .gear-btn svg {
+        width: 20px;
+        height: 20px;
+      }
     `,
   ];
 
@@ -88,16 +132,19 @@ export class ArionTalk extends LitElement {
   @property({ type: String, reflect: true }) theme = 'light';
   /** When set, skips browser support check and always shows the widget UI. */
   @property({ type: Boolean }) force = false;
-  /** When set, shows the voice settings gear icon in the session panel. */
+  /** When set, shows a settings gear icon next to the FAB for pre-session configuration. */
   @property({ type: Boolean }) settings = false;
 
   @state() private supported = false;
   @state() private active = false;
+  @state() private showSettings = false;
 
+  private savedSettings: SavedSettings | null = null;
   private controller = new VoiceSessionController(this);
 
   connectedCallback() {
     super.connectedCallback();
+    this.loadSettings();
     this.checkSupport();
   }
 
@@ -108,23 +155,39 @@ export class ArionTalk extends LitElement {
       return html`
         <vcw-session
           .status=${this.controller.state.status}
-          .lang=${this.controller.state.currentLang}
           .timerDisplay=${this.controller.timerDisplay}
           .interimTranscript=${this.controller.state.interimTranscript}
           .error=${this.controller.state.error}
           .downloadProgress=${this.controller.state.downloadProgress}
-          .settingsEnabled=${this.settings}
-          .voices=${this.controller.getAllVoices()}
-          .currentVoiceSettings=${this.controller.getVoiceOverrides()}
-          @lang-toggle=${this.handleLangToggle}
           @session-end=${this.handleEnd}
-          @voice-settings-apply=${this.handleVoiceSettingsApply}
         ></vcw-session>
       `;
     }
 
+    if (this.showSettings) {
+      return html`
+        <vcw-voice-settings
+          .voices=${this.controller.getAllVoices()}
+          .currentSettings=${this.currentSettings}
+          @settings-apply=${this.handleSettingsApply}
+          @settings-back=${this.handleSettingsBack}
+        ></vcw-voice-settings>
+      `;
+    }
+
     return html`
-      <vcw-fab @fab-click=${this.handleFabClick}></vcw-fab>
+      <div class="fab-row">
+        <vcw-fab @fab-click=${this.handleFabClick}></vcw-fab>
+        ${this.settings ? html`
+          <button class="gear-btn" @click=${this.handleGearClick} aria-label="Settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+          </button>
+        ` : nothing}
+      </div>
     `;
   }
 
@@ -132,7 +195,41 @@ export class ArionTalk extends LitElement {
     this.supported = this.force || await isVoiceChatSupported();
   }
 
+  private get currentSettings(): SavedSettings {
+    return this.savedSettings ?? {
+      lang: this.lang,
+      voiceURI: '',
+      rate: 1.0,
+      pitch: 1.0,
+      volume: 1.0,
+    };
+  }
+
+  private loadSettings() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const stored: SavedSettings = JSON.parse(raw);
+      if (stored.lang) this.lang = stored.lang;
+      this.savedSettings = stored;
+    } catch { /* ignore corrupt data */ }
+  }
+
+  private saveSettings(settings: SavedSettings) {
+    this.savedSettings = settings;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    } catch { /* storage full */ }
+  }
+
   private async handleFabClick() {
+    // Apply saved voice settings before starting
+    const s = this.currentSettings;
+    const voice = s.voiceURI
+      ? this.controller.getAllVoices().find(v => v.voiceURI === s.voiceURI) ?? null
+      : null;
+    this.controller.applyVoiceSettings({ voice, rate: s.rate, pitch: s.pitch, volume: s.volume });
+
     this.active = true;
     this.dispatchEvent(
       new CustomEvent('at-session-start', {
@@ -144,12 +241,18 @@ export class ArionTalk extends LitElement {
     await this.controller.startSession(this.lang);
   }
 
-  private handleLangToggle(e: CustomEvent<{ lang: SupportedLang }>) {
-    this.controller.switchLanguage(e.detail.lang);
+  private handleGearClick() {
+    this.showSettings = true;
   }
 
-  private handleVoiceSettingsApply(e: CustomEvent<VoiceSettings>) {
-    this.controller.applyVoiceSettings(e.detail);
+  private handleSettingsApply(e: CustomEvent<SavedSettings>) {
+    this.saveSettings(e.detail);
+    this.lang = e.detail.lang;
+    this.showSettings = false;
+  }
+
+  private handleSettingsBack() {
+    this.showSettings = false;
   }
 
   private handleEnd() {
