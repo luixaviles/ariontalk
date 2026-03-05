@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Future of Web Components - ArionTalk Demo</title>
+  <meta name="description" content="An article about the future of Web Components for testing ArionTalk" />
+  <link rel="stylesheet" href="./styles/shared.css" />
+</head>
+<body>
+  <header class="toolbar">
+    <div class="toolbar-brand"><a href="./index.html" style="color:inherit;text-decoration:none">ArionTalk</a><span>Demo</span></div>
+    <div class="toolbar-controls">
+      <span class="toolbar-label">Theme</span>
+      <div class="segmented">
+        <button id="btn-light" class="active" onclick="setTheme('light')">Light</button>
+        <button id="btn-dark" onclick="setTheme('dark')">Dark</button>
+      </div>
+      <button id="btn-brand" class="toggle-btn" onclick="toggleBrand()">Brand</button>
+    </div>
+  </header>
+
+  <main>
+    <h1>The Future of Web Components</h1>
+    <p class="byline">Published on January 15, 2026 by Jane Smith</p>
+
+    <article>
+      <h2>Introduction</h2>
+      <p>
+        Web Components have evolved significantly since their introduction. With the rise of
+        frameworks like Lit, building reusable, encapsulated UI components has never been easier.
+        This article explores the current state of Web Components and what the future holds.
+      </p>
+
+      <img
+        src="https://picsum.photos/seed/webcomp/600/300"
+        alt="A futuristic web interface showing interconnected components"
+        crossorigin="anonymous"
+      />
+
+      <h2>Shadow DOM and Encapsulation</h2>
+      <p>
+        Shadow DOM provides true style encapsulation, meaning your component's styles won't leak
+        out to the host page, and the host page's styles won't affect your component. This is
+        crucial for building widgets that work reliably across different websites.
+      </p>
+
+      <h2>Custom Elements v2</h2>
+      <p>
+        The Custom Elements API allows developers to define new HTML tags with their own behavior.
+        Combined with Shadow DOM and HTML Templates, they form the foundation of the Web
+        Components specification. All modern browsers now support these APIs natively.
+      </p>
+
+      <img
+        src="https://picsum.photos/seed/browser/600/300"
+        alt="Browser compatibility chart showing green checkmarks for all major browsers"
+        crossorigin="anonymous"
+      />
+
+      <h2>Performance Considerations</h2>
+      <p>
+        Web Components are lightweight by nature. Unlike heavy framework components, they leverage
+        native browser APIs, resulting in smaller bundle sizes and faster load times. A typical
+        Lit component adds only about 5KB (gzipped) to your bundle.
+      </p>
+
+      <div class="note">
+        <strong>Note:</strong> This is a demo page for testing ArionTalk.
+        Try clicking the microphone button in the bottom-right corner to start a voice
+        conversation about this page's content. Use the toolbar above to switch
+        between light and dark themes, or toggle the brand override.
+      </div>
+
+      <h2>Conclusion</h2>
+      <p>
+        Web Components represent the future of reusable UI on the web. With growing framework
+        support, improved tooling, and native browser adoption, they're becoming the standard
+        way to build interoperable components that work everywhere.
+      </p>
+    </article>
+  </main>
+
+  <ariontalk-widget id="widget" lang="en" force settings></ariontalk-widget>
+  <script type="module">
+    import '@ariontalk/widget';
+    import { initToolbar } from './scripts/toolbar.js';
+    initToolbar();
+  </script>
+</body>
+</html>

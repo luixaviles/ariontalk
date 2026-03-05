@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>El Futuro de los Web Components - ArionTalk Demo</title>
+  <meta name="description" content="Un artículo sobre el futuro de los Web Components para probar ArionTalk" />
+  <link rel="stylesheet" href="./styles/shared.css" />
+</head>
+<body>
+  <header class="toolbar">
+    <div class="toolbar-brand"><a href="./index.html" style="color:inherit;text-decoration:none">ArionTalk</a><span>Demo</span></div>
+    <div class="toolbar-controls">
+      <span class="toolbar-label">Tema</span>
+      <div class="segmented">
+        <button id="btn-light" class="active" onclick="setTheme('light')">Claro</button>
+        <button id="btn-dark" onclick="setTheme('dark')">Oscuro</button>
+      </div>
+      <button id="btn-brand" class="toggle-btn" onclick="toggleBrand()">Marca</button>
+    </div>
+  </header>
+
+  <main>
+    <h1>El Futuro de los Web Components</h1>
+    <p class="byline">Publicado el 15 de enero de 2026 por María García</p>
+
+    <article>
+      <h2>Introducción</h2>
+      <p>
+        Los Web Components han evolucionado significativamente desde su introducción. Con el
+        surgimiento de frameworks como Lit, construir componentes de interfaz reutilizables y
+        encapsulados nunca ha sido tan fácil. Este artículo explora el estado actual de los
+        Web Components y lo que el futuro nos depara.
+      </p>
+
+      <img
+        src="https://picsum.photos/seed/webcomp-es/600/300"
+        alt="Una interfaz web futurista mostrando componentes interconectados"
+        crossorigin="anonymous"
+      />
+
+      <h2>Shadow DOM y Encapsulamiento</h2>
+      <p>
+        El Shadow DOM proporciona un verdadero encapsulamiento de estilos, lo que significa que
+        los estilos de tu componente no se filtrarán hacia la página principal, y los estilos
+        de la página principal no afectarán a tu componente. Esto es crucial para construir
+        widgets que funcionen de manera confiable en diferentes sitios web.
+      </p>
+
+      <h2>Custom Elements v2</h2>
+      <p>
+        La API de Custom Elements permite a los desarrolladores definir nuevas etiquetas HTML
+        con su propio comportamiento. Combinados con Shadow DOM y HTML Templates, forman la
+        base de la especificación de Web Components. Todos los navegadores modernos ahora
+        soportan estas APIs de forma nativa.
+      </p>
+
+      <img
+        src="https://picsum.photos/seed/browser-es/600/300"
+        alt="Tabla de compatibilidad de navegadores mostrando marcas verdes para todos los navegadores principales"
+        crossorigin="anonymous"
+      />
+
+      <h2>Consideraciones de Rendimiento</h2>
+      <p>
+        Los Web Components son ligeros por naturaleza. A diferencia de los componentes de
+        frameworks pesados, aprovechan las APIs nativas del navegador, resultando en paquetes
+        más pequeños y tiempos de carga más rápidos. Un componente típico de Lit agrega solo
+        aproximadamente 5KB (comprimido con gzip) a tu paquete.
+      </p>
+
+      <div class="note">
+        <strong>Nota:</strong> Esta es una página de demostración para probar ArionTalk.
+        Intenta hacer clic en el botón del micrófono en la esquina inferior derecha para
+        iniciar una conversación por voz sobre el contenido de esta página. Usa la barra
+        de herramientas de arriba para cambiar entre temas claro y oscuro, o activar la
+        personalización de marca.
+      </div>
+
+      <h2>Conclusión</h2>
+      <p>
+        Los Web Components representan el futuro de la interfaz reutilizable en la web. Con
+        un creciente soporte de frameworks, herramientas mejoradas y adopción nativa por parte
+        de los navegadores, se están convirtiendo en la forma estándar de construir componentes
+        interoperables que funcionan en todas partes.
+      </p>
+    </article>
+  </main>
+
+  <ariontalk-widget id="widget" lang="es" force settings></ariontalk-widget>
+  <script type="module">
+    import '@ariontalk/widget';
+    import { initToolbar } from './scripts/toolbar.js';
+    initToolbar();
+  </script>
+</body>
+</html>
