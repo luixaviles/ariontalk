@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Entendiendo la IA y los Modelos de Lenguaje - ArionTalk Demo</title>
+  <meta name="description" content="Un artículo sobre Inteligencia Artificial y Modelos de Lenguaje Grande para probar ArionTalk" />
+  <link rel="stylesheet" href="./styles/shared.css" />
+</head>
+<body>
+  <header class="toolbar">
+    <div class="toolbar-brand"><a href="./index.html" style="color:inherit;text-decoration:none">ArionTalk</a><span>Demo</span></div>
+    <div class="toolbar-controls">
+      <span class="toolbar-label">Tema</span>
+      <div class="segmented">
+        <button id="btn-light" class="active" onclick="setTheme('light')">Claro</button>
+        <button id="btn-dark" onclick="setTheme('dark')">Oscuro</button>
+      </div>
+      <button id="btn-brand" class="toggle-btn" onclick="toggleBrand()">Marca</button>
+    </div>
+  </header>
+
+  <main>
+    <h1>Entendiendo la IA y los Modelos de Lenguaje Grande</h1>
+    <p class="byline">Publicado el 20 de febrero de 2026 por Alex Chen</p>
+
+    <article>
+      <h2>¿Qué es la Inteligencia Artificial?</h2>
+      <p>
+        La Inteligencia Artificial se refiere a sistemas diseñados para realizar tareas que
+        normalmente requieren inteligencia humana. Estas tareas incluyen comprender el lenguaje
+        natural, reconocer patrones, tomar decisiones y generar contenido creativo. Aunque la
+        investigación en IA se remonta a la década de 1950, los avances recientes en aprendizaje
+        profundo han acelerado el progreso a un ritmo sin precedentes.
+      </p>
+
+      <img
+        src="https://picsum.photos/seed/ai-neural-es/600/300"
+        alt="Visualización abstracta de una red neuronal con nodos y capas interconectados"
+        crossorigin="anonymous"
+      />
+
+      <h2>El Auge de los Modelos de Lenguaje Grande</h2>
+      <p>
+        Los Modelos de Lenguaje Grande (LLMs, por sus siglas en inglés) son una clase de sistemas
+        de IA entrenados con enormes cantidades de datos textuales. Al aprender patrones estadísticos
+        a través de miles de millones de palabras, estos modelos desarrollan una notable capacidad
+        para generar texto coherente, responder preguntas, traducir idiomas e incluso escribir
+        código. Modelos como GPT, Claude, Gemini y LLaMA han demostrado capacidades que se
+        consideraban ciencia ficción hace apenas una década.
+      </p>
+      <p>
+        Lo "grande" en LLM se refiere tanto al tamaño de los datos de entrenamiento como al número
+        de parámetros del modelo. Los LLMs modernos pueden tener cientos de miles de millones de
+        parámetros, cada uno un pequeño peso numérico que el modelo ajusta durante el entrenamiento
+        para predecir mejor la siguiente palabra en una secuencia.
+      </p>
+
+      <h2>¿Cómo Funcionan los LLMs?</h2>
+      <p>
+        En su núcleo, los LLMs utilizan una arquitectura de red neuronal llamada Transformer,
+        introducida en 2017. Los Transformers emplean un mecanismo llamado "atención" que permite
+        al modelo ponderar la importancia de diferentes palabras en una oración en relación entre
+        sí. Esto le permite al modelo comprender el contexto a lo largo de pasajes extensos de
+        texto.
+      </p>
+      <p>
+        Entrenar un LLM implica dos fases principales. Primero, el pre-entrenamiento expone al
+        modelo a enormes conjuntos de datos textuales, enseñándole gramática, hechos y patrones de
+        razonamiento. Luego, el ajuste fino alinea el modelo con las preferencias humanas mediante
+        técnicas como el Aprendizaje por Refuerzo con Retroalimentación Humana (RLHF), haciéndolo
+        más útil y seguro de usar.
+      </p>
+
+      <img
+        src="https://picsum.photos/seed/transformer-es/600/300"
+        alt="Diagrama mostrando la arquitectura transformer con capas de atención"
+        crossorigin="anonymous"
+      />
+
+      <h2>IA en el Dispositivo</h2>
+      <p>
+        Una tendencia creciente en la IA es ejecutar modelos directamente en los dispositivos de
+        los usuarios en lugar de en la nube. Modelos más pequeños y optimizados como Gemini Nano
+        pueden ejecutarse completamente en el navegador o en un teléfono inteligente, habilitando
+        funciones de IA sin enviar datos a servidores externos. Este enfoque ofrece ventajas
+        significativas en privacidad, latencia y disponibilidad sin conexión.
+      </p>
+      <p>
+        APIs del navegador como la Prompt API llevan la IA en el dispositivo a la plataforma web,
+        permitiendo a los desarrolladores crear funciones inteligentes que funcionan sin claves de
+        API ni infraestructura de backend. Este es el enfoque que ArionTalk utiliza para potenciar
+        sus conversaciones por voz completamente en el dispositivo.
+      </p>
+
+      <h2>Desafíos y Limitaciones</h2>
+      <p>
+        A pesar de sus impresionantes capacidades, los LLMs enfrentan varios desafíos. Pueden
+        generar información que suena plausible pero es incorrecta, un fenómeno conocido como
+        "alucinación". También tienen fechas de corte de conocimiento, lo que significa que carecen
+        de información sobre eventos recientes. El sesgo en los datos de entrenamiento puede llevar
+        a resultados sesgados, y el costo computacional de entrenar modelos grandes plantea
+        preocupaciones ambientales.
+      </p>
+      <p>
+        Los investigadores están trabajando activamente en soluciones: la generación aumentada por
+        recuperación (RAG) ayuda a fundamentar las respuestas en fuentes factuales, los métodos de
+        IA constitucional reducen los resultados dañinos, y la destilación de modelos crea versiones
+        más pequeñas y eficientes de modelos grandes sin una pérdida significativa de calidad.
+      </p>
+
+      <div class="note">
+        <strong>Nota:</strong> Esta es una página de demostración para probar ArionTalk.
+        Intenta hacer clic en el botón del micrófono en la esquina inferior derecha para iniciar
+        una conversación por voz sobre el contenido de esta página. Pregunta sobre los LLMs, los
+        transformers, la IA en el dispositivo o cualquier otro tema cubierto en este artículo.
+      </div>
+
+      <h2>El Futuro de la IA</h2>
+      <p>
+        El campo de la IA está evolucionando rápidamente. Los modelos multimodales que comprenden
+        texto, imágenes, audio y video de forma conjunta se están volviendo habituales. Están
+        surgiendo agentes de IA que pueden usar herramientas, navegar por la web y completar tareas
+        complejas de forma autónoma. Y el impulso hacia modelos más pequeños y eficientes promete
+        democratizar el acceso a las capacidades de IA en todos los dispositivos y plataformas.
+      </p>
+    </article>
+  </main>
+
+  <ariontalk-widget id="widget" lang="es" force settings></ariontalk-widget>
+  <script type="module">
+    import '@ariontalk/widget';
+    import { initToolbar } from './scripts/toolbar.js';
+    initToolbar();
+  </script>
+</body>
+</html>

@@ -4,6 +4,7 @@
   "scripts": {
     "build": "pnpm -r build",
     "dev": "pnpm --filter @ariontalk/widget dev",
+    "demo": "pnpm --filter @ariontalk/demo dev",
     "test": "pnpm -r test"
   },
   "devDependencies": {

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ArionTalk - Demo</title>
+  <link rel="stylesheet" href="./styles/shared.css" />
+  <style>
+    .demo-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 2rem;
+    }
+    .demo-card {
+      display: block;
+      padding: 1.5rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      text-decoration: none;
+      color: inherit;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .demo-card:hover {
+      border-color: #111827;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+    body.dark .demo-card {
+      border-color: #3f3f46;
+    }
+    body.dark .demo-card:hover {
+      border-color: #fafafa;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+    .demo-card h2 {
+      margin-top: 0;
+      margin-bottom: 0.25rem;
+    }
+    .demo-card p {
+      margin-bottom: 0;
+      color: #6b7280;
+      font-size: 14px;
+    }
+    body.dark .demo-card p {
+      color: #a1a1aa;
+    }
+  </style>
+</head>
+<body>
+  <header class="toolbar">
+    <div class="toolbar-brand">ArionTalk<span>Demo</span></div>
+  </header>
+
+  <main>
+    <h1>Demo Articles</h1>
+    <p class="byline">Select an article to test the ArionTalk voice widget</p>
+
+    <nav class="demo-nav">
+      <a href="./en.html" class="demo-card">
+        <h2>English — Web Components</h2>
+        <p>The Future of Web Components — an article about Shadow DOM, Custom Elements, and the evolving web platform.</p>
+      </a>
+      <a href="./en-ai.html" class="demo-card">
+        <h2>English — AI &amp; LLMs</h2>
+        <p>Understanding AI and Large Language Models — an article covering transformers, on-device AI, and the future of the field.</p>
+      </a>
+      <a href="./es.html" class="demo-card">
+        <h2>Spanish — Web Components</h2>
+        <p>El Futuro de los Web Components — un artículo en español sobre Shadow DOM, Custom Elements y la plataforma web.</p>
+      </a>
+      <a href="./es-ai.html" class="demo-card">
+        <h2>Spanish — IA &amp; LLMs</h2>
+        <p>Entendiendo la IA y los Modelos de Lenguaje Grande — el artículo sobre inteligencia artificial en español.</p>
+      </a>
+    </nav>
+  </main>
+</body>
+</html>

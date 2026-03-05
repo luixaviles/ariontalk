@@ -12,6 +12,19 @@ importers:
         specifier: ^2.27.0
         version: 2.30.0
 
+  demo:
+    dependencies:
+      '@ariontalk/widget':
+        specifier: workspace:*
+        version: link:../packages/widget
+      lit:
+        specifier: ^3.2.0
+        version: 3.3.2
+    devDependencies:
+      vite:
+        specifier: ^6.0.0
+        version: 6.4.1
+
   packages/core:
     devDependencies:
       tsdown:

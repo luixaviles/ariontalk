@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Understanding AI and Large Language Models - ArionTalk Demo</title>
+  <meta name="description" content="An article about Artificial Intelligence and Large Language Models for testing ArionTalk" />
+  <link rel="stylesheet" href="./styles/shared.css" />
+</head>
+<body>
+  <header class="toolbar">
+    <div class="toolbar-brand"><a href="./index.html" style="color:inherit;text-decoration:none">ArionTalk</a><span>Demo</span></div>
+    <div class="toolbar-controls">
+      <span class="toolbar-label">Theme</span>
+      <div class="segmented">
+        <button id="btn-light" class="active" onclick="setTheme('light')">Light</button>
+        <button id="btn-dark" onclick="setTheme('dark')">Dark</button>
+      </div>
+      <button id="btn-brand" class="toggle-btn" onclick="toggleBrand()">Brand</button>
+    </div>
+  </header>
+
+  <main>
+    <h1>Understanding AI and Large Language Models</h1>
+    <p class="byline">Published on February 20, 2026 by Alex Chen</p>
+
+    <article>
+      <h2>What is Artificial Intelligence?</h2>
+      <p>
+        Artificial Intelligence refers to systems designed to perform tasks that typically require
+        human intelligence. These tasks include understanding natural language, recognizing patterns,
+        making decisions, and generating creative content. While AI research dates back to the 1950s,
+        recent breakthroughs in deep learning have accelerated progress at an unprecedented pace.
+      </p>
+
+      <img
+        src="https://picsum.photos/seed/ai-neural/600/300"
+        alt="Abstract visualization of a neural network with interconnected nodes and layers"
+        crossorigin="anonymous"
+      />
+
+      <h2>The Rise of Large Language Models</h2>
+      <p>
+        Large Language Models (LLMs) are a class of AI systems trained on vast amounts of text data.
+        By learning statistical patterns across billions of words, these models develop a remarkable
+        ability to generate coherent text, answer questions, translate languages, and even write code.
+        Models like GPT, Claude, Gemini, and LLaMA have demonstrated capabilities that were
+        considered science fiction just a decade ago.
+      </p>
+      <p>
+        The "large" in LLM refers to both the size of the training data and the number of parameters
+        in the model. Modern LLMs can have hundreds of billions of parameters, each one a tiny
+        numerical weight that the model adjusts during training to better predict the next word in a
+        sequence.
+      </p>
+
+      <h2>How LLMs Work</h2>
+      <p>
+        At their core, LLMs use a neural network architecture called the Transformer, introduced in
+        2017. Transformers use a mechanism called "attention" that allows the model to weigh the
+        importance of different words in a sentence relative to each other. This lets the model
+        understand context over long passages of text.
+      </p>
+      <p>
+        Training an LLM involves two main phases. First, pre-training exposes the model to enormous
+        text datasets, teaching it grammar, facts, and reasoning patterns. Then, fine-tuning aligns
+        the model with human preferences through techniques like Reinforcement Learning from Human
+        Feedback (RLHF), making it more helpful and safer to use.
+      </p>
+
+      <img
+        src="https://picsum.photos/seed/transformer/600/300"
+        alt="Diagram showing the transformer architecture with attention layers"
+        crossorigin="anonymous"
+      />
+
+      <h2>On-Device AI</h2>
+      <p>
+        A growing trend in AI is running models directly on user devices rather than in the cloud.
+        Smaller, optimized models like Gemini Nano can run entirely in the browser or on a smartphone,
+        enabling AI features without sending data to external servers. This approach offers significant
+        advantages for privacy, latency, and offline availability.
+      </p>
+      <p>
+        Browser APIs like the Prompt API bring on-device AI to the web platform, allowing developers
+        to build intelligent features that work without API keys or backend infrastructure. This is
+        the approach that ArionTalk uses to power its voice conversations entirely on-device.
+      </p>
+
+      <h2>Challenges and Limitations</h2>
+      <p>
+        Despite their impressive capabilities, LLMs face several challenges. They can generate
+        plausible-sounding but incorrect information, a phenomenon known as "hallucination." They
+        also have knowledge cutoff dates, meaning they lack information about recent events. Bias in
+        training data can lead to biased outputs, and the computational cost of training large models
+        raises environmental concerns.
+      </p>
+      <p>
+        Researchers are actively working on solutions: retrieval-augmented generation (RAG) helps
+        ground responses in factual sources, constitutional AI methods reduce harmful outputs, and
+        model distillation creates smaller, more efficient versions of large models without
+        significant quality loss.
+      </p>
+
+      <div class="note">
+        <strong>Note:</strong> This is a demo page for testing ArionTalk.
+        Try clicking the microphone button in the bottom-right corner to start a voice
+        conversation about this page's content. Ask about LLMs, transformers, on-device AI,
+        or anything else covered in this article.
+      </div>
+
+      <h2>The Future of AI</h2>
+      <p>
+        The field of AI is evolving rapidly. Multimodal models that understand text, images, audio,
+        and video together are becoming mainstream. AI agents that can use tools, browse the web, and
+        complete complex tasks autonomously are emerging. And the push toward smaller, more efficient
+        models promises to democratize access to AI capabilities across devices and platforms.
+      </p>
+    </article>
+  </main>
+
+  <ariontalk-widget id="widget" lang="en" force settings></ariontalk-widget>
+  <script type="module">
+    import '@ariontalk/widget';
+    import { initToolbar } from './scripts/toolbar.js';
+    initToolbar();
+  </script>
+</body>
+</html>
