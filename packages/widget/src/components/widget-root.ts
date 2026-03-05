@@ -1,7 +1,7 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { sharedStyles } from '../styles/shared-styles.js';
-import { isVoiceChatSupported } from '../utils/browser-support.js';
+import { isVoiceChatSupported } from '@ariontalk/core';
 import { VoiceSessionController } from '../controllers/voice-session.controller.js';
 import type { SupportedLang, VoiceSettings } from '../types.js';
 import './widget-fab.js';
@@ -11,7 +11,7 @@ import './widget-session.js';
  * <ariontalk> — Root component that embeds the full voice chat experience.
  * Toggles between a FAB (idle) and session panel (active).
  */
-@customElement('voicezero-ariontalk')
+@customElement('ariontalk-widget')
 export class ArionTalk extends LitElement {
   static styles = [
     sharedStyles,
@@ -168,6 +168,6 @@ export class ArionTalk extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'voicezero-ariontalk': ArionTalk;
+    'ariontalk-widget': ArionTalk;
   }
 }

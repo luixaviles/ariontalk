@@ -2,3 +2,4 @@ notes/
 node_modules/
 dist/
 *.tsbuildinfo
+.pnpm-store/

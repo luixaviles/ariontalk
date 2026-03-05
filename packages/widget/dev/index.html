@@ -213,7 +213,7 @@
     }
 
     /* ── Custom brand theme overrides ── */
-    voicezero-ariontalk.brand-theme {
+    ariontalk-widget.brand-theme {
       --at-primary-color: #7C3AED;
       --at-primary-text: #FFFFFF;
       --at-success-color: #8B5CF6;
@@ -294,8 +294,8 @@
     </article>
   </main>
 
-  <voicezero-ariontalk id="widget" lang="en" force settings></voicezero-ariontalk>
-  <script type="module" src="/src/ariontalk.ts"></script>
+  <ariontalk-widget id="widget" lang="en" force settings></ariontalk-widget>
+  <script type="module" src="/src/index.ts"></script>
   <script>
     function setTheme(theme) {
       const widget = document.getElementById('widget');

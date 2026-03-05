@@ -1,30 +1,19 @@
-import type { ReactiveController, ReactiveControllerHost } from 'lit';
-import type { VoiceSessionState, SupportedLang, VoiceSettings } from '../types.js';
 import { PageExtractorService } from '../services/page-extractor.js';
 import { SpeechRecognitionService } from '../services/speech-recognition.js';
 import { SpeechSynthesisService } from '../services/speech-synthesis.js';
 import { AISessionService } from '../services/ai-session.js';
 import { SessionTimer } from '../utils/timer.js';
+import type { VoiceEngineState, SupportedLang, VoiceSettings } from '../types.js';
 
-/**
- * Lit ReactiveController that orchestrates the full voice conversation loop:
- * page extraction → AI session → speech recognition ↔ AI ↔ speech synthesis
- */
-export class VoiceSessionController implements ReactiveController {
-  private host: ReactiveControllerHost;
-
-  // Services
+export class VoiceEngine {
   private pageExtractor = new PageExtractorService();
   private recognition = new SpeechRecognitionService();
   private synthesis = new SpeechSynthesisService();
   private ai = new AISessionService();
   private timer: SessionTimer;
-
-  // Whether a session is active (controls auto-restart / error recovery behavior)
   private sessionActive = false;
 
-  // State
-  state: VoiceSessionState = {
+  state: VoiceEngineState = {
     status: 'idle',
     currentLang: 'en',
     elapsedSeconds: 0,
@@ -33,24 +22,18 @@ export class VoiceSessionController implements ReactiveController {
     downloadProgress: 0,
   };
 
-  get timerDisplay(): string {
-    return this.timer.formatted;
-  }
+  /** Callback for state change notifications. */
+  onStateChange: ((state: VoiceEngineState) => void) | null = null;
 
-  constructor(host: ReactiveControllerHost) {
-    this.host = host;
-    host.addController(this);
-
+  constructor() {
     this.timer = new SessionTimer((seconds) => {
       this.state = { ...this.state, elapsedSeconds: seconds };
-      this.host.requestUpdate();
+      this.notifyStateChange();
     });
 
-    // Wire recognition callbacks
     this.recognition.onInterimResult = (text) => {
-      // console.log('[ariontalk] interim:', text);
       this.state = { ...this.state, interimTranscript: text };
-      this.host.requestUpdate();
+      this.notifyStateChange();
     };
 
     this.recognition.onFinalResult = (text) => {
@@ -63,9 +46,12 @@ export class VoiceSessionController implements ReactiveController {
     };
   }
 
-  hostConnected() {}
-  hostDisconnected() {
-    this.endSession();
+  get timerDisplay(): string {
+    return this.timer.formatted;
+  }
+
+  private notifyStateChange(): void {
+    this.onStateChange?.(this.state);
   }
 
   /** Start a new voice session: extract page → init AI → start listening. */
@@ -80,7 +66,7 @@ export class VoiceSessionController implements ReactiveController {
       error: null,
       downloadProgress: 0,
     };
-    this.host.requestUpdate();
+    this.notifyStateChange();
 
     // Start listening + timer immediately (don't block on AI init)
     try {
@@ -100,7 +86,7 @@ export class VoiceSessionController implements ReactiveController {
 
       if (needsDownload) {
         this.state = { ...this.state, status: 'loading' };
-        this.host.requestUpdate();
+        this.notifyStateChange();
       }
 
       const onProgress = needsDownload
@@ -109,7 +95,7 @@ export class VoiceSessionController implements ReactiveController {
               ...this.state,
               downloadProgress: loaded >= 1 ? -1 : loaded,
             };
-            this.host.requestUpdate();
+            this.notifyStateChange();
           }
         : undefined;
 
@@ -117,7 +103,7 @@ export class VoiceSessionController implements ReactiveController {
 
       if (this.state.status === 'loading' && this.sessionActive) {
         this.state = { ...this.state, status: 'listening', downloadProgress: 0 };
-        this.host.requestUpdate();
+        this.notifyStateChange();
       }
     } catch (err) {
       console.warn('[ariontalk] AI unavailable:', err);
@@ -141,7 +127,7 @@ export class VoiceSessionController implements ReactiveController {
       error: null,
       downloadProgress: 0,
     };
-    this.host.requestUpdate();
+    this.notifyStateChange();
   }
 
   applyVoiceSettings(settings: VoiceSettings): void {
@@ -159,7 +145,7 @@ export class VoiceSessionController implements ReactiveController {
   /** Switch recognition + synthesis + AI language mid-session. */
   switchLanguage(lang: SupportedLang): void {
     this.state = { ...this.state, currentLang: lang };
-    this.host.requestUpdate();
+    this.notifyStateChange();
 
     this.recognition.setLanguage(lang);
 
@@ -188,7 +174,7 @@ export class VoiceSessionController implements ReactiveController {
       status: 'thinking',
       interimTranscript: '',
     };
-    this.host.requestUpdate();
+    this.notifyStateChange();
 
     // Clear any prior speech before streaming new response
     this.synthesis.cancel();
@@ -215,7 +201,7 @@ export class VoiceSessionController implements ReactiveController {
           if (!firstSentenceEnqueued) {
             firstSentenceEnqueued = true;
             this.state = { ...this.state, status: 'speaking' };
-            this.host.requestUpdate();
+            this.notifyStateChange();
           }
 
           speechQueue.push(this.synthesis.enqueue(clean, lang));
@@ -229,7 +215,7 @@ export class VoiceSessionController implements ReactiveController {
 
         if (!firstSentenceEnqueued) {
           this.state = { ...this.state, status: 'speaking' };
-          this.host.requestUpdate();
+          this.notifyStateChange();
         }
 
         speechQueue.push(this.synthesis.enqueue(remainingText, lang));
@@ -282,7 +268,7 @@ export class VoiceSessionController implements ReactiveController {
 
   private resumeListening(): void {
     this.state = { ...this.state, status: 'listening' };
-    this.host.requestUpdate();
+    this.notifyStateChange();
     this.recognition.resume();
   }
 
@@ -298,13 +284,13 @@ export class VoiceSessionController implements ReactiveController {
 
   private setError(message: string): void {
     this.state = { ...this.state, status: 'error', error: message };
-    this.host.requestUpdate();
+    this.notifyStateChange();
 
     // Auto-dismiss error after 3 seconds, but only resume listening if session is active
     setTimeout(() => {
       if (this.state.status === 'error' && this.sessionActive) {
         this.state = { ...this.state, status: 'listening', error: null };
-        this.host.requestUpdate();
+        this.notifyStateChange();
 
         // Restart recognition in case it died from a fatal error
         try {
@@ -317,7 +303,7 @@ export class VoiceSessionController implements ReactiveController {
 
   /** Clean up AI output for speech synthesis: strip markdown, emojis, truncate. */
   private sanitizeForSpeech(text: string): string {
-    let clean = text
+    const clean = text
       // Remove emojis
       .replace(/\p{Extended_Pictographic}/gu, '')
       // Remove markdown bold/italic
@@ -332,9 +318,11 @@ export class VoiceSessionController implements ReactiveController {
       .replace(/\s{2,}/g, ' ')
       .trim();
 
-    // Remove trailing filler questions like "Let me know if..." / "Does that help?"
-    // clean = clean.replace(/\s*(Let me know|Does that|Is there anything|Do you want|Would you like|Feel free)[^.!?]*[.!?]?\s*$/i, '');
-
     return clean;
+  }
+
+  /** Clean up all resources. Call when the engine is no longer needed. */
+  destroy(): void {
+    this.endSession();
   }
 }

@@ -14,31 +14,50 @@ ArionTalk combines three Chrome built-in APIs into a seamless voice conversation
 
 The widget automatically extracts your page content (text + images) so the AI can answer questions about what the visitor is looking at.
 
+## Packages
+
+| Package | Description |
+|---------|-------------|
+| [`@ariontalk/core`](./packages/core) | Headless voice engine — services, types, and session logic with no UI dependency |
+| [`@ariontalk/widget`](./packages/widget) | Drop-in Web Component that wraps `@ariontalk/core` with a ready-made UI |
+
 ## Quick Start
 
 ### CDN (simplest)
 
 ```html
-<voicezero-ariontalk lang="en"></voicezero-ariontalk>
+<ariontalk-widget lang="en"></ariontalk-widget>
 <script
   type="module"
-  src="https://cdn.jsdelivr.net/npm/ariontalk@latest/dist/ariontalk.js"
+  src="https://cdn.jsdelivr.net/npm/@ariontalk/widget@latest/dist/ariontalk.js"
   async
 ></script>
 ```
 
-### npm
+### npm / pnpm
 
 ```bash
-npm install ariontalk
+pnpm add @ariontalk/widget
 ```
 
 ```javascript
-import 'ariontalk';
+import '@ariontalk/widget';
 ```
 
 ```html
-<voicezero-ariontalk lang="en"></voicezero-ariontalk>
+<ariontalk-widget lang="en"></ariontalk-widget>
+```
+
+### Headless (core only)
+
+Use `@ariontalk/core` if you want the voice engine without the widget UI:
+
+```bash
+pnpm add @ariontalk/core
+```
+
+```javascript
+import { VoiceEngine, isVoiceChatSupported } from '@ariontalk/core';
 ```
 
 ## Configuration
@@ -60,7 +79,7 @@ ArionTalk ships with light (default) and dark themes using a neutral gray/black/
 #### Dark Theme
 
 ```html
-<voicezero-ariontalk theme="dark"></voicezero-ariontalk>
+<ariontalk-widget theme="dark"></ariontalk-widget>
 ```
 
 #### CSS Custom Properties
@@ -93,7 +112,7 @@ Override any `--at-*` property via CSS — no special `theme` value needed:
 
 ```css
 /* Full custom theme */
-voicezero-ariontalk {
+ariontalk-widget {
   --at-primary-color: #7C3AED;
   --at-primary-text: #FFFFFF;
   --at-bg-color: #1A1A2E;
@@ -101,7 +120,7 @@ voicezero-ariontalk {
 }
 
 /* Partial override — change just the accent, keep the rest from light/dark */
-voicezero-ariontalk {
+ariontalk-widget {
   --at-primary-color: #7C3AED;
   --at-primary-text: #FFFFFF;
 }
@@ -114,7 +133,7 @@ This works because external CSS custom properties take precedence over `:host()`
 Listen for widget lifecycle events:
 
 ```javascript
-const widget = document.querySelector('voicezero-ariontalk');
+const widget = document.querySelector('ariontalk-widget');
 
 widget.addEventListener('at-session-start', (e) => {
   console.log('Session started:', e.detail.lang);
@@ -149,52 +168,73 @@ The widget automatically hides itself on unsupported browsers.
 
 ## Architecture
 
+This is a monorepo managed with [pnpm workspaces](https://pnpm.io/workspaces) and [changesets](https://github.com/changesets/changesets).
+
 ```
 ariontalk/
-├── src/
-│   ├── ariontalk.ts                     # Main entry point
-│   ├── components/
-│   │   ├── widget-root.ts               # Root component: FAB + session panel
-│   │   ├── widget-fab.ts                # Floating action button
-│   │   └── widget-session.ts            # Expanded session panel
-│   ├── services/
-│   │   ├── speech-recognition.ts        # WebSpeech Recognition wrapper
-│   │   ├── speech-synthesis.ts          # WebSpeech Synthesis wrapper
-│   │   ├── ai-session.ts               # Prompt API (Gemini Nano) wrapper
-│   │   └── page-extractor.ts           # Page content extraction
-│   ├── controllers/
-│   │   └── voice-session.controller.ts  # Voice session orchestrator
-│   ├── utils/
-│   │   ├── browser-support.ts           # Feature detection
-│   │   └── timer.ts                     # Session timer
-│   ├── styles/
-│   │   └── shared-styles.ts             # Shared CSS
-│   └── types.ts                         # TypeScript types
-├── dev/
-│   └── index.html                       # Development page
-├── package.json
-├── tsconfig.json
-└── vite.config.ts
+├── packages/
+│   ├── core/                              # @ariontalk/core
+│   │   ├── src/
+│   │   │   ├── index.ts                   # Public API exports
+│   │   │   ├── engine/
+│   │   │   │   └── voice-engine.ts        # Voice session orchestrator
+│   │   │   ├── services/
+│   │   │   │   ├── speech-recognition.ts  # WebSpeech Recognition wrapper
+│   │   │   │   ├── speech-synthesis.ts    # WebSpeech Synthesis wrapper
+│   │   │   │   ├── ai-session.ts          # Prompt API (Gemini Nano) wrapper
+│   │   │   │   └── page-extractor.ts      # Page content extraction
+│   │   │   ├── utils/
+│   │   │   │   ├── browser-support.ts     # Feature detection
+│   │   │   │   └── timer.ts              # Session timer
+│   │   │   └── types.ts                   # TypeScript types
+│   │   ├── package.json
+│   │   └── tsdown.config.ts
+│   └── widget/                            # @ariontalk/widget
+│       ├── src/
+│       │   ├── index.ts                   # Main entry point, registers custom element
+│       │   ├── components/
+│       │   │   ├── widget-root.ts         # Root component: FAB + session panel
+│       │   │   ├── widget-fab.ts          # Floating action button
+│       │   │   ├── widget-session.ts      # Expanded session panel
+│       │   │   └── widget-voice-settings.ts
+│       │   ├── controllers/
+│       │   │   └── voice-session.controller.ts
+│       │   ├── styles/
+│       │   │   └── shared-styles.ts       # Shared CSS
+│       │   └── types.ts
+│       ├── dev/
+│       │   └── index.html                 # Development page
+│       ├── package.json
+│       └── vite.config.ts
+├── package.json                           # Root workspace config
+├── pnpm-workspace.yaml
+└── tsconfig.base.json
 ```
 
 ## Development
 
 ```bash
 # Install dependencies
-npm install
+pnpm install
 
-# Start dev server
-npm run dev
+# Start dev server (widget)
+pnpm dev
 
-# Build for production
-npm run build
+# Build all packages
+pnpm build
+
+# Run tests
+pnpm test
 ```
 
 ## Tech Stack
 
-- **[Lit](https://lit.dev/)** — Web Components library
+- **[Lit](https://lit.dev/)** — Web Components library (widget only)
 - **TypeScript** — Type safety
-- **Vite** — Build tool (library mode)
+- **Vite** — Build tool for widget (library mode)
+- **[tsdown](https://github.com/nicepkg/tsdown)** — Build tool for core
+- **[pnpm](https://pnpm.io/)** — Package manager & workspaces
+- **[Changesets](https://github.com/changesets/changesets)** — Versioning & publishing
 - **Chrome Built-in APIs** — WebSpeech, Prompt API (Gemini Nano)
 
 ## Bundle Size
