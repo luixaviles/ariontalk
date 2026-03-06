@@ -1,6 +1,6 @@
 import type { ReactiveController, ReactiveControllerHost } from 'lit';
 import { VoiceEngine } from '@ariontalk/core';
-import type { SupportedLang, VoiceSettings, VoiceEngineState, BargeInMode } from '@ariontalk/core';
+import type { SupportedLang, VoiceSettings, VoiceEngineState, BargeInDetector } from '@ariontalk/core';
 
 export class VoiceSessionController implements ReactiveController {
   private host: ReactiveControllerHost;
@@ -24,9 +24,9 @@ export class VoiceSessionController implements ReactiveController {
     };
   }
 
-  setBargeInMode(mode: BargeInMode): void {
+  setBargeInDetector(detector: BargeInDetector | null): void {
     this.engine.destroy();
-    this.engine = new VoiceEngine({ bargeIn: mode });
+    this.engine = new VoiceEngine({ bargeInDetector: detector ?? undefined });
     this.engine.onStateChange = () => {
       this.host.requestUpdate();
     };

@@ -2,12 +2,14 @@ const RMS_THRESHOLD = 0.035;
 const MIN_DURATION_MS = 250;
 const FFT_SIZE = 512;
 
+import type { BargeInDetector } from '../types.js';
+
 /**
  * Detects user speech during TTS playback using Web Audio API volume monitoring.
  * Uses getUserMedia with echoCancellation to filter out speaker output,
  * then monitors RMS energy to detect when the user is actually speaking.
  */
-export class BargeInDetector {
+export class EnergyBargeInDetector implements BargeInDetector {
   private stream: MediaStream | null = null;
   private audioContext: AudioContext | null = null;
   private analyser: AnalyserNode | null = null;

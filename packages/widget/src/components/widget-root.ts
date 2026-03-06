@@ -3,7 +3,7 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { sharedStyles } from '../styles/shared-styles.js';
 import { isVoiceChatSupported } from '@ariontalk/core';
 import { VoiceSessionController } from '../controllers/voice-session.controller.js';
-import type { SupportedLang, VoiceSettings, BargeInMode } from '../types.js';
+import type { SupportedLang, VoiceSettings, BargeInPlugin } from '../types.js';
 import './widget-fab.js';
 import './widget-session.js';
 import './widget-voice-settings.js';
@@ -16,7 +16,7 @@ interface SavedSettings {
   rate: number;
   pitch: number;
   volume: number;
-  bargeIn: BargeInMode;
+  bargeInPluginId: string;
 }
 
 /**
@@ -135,6 +135,8 @@ export class ArionTalk extends LitElement {
   @property({ type: Boolean }) force = false;
   /** When set, shows a settings gear icon next to the FAB for pre-session configuration. */
   @property({ type: Boolean }) settings = false;
+  /** Registered barge-in plugins. Each provides a factory for creating detector instances. */
+  @property({ type: Array }) bargeInPlugins: BargeInPlugin[] = [];
 
   @state() private supported = false;
   @state() private active = false;
@@ -161,7 +163,7 @@ export class ArionTalk extends LitElement {
           .interimTranscript=${this.controller.state.interimTranscript}
           .error=${this.controller.state.error}
           .downloadProgress=${this.controller.state.downloadProgress}
-          .bargeInEnabled=${this.currentSettings.bargeIn !== 'off'}
+          .bargeInEnabled=${this.currentSettings.bargeInPluginId !== 'off'}
           .muted=${this.muted}
           @mute-toggle=${this.handleMuteToggle}
           @session-end=${this.handleEnd}
@@ -174,6 +176,7 @@ export class ArionTalk extends LitElement {
         <vcw-voice-settings
           .voices=${this.controller.getAllVoices()}
           .currentSettings=${this.currentSettings}
+          .bargeInPlugins=${this.bargeInPlugins}
           @settings-apply=${this.handleSettingsApply}
           @settings-back=${this.handleSettingsBack}
         ></vcw-voice-settings>
@@ -207,7 +210,7 @@ export class ArionTalk extends LitElement {
       rate: 1.0,
       pitch: 1.0,
       volume: 1.0,
-      bargeIn: 'off',
+      bargeInPluginId: 'off',
     };
   }
 
@@ -234,7 +237,10 @@ export class ArionTalk extends LitElement {
     const voice = s.voiceURI
       ? this.controller.getAllVoices().find(v => v.voiceURI === s.voiceURI) ?? null
       : null;
-    this.controller.setBargeInMode(s.bargeIn);
+    // Resolve plugin ID to detector instance
+    const plugin = this.bargeInPlugins.find(p => p.id === s.bargeInPluginId);
+    const detector = plugin ? plugin.create() : null;
+    this.controller.setBargeInDetector(detector);
     this.controller.applyVoiceSettings({ voice, rate: s.rate, pitch: s.pitch, volume: s.volume });
 
     this.active = true;
