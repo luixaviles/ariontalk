@@ -47,6 +47,14 @@ export class WidgetSession extends LitElement {
         min-height: 28px;
       }
 
+      /* Muted: static gray dot */
+      .status-muted .indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--at-text-muted);
+      }
+
       /* Listening: pulsing mic */
       .status-listening .indicator {
         width: 12px;
@@ -156,6 +164,33 @@ export class WidgetSession extends LitElement {
         gap: 16px;
       }
 
+      /* Mute button */
+      .mute-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: var(--at-surface-color);
+        color: var(--at-text-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.15s, color 0.15s;
+      }
+
+      .mute-btn:hover {
+        background: var(--at-surface-hover);
+      }
+
+      .mute-btn.active {
+        background: var(--at-primary-color);
+        color: var(--at-primary-text);
+      }
+
+      .mute-btn svg {
+        width: 20px;
+        height: 20px;
+      }
+
       /* End call button */
       .end-btn {
         width: 48px;
@@ -185,13 +220,15 @@ export class WidgetSession extends LitElement {
   @property({ type: String }) interimTranscript = '';
   @property({ type: String }) error: string | null = null;
   @property({ type: Number }) downloadProgress = 0;
+  @property({ type: Boolean }) bargeInEnabled = false;
+  @property({ type: Boolean }) muted = false;
 
   render() {
     return html`
       <div class="panel">
         <div class="timer" role="timer" aria-label="Session duration">${this.timerDisplay}</div>
 
-        <div class="status status-${this.status}" aria-live="polite" aria-atomic="true">
+        <div class="status status-${this.displayStatus}" aria-live="polite" aria-atomic="true">
           ${this.renderStatusIndicator()}
           <span>${this.statusLabel}</span>
         </div>
@@ -207,6 +244,32 @@ export class WidgetSession extends LitElement {
           : nothing}
 
         <div class="controls">
+          ${this.bargeInEnabled ? html`
+            <button
+              class="mute-btn ${this.muted ? 'active' : ''}"
+              @click=${this.handleMuteToggle}
+              aria-label=${this.muted ? 'Unmute barge-in detection' : 'Mute barge-in detection'}
+              aria-pressed=${this.muted ? 'true' : 'false'}
+              title=${this.muted ? 'Unmute' : 'Mute'}
+            >
+              ${this.muted ? html`
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="1" y1="1" x2="23" y2="23"></line>
+                  <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"></path>
+                  <path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2c0 .76-.12 1.5-.34 2.18"></path>
+                  <line x1="12" y1="19" x2="12" y2="23"></line>
+                  <line x1="8" y1="23" x2="16" y2="23"></line>
+                </svg>
+              ` : html`
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                  <line x1="12" y1="19" x2="12" y2="23"></line>
+                  <line x1="8" y1="23" x2="16" y2="23"></line>
+                </svg>
+              `}
+            </button>
+          ` : nothing}
           <button
             class="end-btn"
             @click=${this.handleEnd}
@@ -222,10 +285,16 @@ export class WidgetSession extends LitElement {
     `;
   }
 
+  private get displayStatus(): string {
+    if (this.muted && this.status === 'listening') return 'muted';
+    return this.status;
+  }
+
   private get statusLabel(): string {
-    switch (this.status) {
+    switch (this.displayStatus) {
       case 'loading': return 'Loading AI model...';
       case 'listening': return 'Listening...';
+      case 'muted': return 'Muted';
       case 'thinking': return 'Thinking...';
       case 'speaking': return 'Speaking...';
       case 'error': return 'Error';
@@ -252,10 +321,12 @@ export class WidgetSession extends LitElement {
   }
 
   private renderStatusIndicator() {
-    switch (this.status) {
+    switch (this.displayStatus) {
       case 'loading':
         return html`<div class="indicator"></div>`;
       case 'listening':
+        return html`<div class="indicator"></div>`;
+      case 'muted':
         return html`<div class="indicator"></div>`;
       case 'thinking':
         return html`<div class="indicator"></div>`;
@@ -271,6 +342,14 @@ export class WidgetSession extends LitElement {
       default:
         return nothing;
     }
+  }
+
+  private handleMuteToggle() {
+    this.dispatchEvent(new CustomEvent('mute-toggle', {
+      detail: { muted: !this.muted },
+      bubbles: true,
+      composed: true,
+    }));
   }
 
   private handleEnd() {

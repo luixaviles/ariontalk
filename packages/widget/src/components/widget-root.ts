@@ -139,6 +139,7 @@ export class ArionTalk extends LitElement {
   @state() private supported = false;
   @state() private active = false;
   @state() private showSettings = false;
+  @state() private muted = false;
 
   private savedSettings: SavedSettings | null = null;
   private controller = new VoiceSessionController(this);
@@ -160,6 +161,9 @@ export class ArionTalk extends LitElement {
           .interimTranscript=${this.controller.state.interimTranscript}
           .error=${this.controller.state.error}
           .downloadProgress=${this.controller.state.downloadProgress}
+          .bargeInEnabled=${this.currentSettings.bargeIn !== 'off'}
+          .muted=${this.muted}
+          @mute-toggle=${this.handleMuteToggle}
           @session-end=${this.handleEnd}
         ></vcw-session>
       `;
@@ -258,10 +262,16 @@ export class ArionTalk extends LitElement {
     this.showSettings = false;
   }
 
+  private handleMuteToggle(e: CustomEvent<{ muted: boolean }>) {
+    this.muted = e.detail.muted;
+    this.controller.setMuted(this.muted);
+  }
+
   private handleEnd() {
     const duration = this.controller.state.elapsedSeconds;
     this.controller.endSession();
     this.active = false;
+    this.muted = false;
     this.dispatchEvent(
       new CustomEvent('at-session-end', {
         detail: { duration, messageCount: 0 },

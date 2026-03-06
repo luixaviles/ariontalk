@@ -20,6 +20,7 @@ export class VoiceEngine {
   private timer: SessionTimer;
   private sessionActive = false;
   private bargeInTriggered = false;
+  private muted = false;
 
   state: VoiceEngineState = {
     status: 'idle',
@@ -127,6 +128,7 @@ export class VoiceEngine {
   /** End the current session and clean up all services. */
   endSession(): void {
     this.sessionActive = false;
+    this.muted = false;
     this.bargeIn.destroy();
     this.recognition.stop();
     this.synthesis.cancel();
@@ -143,6 +145,25 @@ export class VoiceEngine {
       downloadProgress: 0,
     };
     this.notifyStateChange();
+  }
+
+  setMuted(muted: boolean): void {
+    this.muted = muted;
+    if (muted) {
+      this.bargeIn.stopMonitoring();
+      if (this.state.status === 'listening') {
+        this.recognition.pause();
+        this.state = { ...this.state, interimTranscript: '' };
+        this.notifyStateChange();
+      }
+    } else {
+      if (this.state.status === 'speaking' && this.bargeInMode !== 'off') {
+        this.bargeIn.startMonitoring(() => this.handleBargeIn());
+      }
+      if (this.state.status === 'listening') {
+        this.recognition.resume();
+      }
+    }
   }
 
   applyVoiceSettings(settings: VoiceSettings): void {
@@ -222,7 +243,9 @@ export class VoiceEngine {
             firstSentenceEnqueued = true;
             this.state = { ...this.state, status: 'speaking' };
             this.notifyStateChange();
-            this.bargeIn.startMonitoring(() => this.handleBargeIn());
+            if (!this.muted) {
+              this.bargeIn.startMonitoring(() => this.handleBargeIn());
+            }
           }
 
           speechQueue.push(this.synthesis.enqueue(clean, lang));
@@ -238,7 +261,9 @@ export class VoiceEngine {
           if (!firstSentenceEnqueued) {
             this.state = { ...this.state, status: 'speaking' };
             this.notifyStateChange();
-            this.bargeIn.startMonitoring(() => this.handleBargeIn());
+            if (!this.muted) {
+              this.bargeIn.startMonitoring(() => this.handleBargeIn());
+            }
           }
 
           speechQueue.push(this.synthesis.enqueue(remainingText, lang));
@@ -305,7 +330,9 @@ export class VoiceEngine {
   private resumeListening(): void {
     this.state = { ...this.state, status: 'listening' };
     this.notifyStateChange();
-    this.recognition.resume();
+    if (!this.muted) {
+      this.recognition.resume();
+    }
   }
 
   private async reinitAI(lang: SupportedLang): Promise<void> {
@@ -329,10 +356,12 @@ export class VoiceEngine {
         this.notifyStateChange();
 
         // Restart recognition in case it died from a fatal error
-        try {
-          this.recognition.stop();
-          this.recognition.start(this.state.currentLang);
-        } catch { /* ignore */ }
+        if (!this.muted) {
+          try {
+            this.recognition.stop();
+            this.recognition.start(this.state.currentLang);
+          } catch { /* ignore */ }
+        }
       }
     }, 3000);
   }
