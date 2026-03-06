@@ -371,8 +371,10 @@ export class VoiceEngine {
     const clean = text
       // Remove emojis
       .replace(/\p{Extended_Pictographic}/gu, '')
-      // Remove markdown bold/italic
+      // Remove markdown bold/italic (paired)
       .replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1')
+      // Remove any remaining stray asterisks (unpaired markdown)
+      .replace(/\*+/g, '')
       // Remove markdown headers
       .replace(/^#{1,6}\s+/gm, '')
       // Remove bullet points and list markers
