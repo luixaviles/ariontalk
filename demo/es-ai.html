@@ -130,8 +130,18 @@
   <ariontalk-widget id="widget" lang="es" force settings></ariontalk-widget>
   <script type="module">
     import '@ariontalk/widget';
+    import { EnergyBargeInDetector } from '@ariontalk/core';
     import { initToolbar } from './scripts/toolbar.js';
     initToolbar();
+
+    document.querySelector('#widget').bargeInPlugins = [
+      {
+        id: 'energy',
+        label: 'Energy',
+        tooltip: 'Interrupt by speaking — uses mic energy detection',
+        create: () => new EnergyBargeInDetector(),
+      },
+    ];
   </script>
 </body>
 </html>

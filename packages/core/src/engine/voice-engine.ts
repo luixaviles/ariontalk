@@ -2,12 +2,11 @@ import { PageExtractorService } from '../services/page-extractor.js';
 import { SpeechRecognitionService } from '../services/speech-recognition.js';
 import { SpeechSynthesisService } from '../services/speech-synthesis.js';
 import { AISessionService } from '../services/ai-session.js';
-import { BargeInDetector } from '../services/barge-in-detector.js';
 import { SessionTimer } from '../utils/timer.js';
-import type { VoiceEngineState, SupportedLang, VoiceSettings, BargeInMode } from '../types.js';
+import type { VoiceEngineState, SupportedLang, VoiceSettings, BargeInDetector } from '../types.js';
 
 export interface VoiceEngineOptions {
-  bargeIn?: BargeInMode;
+  bargeInDetector?: BargeInDetector;
 }
 
 export class VoiceEngine {
@@ -15,8 +14,7 @@ export class VoiceEngine {
   private recognition = new SpeechRecognitionService();
   private synthesis = new SpeechSynthesisService();
   private ai = new AISessionService();
-  private bargeIn = new BargeInDetector();
-  private bargeInMode: BargeInMode;
+  private bargeIn: BargeInDetector | null;
   private timer: SessionTimer;
   private sessionActive = false;
   private bargeInTriggered = false;
@@ -35,7 +33,7 @@ export class VoiceEngine {
   onStateChange: ((state: VoiceEngineState) => void) | null = null;
 
   constructor(options?: VoiceEngineOptions) {
-    this.bargeInMode = options?.bargeIn ?? 'off';
+    this.bargeIn = options?.bargeInDetector ?? null;
     this.timer = new SessionTimer((seconds) => {
       this.state = { ...this.state, elapsedSeconds: seconds };
       this.notifyStateChange();
@@ -87,9 +85,7 @@ export class VoiceEngine {
     this.timer.start();
 
     // Acquire mic stream for barge-in detection (non-blocking, graceful degradation)
-    if (this.bargeInMode !== 'off') {
-      this.bargeIn.init().catch(() => {});
-    }
+    this.bargeIn?.init().catch(() => {});
 
     // Check availability, then init AI with monitor only when download is needed
     const pageText = this.pageExtractor.extractText();
@@ -129,7 +125,7 @@ export class VoiceEngine {
   endSession(): void {
     this.sessionActive = false;
     this.muted = false;
-    this.bargeIn.destroy();
+    this.bargeIn?.destroy();
     this.recognition.stop();
     this.synthesis.cancel();
     this.ai.destroy();
@@ -150,14 +146,14 @@ export class VoiceEngine {
   setMuted(muted: boolean): void {
     this.muted = muted;
     if (muted) {
-      this.bargeIn.stopMonitoring();
+      this.bargeIn?.stopMonitoring();
       if (this.state.status === 'listening') {
         this.recognition.pause();
         this.state = { ...this.state, interimTranscript: '' };
         this.notifyStateChange();
       }
     } else {
-      if (this.state.status === 'speaking' && this.bargeInMode !== 'off') {
+      if (this.state.status === 'speaking' && this.bargeIn) {
         this.bargeIn.startMonitoring(() => this.handleBargeIn());
       }
       if (this.state.status === 'listening') {
@@ -244,7 +240,7 @@ export class VoiceEngine {
             this.state = { ...this.state, status: 'speaking' };
             this.notifyStateChange();
             if (!this.muted) {
-              this.bargeIn.startMonitoring(() => this.handleBargeIn());
+              this.bargeIn?.startMonitoring(() => this.handleBargeIn());
             }
           }
 
@@ -262,7 +258,7 @@ export class VoiceEngine {
             this.state = { ...this.state, status: 'speaking' };
             this.notifyStateChange();
             if (!this.muted) {
-              this.bargeIn.startMonitoring(() => this.handleBargeIn());
+              this.bargeIn?.startMonitoring(() => this.handleBargeIn());
             }
           }
 
@@ -272,14 +268,14 @@ export class VoiceEngine {
 
       // Wait for all queued speech to finish (resolves immediately if canceled)
       await Promise.all(speechQueue);
-      this.bargeIn.stopMonitoring();
+      this.bargeIn?.stopMonitoring();
 
       if (this.sessionActive) {
         this.resumeListening();
       }
     } catch (err) {
       // Cancel remaining queued utterances on error
-      this.bargeIn.stopMonitoring();
+      this.bargeIn?.stopMonitoring();
       this.synthesis.cancel();
 
       if (this.sessionActive) {
@@ -296,7 +292,7 @@ export class VoiceEngine {
     console.log('[ariontalk] Barge-in detected, canceling speech');
     this.bargeInTriggered = true;
     this.synthesis.cancel();
-    this.bargeIn.stopMonitoring();
+    this.bargeIn?.stopMonitoring();
   }
 
   /** Extract complete sentences from a text buffer, returning unmatched remainder. */

@@ -1,7 +1,7 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { sharedStyles } from '../styles/shared-styles.js';
-import type { SupportedLang, BargeInMode } from '../types.js';
+import type { SupportedLang, BargeInPlugin } from '../types.js';
 
 interface VoiceTier {
   label: string;
@@ -14,7 +14,7 @@ interface SettingsData {
   rate: number;
   pitch: number;
   volume: number;
-  bargeIn: BargeInMode;
+  bargeInPluginId: string;
 }
 
 /**
@@ -214,13 +214,14 @@ export class WidgetVoiceSettings extends LitElement {
 
   @property({ type: Array }) voices: SpeechSynthesisVoice[] = [];
   @property({ type: Object }) currentSettings: SettingsData | null = null;
+  @property({ type: Array }) bargeInPlugins: BargeInPlugin[] = [];
 
   @state() private selectedLang: SupportedLang = 'en';
   @state() private selectedVoiceURI = '';
   @state() private rate = 1.0;
   @state() private pitch = 1.0;
   @state() private volume = 1.0;
-  @state() private bargeIn: BargeInMode = 'off';
+  @state() private bargeInPluginId = 'off';
 
   private initialized = false;
 
@@ -238,7 +239,7 @@ export class WidgetVoiceSettings extends LitElement {
         this.rate = this.currentSettings.rate;
         this.pitch = this.currentSettings.pitch;
         this.volume = this.currentSettings.volume;
-        this.bargeIn = this.currentSettings.bargeIn ?? 'off';
+        this.bargeInPluginId = this.currentSettings.bargeInPluginId ?? 'off';
       }
     }
   }
@@ -306,22 +307,26 @@ export class WidgetVoiceSettings extends LitElement {
                  @input=${this.handleVolumeChange} />
         </div>
 
-        <div class="field">
-          <label class="field-label help-label">
-            Interruption
-            <span class="help-icon"
-              data-tooltip="Controls whether you can interrupt the assistant while it speaks"
-              >?</span>
-          </label>
-          <div class="lang-selector">
-            <button class="lang-option ${this.bargeIn === 'off' ? 'active' : ''}"
-              data-tooltip="Wait for the response to finish"
-              @click=${() => { this.bargeIn = 'off'; }}>Off</button>
-            <button class="lang-option ${this.bargeIn === 'energy' ? 'active' : ''}"
-              data-tooltip="Interrupt by speaking — uses mic energy detection"
-              @click=${() => { this.bargeIn = 'energy'; }}>Energy</button>
+        ${this.bargeInPlugins.length > 0 ? html`
+          <div class="field">
+            <label class="field-label help-label">
+              Interruption
+              <span class="help-icon"
+                data-tooltip="Controls whether you can interrupt the assistant while it speaks"
+                >?</span>
+            </label>
+            <div class="lang-selector">
+              <button class="lang-option ${this.bargeInPluginId === 'off' ? 'active' : ''}"
+                data-tooltip="Wait for the response to finish"
+                @click=${() => { this.bargeInPluginId = 'off'; }}>Off</button>
+              ${this.bargeInPlugins.map(plugin => html`
+                <button class="lang-option ${this.bargeInPluginId === plugin.id ? 'active' : ''}"
+                  data-tooltip=${plugin.tooltip ?? ''}
+                  @click=${() => { this.bargeInPluginId = plugin.id; }}>${plugin.label}</button>
+              `)}
+            </div>
           </div>
-        </div>
+        ` : nothing}
 
         <button class="apply-btn" @click=${this.handleApply}>Apply</button>
       </div>
@@ -387,7 +392,7 @@ export class WidgetVoiceSettings extends LitElement {
         rate: this.rate,
         pitch: this.pitch,
         volume: this.volume,
-        bargeIn: this.bargeIn,
+        bargeInPluginId: this.bargeInPluginId,
       } satisfies SettingsData,
       bubbles: true,
       composed: true,
