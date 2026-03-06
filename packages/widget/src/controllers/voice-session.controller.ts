@@ -45,6 +45,10 @@ export class VoiceSessionController implements ReactiveController {
     this.engine.endSession();
   }
 
+  setMuted(muted: boolean): void {
+    this.engine.setMuted(muted);
+  }
+
   switchLanguage(lang: SupportedLang): void {
     this.engine.switchLanguage(lang);
   }
