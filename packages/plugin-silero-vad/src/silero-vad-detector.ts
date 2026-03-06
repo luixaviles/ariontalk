@@ -16,15 +16,30 @@ export interface SileroVadOptions {
   /**
    * Probability threshold for speech detection (0-1).
    * Higher = fewer false positives but slower to trigger.
-   * @default 0.5
+   * @default 0.6
    */
   positiveSpeechThreshold?: number;
 
   /**
-   * Minimum speech duration in ms before triggering barge-in.
-   * @default 250
+   * Probability threshold below which speech is considered absent (0-1).
+   * Should be lower than positiveSpeechThreshold (Silero recommends ~0.15 less).
+   * @default 0.45
+   */
+  negativeSpeechThreshold?: number;
+
+  /**
+   * Minimum sustained speech duration in ms before triggering barge-in.
+   * Shorter sounds are discarded as misfires (coughs, thumps, etc.).
+   * @default 300
    */
   minSpeechMs?: number;
+
+  /**
+   * Grace period in ms after speech drops below negativeSpeechThreshold
+   * before considering speech ended. Bridges brief pauses mid-sentence.
+   * @default 1400
+   */
+  redemptionMs?: number;
 }
 
 export class SileroVadDetector implements BargeInDetector {
@@ -44,12 +59,16 @@ export class SileroVadDetector implements BargeInDetector {
       const { MicVAD } = await import('@ricky0123/vad-web');
       this.vad = await MicVAD.new({
         startOnLoad: false,
-        positiveSpeechThreshold: this.options.positiveSpeechThreshold ?? 0.5,
-        minSpeechMs: this.options.minSpeechMs ?? 250,
+        positiveSpeechThreshold: this.options.positiveSpeechThreshold ?? 0.6,
+        negativeSpeechThreshold: this.options.negativeSpeechThreshold ?? 0.45,
+        minSpeechMs: this.options.minSpeechMs ?? 300,
+        redemptionMs: this.options.redemptionMs ?? 1400,
         // Only pass asset paths when explicitly set — the library defaults to './'
         ...(this.options.baseAssetPath != null && { baseAssetPath: this.options.baseAssetPath }),
         ...(this.options.onnxWASMBasePath != null && { onnxWASMBasePath: this.options.onnxWASMBasePath }),
-        onSpeechStart: () => {
+        // Use onSpeechRealStart instead of onSpeechStart — it only fires after
+        // sustained speech exceeding minSpeechMs, filtering out transient noises.
+        onSpeechRealStart: () => {
           if (this.monitoring && this.onBargeInCallback) {
             this.monitoring = false;
             this.onBargeInCallback();
