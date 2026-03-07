@@ -16,6 +16,7 @@ export class SpeechRecognitionService {
   private useLocalProcessing = false;
   private fatalError = false;
   private consecutiveAborts = 0;
+  private generation = 0;
   private static readonly MAX_CONSECUTIVE_ABORTS = 3;
   private static readonly RESTART_BASE_DELAY_MS = 300;
 
@@ -27,7 +28,9 @@ export class SpeechRecognitionService {
     this.currentLang = lang;
     this.active = true;
     this.paused = false;
+    this.fatalError = false;
     this.consecutiveAborts = 0;
+    this.generation++;
     this.createAndStart();
   }
 
@@ -36,6 +39,7 @@ export class SpeechRecognitionService {
     this.paused = false;
     this.fatalError = false;
     this.consecutiveAborts = 0;
+    this.generation++;
     if (this.recognition) {
       try { this.recognition.abort(); } catch { /* ignore */ }
       this.recognition = null;
@@ -102,7 +106,11 @@ export class SpeechRecognitionService {
       }
     };
 
+    const gen = this.generation;
+
     rec.onerror = (event: any) => {
+      if (gen !== this.generation) return;
+
       const error = event.error as string;
       console.log('[ariontalk] SpeechRecognition error:', error);
 
@@ -124,11 +132,14 @@ export class SpeechRecognitionService {
     };
 
     rec.onend = () => {
+      if (gen !== this.generation) return;
+
       console.log('[ariontalk] SpeechRecognition ended, active:', this.active, 'paused:', this.paused, 'fatalError:', this.fatalError);
       // Auto-restart if session is still active, not paused, and no fatal error
       if (this.active && !this.paused && !this.fatalError) {
         const delay = SpeechRecognitionService.RESTART_BASE_DELAY_MS * Math.pow(2, this.consecutiveAborts);
         setTimeout(() => {
+          if (gen !== this.generation) return;
           if (!this.active || this.paused || this.fatalError) return;
           this.createAndStart();
         }, delay);
