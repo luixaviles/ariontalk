@@ -190,6 +190,7 @@ export class VoiceEngine {
     if (!text.trim()) return;
 
     if (!this.ai.isReady) {
+      this.recognition.pause();
       this.setError(
         this.state.status === 'loading'
           ? 'AI model is still downloading. Please wait for it to finish.'
