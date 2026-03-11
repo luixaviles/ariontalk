@@ -1,4 +1,7 @@
 import type { SupportedLang } from '../types.js';
+import { createLogger } from '../utils/logger.js';
+
+const log = createLogger('speech-recognition');
 
 const LANG_MAP: Record<SupportedLang, string> = {
   en: 'en-US',
@@ -112,14 +115,14 @@ export class SpeechRecognitionService {
       if (gen !== this.generation) return;
 
       const error = event.error as string;
-      console.log('[ariontalk] SpeechRecognition error:', error);
+      log.warn('error:', error);
 
       if (error === 'no-speech') return;
 
       if (error === 'aborted') {
         this.consecutiveAborts++;
         if (this.consecutiveAborts >= SpeechRecognitionService.MAX_CONSECUTIVE_ABORTS) {
-          console.warn('[ariontalk] SpeechRecognition aborted repeatedly, stopping restarts');
+          log.warn('aborted repeatedly, stopping restarts');
           this.fatalError = true;
           this.onError?.('speech-recognition-unavailable');
         }
@@ -134,7 +137,10 @@ export class SpeechRecognitionService {
     rec.onend = () => {
       if (gen !== this.generation) return;
 
-      console.log('[ariontalk] SpeechRecognition ended, active:', this.active, 'paused:', this.paused, 'fatalError:', this.fatalError);
+      // Only log unexpected endings (active but not paused = unplanned restart)
+      if (this.active && !this.paused) {
+        log.debug('ended unexpectedly, fatalError:', this.fatalError);
+      }
       // Auto-restart if session is still active, not paused, and no fatal error
       if (this.active && !this.paused && !this.fatalError) {
         const delay = SpeechRecognitionService.RESTART_BASE_DELAY_MS * Math.pow(2, this.consecutiveAborts);
@@ -149,9 +155,9 @@ export class SpeechRecognitionService {
     this.recognition = rec;
     try {
       rec.start();
-      console.log('[ariontalk] SpeechRecognition started, lang:', rec.lang);
+      log.info('started, lang:', rec.lang);
     } catch (err) {
-      console.warn('[ariontalk] SpeechRecognition start failed:', err);
+      log.warn('start failed:', err);
     }
   }
 }

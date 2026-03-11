@@ -1,4 +1,7 @@
 import type { BargeInDetector } from '@ariontalk/core';
+import { createLogger } from '@ariontalk/core';
+
+const log = createLogger('vad');
 
 export interface SileroVadOptions {
   /**
@@ -57,6 +60,7 @@ export class SileroVadDetector implements BargeInDetector {
       // Dynamic import — defers the heavy onnxruntime-web + vad-web loading
       // to when the user actually starts a session with Smart VAD enabled.
       const { MicVAD } = await import('@ricky0123/vad-web');
+
       this.vad = await MicVAD.new({
         startOnLoad: false,
         positiveSpeechThreshold: this.options.positiveSpeechThreshold ?? 0.7,
@@ -76,7 +80,7 @@ export class SileroVadDetector implements BargeInDetector {
         },
       });
     } catch (err) {
-      console.warn('[ariontalk] SileroVadDetector: init failed, barge-in disabled', err);
+      log.warn('init failed, barge-in disabled', err);
       this.vad = null;
     }
   }

@@ -3,6 +3,9 @@ const MIN_DURATION_MS = 250;
 const FFT_SIZE = 512;
 
 import type { BargeInDetector } from '../types.js';
+import { createLogger } from '../utils/logger.js';
+
+const log = createLogger('barge-in');
 
 /**
  * Detects user speech during TTS playback using Web Audio API volume monitoring.
@@ -32,7 +35,7 @@ export class EnergyBargeInDetector implements BargeInDetector {
       this.source.connect(this.analyser);
       this.dataArray = new Float32Array(this.analyser.fftSize);
     } catch (err) {
-      console.warn('[ariontalk] BargeInDetector: microphone unavailable, barge-in disabled', err);
+      log.warn('microphone unavailable, barge-in disabled', err);
       this.cleanup();
     }
   }

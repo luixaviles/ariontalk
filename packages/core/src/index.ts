@@ -15,3 +15,6 @@ export { EnergyBargeInDetector } from './services/barge-in-detector.js';
 // Utils
 export { isVoiceChatSupported } from './utils/browser-support.js';
 export { SessionTimer } from './utils/timer.js';
+
+// Logging
+export { LogLevel, createLogger, setLogLevel } from './utils/logger.js';
