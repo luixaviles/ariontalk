@@ -3,10 +3,12 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "node scripts/copy-vad-assets.js",
     "dev": "vite"
   },
   "dependencies": {
     "@ariontalk/widget": "workspace:*",
+    "@ariontalk/plugin-silero-vad": "workspace:*",
     "lit": "^3.2.0"
   },
   "devDependencies": {

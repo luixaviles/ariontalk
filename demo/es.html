@@ -91,6 +91,7 @@
   <script type="module">
     import '@ariontalk/widget';
     import { EnergyBargeInDetector } from '@ariontalk/core';
+    import { SileroVadDetector } from '@ariontalk/plugin-silero-vad';
     import { initToolbar } from './scripts/toolbar.js';
     initToolbar();
 
@@ -100,6 +101,12 @@
         label: 'Energy',
         tooltip: 'Interrupt by speaking — uses mic energy detection',
         create: () => new EnergyBargeInDetector(),
+      },
+      {
+        id: 'silero-vad',
+        label: 'Smart VAD',
+        tooltip: 'AI-powered speech detection — more accurate, fewer false triggers',
+        create: () => new SileroVadDetector({ onnxWASMBasePath: '/' }),
       },
     ];
   </script>
