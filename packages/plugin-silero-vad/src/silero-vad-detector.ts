@@ -95,7 +95,9 @@ export class SileroVadDetector implements BargeInDetector {
 
   destroy(): void {
     this.stopMonitoring();
-    this.vad?.destroy();
+    // MicVAD.destroy() is async and throws when called before start()
+    // because its internal audio resources (stream, context) are still null.
+    this.vad?.destroy().catch(() => {});
     this.vad = null;
   }
 }
