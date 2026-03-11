@@ -1,4 +1,7 @@
 import type { SupportedLang } from '../types.js';
+import { createLogger } from '../utils/logger.js';
+
+const log = createLogger('ai-session');
 
 /**
  * Wraps Chrome's Prompt API (LanguageModel / Gemini Nano) for on-device AI.
@@ -17,7 +20,7 @@ export class AISessionService {
       const lm = (window as any).LanguageModel;
       if (!lm) return 'unavailable';
       const result = await lm.availability();
-      console.log('[ariontalk] availability:', result);
+      log.debug('availability:', result);
       return result as 'available' | 'downloadable' | 'downloading' | 'unavailable';
     } catch {
       return 'unavailable';
@@ -47,9 +50,8 @@ export class AISessionService {
       };
     }
 
-    console.log('[ariontalk] lm.create() systemPrompt:', systemPrompt);
     this.session = await lm.create(options);
-    console.log('[ariontalk] lm.create() session ready');
+    log.info('session ready');
   }
 
   /** Sends a user message and yields streaming response chunks. */
@@ -67,7 +69,6 @@ export class AISessionService {
     }
 
     const promptInput = content.length === 1 ? userMessage : content;
-    console.log('[ariontalk] promptStreaming() input:', promptInput);
 
     // Use prompt with streaming
     const stream = this.session.promptStreaming(promptInput);

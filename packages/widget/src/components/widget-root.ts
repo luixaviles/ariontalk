@@ -1,7 +1,7 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { sharedStyles } from '../styles/shared-styles.js';
-import { isVoiceChatSupported } from '@ariontalk/core';
+import { isVoiceChatSupported, setLogLevel, LogLevel } from '@ariontalk/core';
 import { VoiceSessionController } from '../controllers/voice-session.controller.js';
 import type { SupportedLang, VoiceSettings, BargeInPlugin } from '../types.js';
 import './widget-fab.js';
@@ -137,6 +137,8 @@ export class ArionTalk extends LitElement {
   @property({ type: Boolean }) settings = false;
   /** Registered barge-in plugins. Each provides a factory for creating detector instances. */
   @property({ type: Array }) bargeInPlugins: BargeInPlugin[] = [];
+  /** Log level: 'disabled' | 'error' | 'warning' | 'info' | 'debug'. Disabled by default. */
+  @property({ type: String, attribute: 'log-level' }) logLevel: LogLevel = LogLevel.Disabled;
 
   @state() private supported = false;
   @state() private active = false;
@@ -148,8 +150,15 @@ export class ArionTalk extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
+    if (this.logLevel !== LogLevel.Disabled) setLogLevel(this.logLevel);
     this.loadSettings();
     this.checkSupport();
+  }
+
+  updated(changed: Map<string, unknown>) {
+    if (changed.has('logLevel')) {
+      setLogLevel(this.logLevel);
+    }
   }
 
   render() {

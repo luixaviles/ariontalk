@@ -3,7 +3,10 @@ import { SpeechRecognitionService } from '../services/speech-recognition.js';
 import { SpeechSynthesisService } from '../services/speech-synthesis.js';
 import { AISessionService } from '../services/ai-session.js';
 import { SessionTimer } from '../utils/timer.js';
+import { createLogger } from '../utils/logger.js';
 import type { VoiceEngineState, SupportedLang, VoiceSettings, BargeInDetector } from '../types.js';
+
+const log = createLogger('voice-engine');
 
 export interface VoiceEngineOptions {
   bargeInDetector?: BargeInDetector;
@@ -45,7 +48,7 @@ export class VoiceEngine {
     };
 
     this.recognition.onFinalResult = (text) => {
-      console.log('[ariontalk] final transcript:', text);
+      log.debug('STT →', text);
       this.handleFinalTranscript(text);
     };
 
@@ -80,7 +83,7 @@ export class VoiceEngine {
     try {
       this.recognition.start(lang);
     } catch (err) {
-      console.warn('[ariontalk] Speech recognition unavailable:', err);
+      log.warn('Speech recognition unavailable:', err);
     }
     this.timer.start();
 
@@ -117,7 +120,7 @@ export class VoiceEngine {
         this.notifyStateChange();
       }
     } catch (err) {
-      console.warn('[ariontalk] AI unavailable:', err);
+      log.warn('AI unavailable:', err);
     }
   }
 
@@ -234,7 +237,7 @@ export class VoiceEngine {
           const clean = this.sanitizeForSpeech(sentence);
           if (!clean) continue;
 
-          console.log('[ariontalk] Streaming sentence to TTS:', clean);
+          log.debug('TTS ←', clean);
 
           if (!firstSentenceEnqueued) {
             firstSentenceEnqueued = true;
@@ -253,7 +256,7 @@ export class VoiceEngine {
       if (!this.bargeInTriggered) {
         const remainingText = this.sanitizeForSpeech(buffer.trim());
         if (remainingText) {
-          console.log('[ariontalk] Streaming sentence to TTS:', remainingText);
+          log.debug('TTS ←', remainingText);
 
           if (!firstSentenceEnqueued) {
             this.state = { ...this.state, status: 'speaking' };
@@ -290,7 +293,7 @@ export class VoiceEngine {
   private handleBargeIn(): void {
     if (!this.sessionActive || this.bargeInTriggered) return;
 
-    console.log('[ariontalk] Barge-in detected, canceling speech');
+    log.info('Barge-in detected, canceling speech');
     this.bargeInTriggered = true;
     this.synthesis.cancel();
     this.bargeIn?.stopMonitoring();
