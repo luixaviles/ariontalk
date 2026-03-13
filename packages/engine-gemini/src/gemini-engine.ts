@@ -72,6 +72,8 @@ export class GeminiEngine implements VoiceEngineInterface {
   private sessionEndTimeout: ReturnType<typeof setTimeout> | null = null;
   private retryCount = 0;
   private static readonly MAX_RETRIES = 3;
+  private transcriptBuffer = '';
+  private transcriptRole: 'user' | 'model' | null = null;
 
   constructor(options: GeminiEngineOptions) {
     this.options = options;
@@ -87,6 +89,8 @@ export class GeminiEngine implements VoiceEngineInterface {
     this.sessionActive = true;
     this.retryCount = 0;
     this.savedSessionHandle = null;
+    this.transcriptBuffer = '';
+    this.transcriptRole = null;
 
     this.state = {
       status: 'loading',
@@ -275,17 +279,29 @@ export class GeminiEngine implements VoiceEngineInterface {
 
     // Input transcription (user speech)
     if (content?.inputTranscription?.text) {
-      this.updateState({ interimTranscript: content.inputTranscription.text });
+      if (this.transcriptRole !== 'user') {
+        this.transcriptBuffer = '';
+        this.transcriptRole = 'user';
+      }
+      this.transcriptBuffer += content.inputTranscription.text;
+      this.updateState({ interimTranscript: this.transcriptBuffer });
     }
 
     // Output transcription (model speech)
     if (content?.outputTranscription?.text) {
-      this.updateState({ interimTranscript: content.outputTranscription.text });
+      if (this.transcriptRole !== 'model') {
+        this.transcriptBuffer = '';
+        this.transcriptRole = 'model';
+      }
+      this.transcriptBuffer += content.outputTranscription.text;
+      this.updateState({ interimTranscript: this.transcriptBuffer });
     }
 
     // Interruption
     if (content?.interrupted) {
       this.audioPlayback.clear();
+      this.transcriptBuffer = '';
+      this.transcriptRole = null;
       this.updateState({ status: 'listening', interimTranscript: '' });
     }
 
@@ -293,6 +309,8 @@ export class GeminiEngine implements VoiceEngineInterface {
     if (content?.turnComplete) {
       this.audioPlayback.onDrained(() => {
         if (this.sessionActive) {
+          this.transcriptBuffer = '';
+          this.transcriptRole = null;
           this.updateState({ status: 'listening', interimTranscript: '' });
         }
       });

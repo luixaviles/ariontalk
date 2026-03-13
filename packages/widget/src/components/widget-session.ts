@@ -233,7 +233,7 @@ export class WidgetSession extends LitElement {
           <span>${this.statusLabel}</span>
         </div>
 
-        ${this.status === 'loading' ? this.renderProgressBar() : nothing}
+        ${this.status === 'loading' && this.downloadProgress !== 0 ? this.renderProgressBar() : nothing}
 
         ${this.interimTranscript
           ? html`<div class="transcript" aria-live="polite">${this.interimTranscript}</div>`
@@ -292,7 +292,7 @@ export class WidgetSession extends LitElement {
 
   private get statusLabel(): string {
     switch (this.displayStatus) {
-      case 'loading': return 'Loading AI model...';
+      case 'loading': return this.downloadProgress !== 0 ? 'Loading AI model...' : 'Connecting...';
       case 'listening': return 'Listening...';
       case 'muted': return 'Muted';
       case 'thinking': return 'Thinking...';
