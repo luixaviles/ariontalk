@@ -1,6 +1,14 @@
-import type { SupportedLang, VoiceSettings } from '../types.js';
+import type { SupportedLang } from '../types.js';
 
-const LANG_MAP: Record<SupportedLang, string> = {
+/** Internal voice-override format used only inside SpeechSynthesisService. */
+export interface SynthesisVoiceOverrides {
+  voice: SpeechSynthesisVoice | null;
+  rate: number;
+  pitch: number;
+  volume: number;
+}
+
+const LANG_MAP: Record<string, string> = {
   en: 'en',
   es: 'es',
 };
@@ -13,7 +21,7 @@ export class SpeechSynthesisService {
   private voiceCache: Map<string, SpeechSynthesisVoice> = new Map();
   private activeUtterances = new Set<SpeechSynthesisUtterance>();
   private pendingResolves = new Set<() => void>();
-  private overrides: VoiceSettings | null = null;
+  private overrides: SynthesisVoiceOverrides | null = null;
 
   constructor() {
     this.loadVoices();
@@ -35,7 +43,7 @@ export class SpeechSynthesisService {
       this.cancel();
 
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = LANG_MAP[lang];
+      utterance.lang = LANG_MAP[lang] ?? lang;
 
       if (this.overrides?.voice) {
         const match = speechSynthesis.getVoices().find(
@@ -82,7 +90,7 @@ export class SpeechSynthesisService {
       }
 
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = LANG_MAP[lang];
+      utterance.lang = LANG_MAP[lang] ?? lang;
 
       if (this.overrides?.voice) {
         const match = speechSynthesis.getVoices().find(
@@ -138,15 +146,15 @@ export class SpeechSynthesisService {
   /** Returns available voices for a given language. */
   getAvailableVoices(lang: SupportedLang): SpeechSynthesisVoice[] {
     if (!window.speechSynthesis) return [];
-    const prefix = LANG_MAP[lang];
+    const prefix = LANG_MAP[lang] ?? lang;
     return speechSynthesis.getVoices().filter((v) => v.lang.startsWith(prefix));
   }
 
-  setVoiceOverrides(settings: VoiceSettings | null): void {
+  setVoiceOverrides(settings: SynthesisVoiceOverrides | null): void {
     this.overrides = settings;
   }
 
-  getVoiceOverrides(): VoiceSettings | null {
+  getVoiceOverrides(): SynthesisVoiceOverrides | null {
     return this.overrides;
   }
 

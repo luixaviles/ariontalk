@@ -2,15 +2,16 @@ import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { sharedStyles } from '../styles/shared-styles.js';
 import type { SupportedLang, BargeInPlugin } from '../types.js';
+import type { VoiceInfo, EngineCapabilities } from '@ariontalk/core';
 
 interface VoiceTier {
   label: string;
-  voices: SpeechSynthesisVoice[];
+  voices: VoiceInfo[];
 }
 
 interface SettingsData {
   lang: SupportedLang;
-  voiceURI: string;
+  voiceId: string;
   rate: number;
   pitch: number;
   volume: number;
@@ -212,12 +213,13 @@ export class WidgetVoiceSettings extends LitElement {
     `,
   ];
 
-  @property({ type: Array }) voices: SpeechSynthesisVoice[] = [];
+  @property({ type: Array }) voices: VoiceInfo[] = [];
   @property({ type: Object }) currentSettings: SettingsData | null = null;
   @property({ type: Array }) bargeInPlugins: BargeInPlugin[] = [];
+  @property({ type: Object }) capabilities: EngineCapabilities | null = null;
 
   @state() private selectedLang: SupportedLang = 'en';
-  @state() private selectedVoiceURI = '';
+  @state() private selectedVoiceId = '';
   @state() private rate = 1.0;
   @state() private pitch = 1.0;
   @state() private volume = 1.0;
@@ -235,7 +237,7 @@ export class WidgetVoiceSettings extends LitElement {
       this.initialized = true;
       if (this.currentSettings) {
         this.selectedLang = this.currentSettings.lang;
-        this.selectedVoiceURI = this.currentSettings.voiceURI;
+        this.selectedVoiceId = this.currentSettings.voiceId;
         this.rate = this.currentSettings.rate;
         this.pitch = this.currentSettings.pitch;
         this.volume = this.currentSettings.volume;
@@ -270,22 +272,25 @@ export class WidgetVoiceSettings extends LitElement {
           </div>
         </div>
 
+        ${this.capabilities?.supportsVoiceSelection !== false ? html`
         <div class="field">
           <label class="field-label">Voice</label>
-          <select @change=${this.handleVoiceChange} .value=${this.selectedVoiceURI}>
+          <select @change=${this.handleVoiceChange} .value=${this.selectedVoiceId}>
             <option value="">Automatic</option>
             ${tiers.map(tier => tier.voices.length > 0 ? html`
               <optgroup label=${tier.label}>
                 ${tier.voices.map(v => html`
-                  <option value=${v.voiceURI} ?selected=${v.voiceURI === this.selectedVoiceURI}>
-                    ${v.name} (${v.lang}, ${v.localService ? 'local' : 'remote'})
+                  <option value=${v.id} ?selected=${v.id === this.selectedVoiceId}>
+                    ${v.name} (${v.lang}, ${v.local ? 'local' : 'remote'})
                   </option>
                 `)}
               </optgroup>
             ` : '')}
           </select>
         </div>
+        ` : nothing}
 
+        ${this.capabilities?.supportsRatePitchVolume !== false ? html`
         <div class="field">
           <label class="field-label">Speed: ${this.rate.toFixed(1)}x</label>
           <input type="range" min="0.5" max="2.0" step="0.1"
@@ -306,8 +311,9 @@ export class WidgetVoiceSettings extends LitElement {
                  .value=${String(this.volume)}
                  @input=${this.handleVolumeChange} />
         </div>
+        ` : nothing}
 
-        ${this.bargeInPlugins.length > 0 ? html`
+        ${this.capabilities?.supportsBargeInPlugins !== false && this.bargeInPlugins.length > 0 ? html`
           <div class="field">
             <label class="field-label help-label">
               Interruption
@@ -334,15 +340,15 @@ export class WidgetVoiceSettings extends LitElement {
   }
 
   private getVoiceTiers(): VoiceTier[] {
-    const premium: SpeechSynthesisVoice[] = [];
-    const local: SpeechSynthesisVoice[] = [];
-    const network: SpeechSynthesisVoice[] = [];
-    const google: SpeechSynthesisVoice[] = [];
+    const premium: VoiceInfo[] = [];
+    const local: VoiceInfo[] = [];
+    const network: VoiceInfo[] = [];
+    const google: VoiceInfo[] = [];
 
     for (const v of this.voices) {
       if (/premium|enhanced|natural/i.test(v.name)) {
         premium.push(v);
-      } else if (v.localService) {
+      } else if (v.local) {
         local.push(v);
       } else if (/google/i.test(v.name)) {
         google.push(v);
@@ -351,7 +357,7 @@ export class WidgetVoiceSettings extends LitElement {
       }
     }
 
-    const sort = (arr: SpeechSynthesisVoice[]) =>
+    const sort = (arr: VoiceInfo[]) =>
       arr.sort((a, b) => a.lang.localeCompare(b.lang) || a.name.localeCompare(b.name));
 
     return [
@@ -363,7 +369,7 @@ export class WidgetVoiceSettings extends LitElement {
   }
 
   private handleVoiceChange(e: Event) {
-    this.selectedVoiceURI = (e.target as HTMLSelectElement).value;
+    this.selectedVoiceId = (e.target as HTMLSelectElement).value;
   }
 
   private handleRateChange(e: Event) {
@@ -388,7 +394,7 @@ export class WidgetVoiceSettings extends LitElement {
     this.dispatchEvent(new CustomEvent('settings-apply', {
       detail: {
         lang: this.selectedLang,
-        voiceURI: this.selectedVoiceURI,
+        voiceId: this.selectedVoiceId,
         rate: this.rate,
         pitch: this.pitch,
         volume: this.volume,

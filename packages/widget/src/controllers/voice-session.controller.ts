@@ -1,17 +1,17 @@
 import type { ReactiveController, ReactiveControllerHost } from 'lit';
-import { VoiceEngine } from '@ariontalk/core';
-import type { SupportedLang, VoiceSettings, VoiceEngineState, BargeInDetector } from '@ariontalk/core';
+import { VoiceEngine, SessionTimer } from '@ariontalk/core';
+import type { SupportedLang, VoiceSettings, VoiceEngineState, VoiceEngineInterface, VoiceInfo, EngineCapabilities } from '@ariontalk/core';
 
 export class VoiceSessionController implements ReactiveController {
   private host: ReactiveControllerHost;
-  private engine: VoiceEngine;
+  private engine: VoiceEngineInterface;
 
   get state(): VoiceEngineState {
     return this.engine.state;
   }
 
   get timerDisplay(): string {
-    return this.engine.timerDisplay;
+    return SessionTimer.format(this.engine.state.elapsedSeconds);
   }
 
   constructor(host: ReactiveControllerHost) {
@@ -24,9 +24,24 @@ export class VoiceSessionController implements ReactiveController {
     };
   }
 
-  setBargeInDetector(detector: BargeInDetector | null): void {
+  get capabilities(): EngineCapabilities {
+    return this.engine.capabilities;
+  }
+
+  async setEngine(type: 'local' | 'gemini', config?: any): Promise<void> {
     this.engine.destroy();
-    this.engine = new VoiceEngine({ bargeInDetector: detector ?? undefined });
+    if (type === 'gemini') {
+      const { GeminiEngine } = await import('@ariontalk/engine-gemini');
+      this.engine = new GeminiEngine({
+        tokenServerUrl: config.tokenServer,
+        model: config.model,
+        voice: config.voice,
+      });
+    } else {
+      this.engine = new VoiceEngine({
+        bargeInDetector: config?.bargeInDetector,
+      });
+    }
     this.engine.onStateChange = () => {
       this.host.requestUpdate();
     };
@@ -61,7 +76,7 @@ export class VoiceSessionController implements ReactiveController {
     return this.engine.getVoiceOverrides();
   }
 
-  getAllVoices(): SpeechSynthesisVoice[] {
-    return this.engine.getAllVoices();
+  getVoices(): VoiceInfo[] {
+    return this.engine.getVoices();
   }
 }

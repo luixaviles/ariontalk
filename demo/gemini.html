@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Understanding Voice AI - ArionTalk Gemini Demo</title>
+  <meta name="description" content="A demo page for testing ArionTalk with the Gemini Live engine" />
+  <link rel="stylesheet" href="./styles/shared.css" />
+</head>
+<body>
+  <header class="toolbar">
+    <div class="toolbar-brand"><a href="./index.html" style="color:inherit;text-decoration:none">ArionTalk</a><span>Gemini Demo</span></div>
+    <div class="toolbar-controls">
+      <span class="toolbar-label">Theme</span>
+      <div class="segmented">
+        <button id="btn-light" class="active" onclick="setTheme('light')">Light</button>
+        <button id="btn-dark" onclick="setTheme('dark')">Dark</button>
+      </div>
+      <button id="btn-brand" class="toggle-btn" onclick="toggleBrand()">Brand</button>
+    </div>
+  </header>
+
+  <main>
+    <h1>Understanding Voice AI</h1>
+    <p class="byline">Published on March 10, 2026 by Alex Rivera</p>
+
+    <article>
+      <h2>Introduction</h2>
+      <p>
+        Voice AI has transformed the way we interact with technology. From virtual assistants
+        on our phones to sophisticated conversational agents embedded in web pages, the ability
+        to speak naturally with machines is rapidly becoming mainstream.
+      </p>
+
+      <h2>How It Works</h2>
+      <p>
+        Modern voice AI systems combine several technologies: automatic speech recognition (ASR)
+        converts spoken words into text, large language models (LLMs) generate intelligent
+        responses, and text-to-speech (TTS) synthesis turns those responses back into natural
+        sounding audio. Cloud-based engines like Gemini Live can handle the entire pipeline
+        end-to-end with low latency.
+      </p>
+
+      <h2>The Multimodal Advantage</h2>
+      <p>
+        What makes Gemini Live particularly powerful is its ability to process not just audio
+        but also visual context. By sending page content — text and images — alongside the voice
+        stream, the AI can answer questions about what the user is currently viewing, creating
+        a truly context-aware conversational experience.
+      </p>
+
+      <div class="note">
+        <strong>Note:</strong> This demo uses the Gemini Live engine for voice chat.
+        Click the microphone button in the bottom-right corner to start a conversation
+        about this page. A local token server must be running at
+        <code>http://localhost:3001/api/token</code> for authentication.
+      </div>
+
+      <h2>Looking Ahead</h2>
+      <p>
+        As voice AI models continue to improve, we can expect even more natural conversations,
+        better understanding of nuance and context, and seamless integration into everyday
+        web experiences. The gap between talking to a human and talking to an AI is narrowing
+        every day.
+      </p>
+    </article>
+  </main>
+
+  <ariontalk-widget id="widget" engine="gemini" token-server="http://localhost:3001/api/token" lang="en" settings log-level="debug"></ariontalk-widget>
+  <script type="module">
+    import '@ariontalk/widget';
+    import { initToolbar } from './scripts/toolbar.js';
+    initToolbar();
+  </script>
+</body>
+</html>

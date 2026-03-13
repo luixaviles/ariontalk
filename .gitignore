@@ -3,6 +3,7 @@ node_modules/
 dist/
 *.tsbuildinfo
 .pnpm-store/
+.env
 
 # Copied VAD/ONNX assets for dev server
 demo/public/
