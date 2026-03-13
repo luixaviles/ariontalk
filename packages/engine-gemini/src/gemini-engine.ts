@@ -5,14 +5,12 @@ import type {
   VoiceSettings,
   VoiceEngineState,
   SupportedLang,
-  ImageContext,
 } from '@ariontalk/core';
 import { PageExtractorService, SessionTimer, createLogger } from '@ariontalk/core';
-import { GoogleGenAI, type LiveServerMessage, type Session } from '@google/genai';
+import { GoogleGenAI, Modality, type LiveServerMessage, type Session } from '@google/genai';
 import { AudioCapture } from './audio/audio-capture.js';
 import { AudioPlayback } from './audio/audio-playback.js';
 import { TokenManager } from './session/token-manager.js';
-import { buildSystemPrompt } from './context/system-prompt.js';
 
 const log = createLogger('gemini-engine');
 
@@ -103,13 +101,19 @@ export class GeminiEngine implements VoiceEngineInterface {
     try {
       // Extract page context
       const pageText = this.pageExtractor.extractText();
-      const pageImages = await this.pageExtractor.extractImages();
       const pageTitle = document.title;
       const pageUrl = window.location.href;
 
-      // Fetch ephemeral token (model + voice + audio config locked into the token)
+      // Fetch ephemeral token with page context (system instruction baked into token)
       const model = this.options.model || DEFAULT_MODEL;
-      const { token } = await this.tokenManager.fetchToken(model, this.voiceId);
+      const { token } = await this.tokenManager.fetchToken({
+        model,
+        voice: this.voiceId,
+        lang,
+        pageTitle,
+        pageUrl,
+        pageContent: pageText,
+      });
       if (!this.sessionActive) return;
 
       // Initialize audio playback
@@ -118,7 +122,7 @@ export class GeminiEngine implements VoiceEngineInterface {
       if (!this.sessionActive) return;
 
       // Connect to Gemini Live
-      await this.connect(token, lang, pageText, pageImages, pageTitle, pageUrl);
+      await this.connect(token);
       if (!this.sessionActive) return;
 
       // Start mic capture
@@ -139,8 +143,6 @@ export class GeminiEngine implements VoiceEngineInterface {
       this.updateState({ status: 'listening' });
       log.info('Session started, lang:', lang);
     } catch (err) {
-      console.log('an error has occurred!!')
-      console.error('error', err);
       if (!this.sessionActive) return;
       const message = err instanceof Error ? err.message : 'Failed to start session';
       log.error('startSession failed:', message);
@@ -221,45 +223,15 @@ export class GeminiEngine implements VoiceEngineInterface {
 
   // --- Private methods ---
 
-  private async connect(
-    token: string,
-    lang: string,
-    pageText: string,
-    pageImages: ImageContext[],
-    pageTitle: string,
-    pageUrl: string,
-  ): Promise<void> {
+  private async connect(token: string): Promise<void> {
     const ai = new GoogleGenAI({ apiKey: token, apiVersion: 'v1alpha' });
-
-    // Build system instruction with text + images as Part[]
-    const systemPromptText = buildSystemPrompt(pageText, lang, pageTitle, pageUrl);
-    const systemParts: Array<{ text: string } | { inlineData: { data: string; mimeType: string } }> = [
-      { text: systemPromptText },
-    ];
-
-    for (const img of pageImages) {
-      try {
-        const base64 = await this.blobToBase64(img.blob);
-        systemParts.push({ inlineData: { data: base64, mimeType: 'image/jpeg' } });
-        if (img.alt) {
-          systemParts.push({ text: `[Image: ${img.alt}]` });
-        }
-      } catch {
-        // Skip images that fail to convert
-      }
-    }
-
     const model = this.options.model || DEFAULT_MODEL;
 
-    console.log('going to use model: ', model);
-
-    // responseModalities, speechConfig are locked in the ephemeral token
-    // systemInstruction is ignored by BidiGenerateContentConstrained (known limitation)
+    
     this.session = await ai.live.connect({
       model,
       config: {
-        inputAudioTranscription: {},
-        outputAudioTranscription: {},
+        responseModalities: [Modality.AUDIO],
         sessionResumption: this.savedSessionHandle
           ? { handle: this.savedSessionHandle }
           : {},
@@ -370,15 +342,21 @@ export class GeminiEngine implements VoiceEngineInterface {
       }
 
       const model = this.options.model || DEFAULT_MODEL;
-      const { token } = await this.tokenManager.fetchToken(model, this.voiceId);
-      if (!this.sessionActive) return;
-
       const pageText = this.pageExtractor.extractText();
-      const pageImages = await this.pageExtractor.extractImages();
       const pageTitle = document.title;
       const pageUrl = window.location.href;
 
-      await this.connect(token, this.state.currentLang, pageText, pageImages, pageTitle, pageUrl);
+      const { token } = await this.tokenManager.fetchToken({
+        model,
+        voice: this.voiceId,
+        lang: this.state.currentLang,
+        pageTitle,
+        pageUrl,
+        pageContent: pageText,
+      });
+      if (!this.sessionActive) return;
+
+      await this.connect(token);
       if (!this.sessionActive) return;
 
       // Restart audio capture after successful reconnect
@@ -404,16 +382,22 @@ export class GeminiEngine implements VoiceEngineInterface {
   private async restartSession(lang: string): Promise<void> {
     try {
       const model = this.options.model || DEFAULT_MODEL;
-      const { token } = await this.tokenManager.fetchToken(model, this.voiceId);
-      if (!this.sessionActive) return;
-
       const pageText = this.pageExtractor.extractText();
-      const pageImages = await this.pageExtractor.extractImages();
       const pageTitle = document.title;
       const pageUrl = window.location.href;
 
+      const { token } = await this.tokenManager.fetchToken({
+        model,
+        voice: this.voiceId,
+        lang,
+        pageTitle,
+        pageUrl,
+        pageContent: pageText,
+      });
+      if (!this.sessionActive) return;
+
       this.savedSessionHandle = null;
-      await this.connect(token, lang, pageText, pageImages, pageTitle, pageUrl);
+      await this.connect(token);
       if (!this.sessionActive) return;
 
       await this.audioCapture.start((base64Pcm) => {
@@ -466,19 +450,5 @@ export class GeminiEngine implements VoiceEngineInterface {
 
   private notifyStateChange(): void {
     this.onStateChange?.(this.state);
-  }
-
-  private blobToBase64(blob: Blob): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        // Strip the data URL prefix (data:image/jpeg;base64,)
-        const base64 = result.split(',')[1];
-        resolve(base64);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
   }
 }

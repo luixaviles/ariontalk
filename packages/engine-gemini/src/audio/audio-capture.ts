@@ -6,7 +6,7 @@ const CAPTURE_WORKLET_CODE = `
 class CaptureProcessor extends AudioWorkletProcessor {
   constructor() {
     super();
-    this.buffer = new Float32Array(1600); // ~100ms at 16kHz
+    this.buffer = new Float32Array(320); // 20ms at 16kHz
     this.offset = 0;
   }
 
@@ -69,6 +69,7 @@ export class AudioCapture {
     });
 
     this.audioContext = new AudioContext({ sampleRate: 16000 });
+    await this.audioContext.resume();
 
     // Register worklet from inline code via Blob URL
     const blob = new Blob([CAPTURE_WORKLET_CODE], { type: 'application/javascript' });
