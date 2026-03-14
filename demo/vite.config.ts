@@ -37,6 +37,7 @@ export default defineConfig({
       '@ariontalk/core': resolve(__dirname, '../packages/core/src/index.ts'),
       '@ariontalk/widget': resolve(__dirname, '../packages/widget/src/index.ts'),
       '@ariontalk/plugin-silero-vad': resolve(__dirname, '../packages/plugin-silero-vad/src/index.ts'),
+      '@ariontalk/engine-gemini': resolve(__dirname, '../packages/engine-gemini/src/index.ts'),
     },
   },
   optimizeDeps: {
@@ -50,6 +51,7 @@ export default defineConfig({
         enAi: resolve(__dirname, 'en-ai.html'),
         es: resolve(__dirname, 'es.html'),
         esAi: resolve(__dirname, 'es-ai.html'),
+        gemini: resolve(__dirname, 'gemini.html'),
       },
     },
   },

@@ -1,4 +1,6 @@
-export type SupportedLang = 'en' | 'es';
+export type WellKnownLang = 'en' | 'es' | 'ja' | 'fr' | 'de' | 'pt'
+                         | 'it' | 'zh' | 'ko' | 'hi' | 'ar' | 'ru';
+export type SupportedLang = WellKnownLang | (string & {});
 
 export interface ImageContext {
   blob: Blob;
@@ -6,8 +8,15 @@ export interface ImageContext {
   src: string;
 }
 
+export interface VoiceInfo {
+  id: string;           // Unique identifier (voiceURI for local, name for Gemini)
+  name: string;         // Display name
+  lang: string;         // BCP-47 language code
+  local: boolean;       // True for on-device voices
+}
+
 export interface VoiceSettings {
-  voice: SpeechSynthesisVoice | null;
+  voiceId: string | null;
   rate: number;
   pitch: number;
   volume: number;
@@ -34,4 +43,37 @@ export interface VoiceEngineState {
   interimTranscript: string;
   error: string | null;
   downloadProgress: number;
+}
+
+export interface EngineCapabilities {
+  supportedLanguages: readonly string[];
+  supportsVoiceSelection: boolean;
+  supportsRatePitchVolume: boolean;
+  supportsBargeInPlugins: boolean;
+  supportsOffline: boolean;
+  maxSessionDurationSec: number | null;   // null = unlimited
+  requiresTokenServer: boolean;
+}
+
+export interface VoiceEngineInterface {
+  // Lifecycle
+  startSession(lang: string): Promise<void>;
+  endSession(): void;
+  destroy(): void;
+
+  // Runtime
+  switchLanguage(lang: string): void;
+  setMuted(muted: boolean): void;
+
+  // Voice settings
+  applyVoiceSettings(settings: VoiceSettings): void;
+  getVoiceOverrides(): VoiceSettings | null;
+  getVoices(): VoiceInfo[];
+
+  // State
+  readonly state: VoiceEngineState;
+  onStateChange: ((state: VoiceEngineState) => void) | null;
+
+  // Capabilities (engines declare what they support)
+  readonly capabilities: EngineCapabilities;
 }

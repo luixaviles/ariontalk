@@ -1,5 +1,9 @@
 // Types
-export type { SupportedLang, VoiceSettings, ImageContext, BargeInDetector, EngineStatus, VoiceEngineState } from './types.js';
+export type {
+  SupportedLang, WellKnownLang, VoiceSettings, VoiceInfo, ImageContext,
+  BargeInDetector, EngineStatus, VoiceEngineState,
+  EngineCapabilities, VoiceEngineInterface,
+} from './types.js';
 
 // Engine
 export { VoiceEngine } from './engine/voice-engine.js';

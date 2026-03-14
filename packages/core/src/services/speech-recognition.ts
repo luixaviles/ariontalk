@@ -3,7 +3,7 @@ import { createLogger } from '../utils/logger.js';
 
 const log = createLogger('speech-recognition');
 
-const LANG_MAP: Record<SupportedLang, string> = {
+const LANG_MAP: Record<string, string> = {
   en: 'en-US',
   es: 'es-ES',
 };
@@ -86,7 +86,7 @@ export class SpeechRecognitionService {
     const rec = new SpeechRecognitionCtor();
     rec.continuous = true;
     rec.interimResults = true;
-    rec.lang = LANG_MAP[this.currentLang];
+    rec.lang = LANG_MAP[this.currentLang] ?? this.currentLang;
 
     // Attempt on-device processing if not already failed
     if (this.useLocalProcessing) {

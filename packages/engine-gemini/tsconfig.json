@@ -7,6 +7,5 @@
     "composite": true
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist"],
-  "references": [{ "path": "../core" }, { "path": "../engine-gemini" }]
+  "exclude": ["node_modules", "dist"]
 }

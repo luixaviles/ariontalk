@@ -1,8 +1,16 @@
 /**
  * Checks whether all required browser APIs are available for the voice chat widget.
- * Requires: SpeechRecognition, speechSynthesis, and the Prompt API (LanguageModel).
+ * For 'local': requires SpeechRecognition, speechSynthesis, and the Prompt API (LanguageModel).
+ * For 'gemini': requires getUserMedia and AudioContext.
  */
-export async function isVoiceChatSupported(): Promise<boolean> {
+export async function isVoiceChatSupported(
+  engine: 'local' | 'gemini' = 'local'
+): Promise<boolean> {
+  if (engine === 'gemini') {
+    return !!(navigator.mediaDevices?.getUserMedia)
+        && !!(window.AudioContext || (window as any).webkitAudioContext);
+  }
+
   // 1. Check SpeechRecognition
   const SpeechRecognition =
     (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;

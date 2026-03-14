@@ -1,0 +1,25 @@
+{
+  "name": "@ariontalk/engine-gemini",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
+    }
+  },
+  "scripts": {
+    "build": "tsdown"
+  },
+  "peerDependencies": {
+    "@ariontalk/core": "workspace:*"
+  },
+  "dependencies": {
+    "@google/genai": "^1.x"
+  },
+  "devDependencies": {
+    "@ariontalk/core": "workspace:*",
+    "tsdown": "^0.x",
+    "typescript": "^5.6.0"
+  }
+}

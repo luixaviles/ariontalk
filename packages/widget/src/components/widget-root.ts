@@ -12,7 +12,7 @@ const STORAGE_KEY = 'ariontalk:settings';
 
 interface SavedSettings {
   lang: SupportedLang;
-  voiceURI: string;
+  voiceId: string;
   rate: number;
   pitch: number;
   volume: number;
@@ -139,6 +139,14 @@ export class ArionTalk extends LitElement {
   @property({ type: Array }) bargeInPlugins: BargeInPlugin[] = [];
   /** Log level: 'disabled' | 'error' | 'warning' | 'info' | 'debug'. Disabled by default. */
   @property({ type: String, attribute: 'log-level' }) logLevel: LogLevel = LogLevel.Disabled;
+  /** Engine type: 'local' (browser-based) or 'gemini' (cloud-based). */
+  @property({ type: String }) engine: 'local' | 'gemini' = 'local';
+  /** URL of the token server for Gemini engine authentication. */
+  @property({ type: String, attribute: 'token-server' }) tokenServer = '';
+  /** Gemini model identifier (e.g. 'gemini-2.0-flash-exp'). */
+  @property({ type: String, attribute: 'gemini-model' }) geminiModel = '';
+  /** Gemini voice name for TTS output. */
+  @property({ type: String, attribute: 'gemini-voice' }) geminiVoice = '';
 
   @state() private supported = false;
   @state() private active = false;
@@ -183,9 +191,10 @@ export class ArionTalk extends LitElement {
     if (this.showSettings) {
       return html`
         <vcw-voice-settings
-          .voices=${this.controller.getAllVoices()}
+          .voices=${this.controller.getVoices()}
           .currentSettings=${this.currentSettings}
           .bargeInPlugins=${this.bargeInPlugins}
+          .capabilities=${this.controller.capabilities}
           @settings-apply=${this.handleSettingsApply}
           @settings-back=${this.handleSettingsBack}
         ></vcw-voice-settings>
@@ -209,13 +218,13 @@ export class ArionTalk extends LitElement {
   }
 
   private async checkSupport() {
-    this.supported = this.force || await isVoiceChatSupported();
+    this.supported = this.force || await isVoiceChatSupported(this.engine);
   }
 
   private get currentSettings(): SavedSettings {
     return this.savedSettings ?? {
       lang: this.lang,
-      voiceURI: '',
+      voiceId: '',
       rate: 1.0,
       pitch: 1.0,
       volume: 1.0,
@@ -241,25 +250,33 @@ export class ArionTalk extends LitElement {
   }
 
   private async handleFabClick() {
-    // Apply saved voice settings before starting
     const s = this.currentSettings;
-    const voice = s.voiceURI
-      ? this.controller.getAllVoices().find(v => v.voiceURI === s.voiceURI) ?? null
-      : null;
-    // Resolve plugin ID to detector instance
-    const plugin = this.bargeInPlugins.find(p => p.id === s.bargeInPluginId);
-    const detector = plugin ? plugin.create() : null;
-    this.controller.setBargeInDetector(detector);
-    this.controller.applyVoiceSettings({ voice, rate: s.rate, pitch: s.pitch, volume: s.volume });
+
+    if (this.engine === 'gemini') {
+      await this.controller.setEngine('gemini', {
+        tokenServer: this.tokenServer,
+        model: this.geminiModel,
+        voice: this.geminiVoice || undefined,
+      });
+    } else {
+      const plugin = this.bargeInPlugins.find(p => p.id === s.bargeInPluginId);
+      const detector = plugin ? plugin.create() : null;
+      await this.controller.setEngine('local', { bargeInDetector: detector ?? undefined });
+    }
+
+    this.controller.applyVoiceSettings({
+      voiceId: s.voiceId || null,
+      rate: s.rate,
+      pitch: s.pitch,
+      volume: s.volume,
+    });
 
     this.active = true;
-    this.dispatchEvent(
-      new CustomEvent('at-session-start', {
-        detail: { lang: this.lang },
-        bubbles: true,
-        composed: true,
-      }),
-    );
+    this.dispatchEvent(new CustomEvent('at-session-start', {
+      detail: { lang: this.lang },
+      bubbles: true,
+      composed: true,
+    }));
     await this.controller.startSession(this.lang);
   }
 

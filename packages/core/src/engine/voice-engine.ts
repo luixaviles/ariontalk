@@ -4,7 +4,7 @@ import { SpeechSynthesisService } from '../services/speech-synthesis.js';
 import { AISessionService } from '../services/ai-session.js';
 import { SessionTimer } from '../utils/timer.js';
 import { createLogger } from '../utils/logger.js';
-import type { VoiceEngineState, SupportedLang, VoiceSettings, BargeInDetector } from '../types.js';
+import type { VoiceEngineInterface, EngineCapabilities, VoiceInfo, VoiceEngineState, SupportedLang, VoiceSettings, BargeInDetector } from '../types.js';
 
 const log = createLogger('voice-engine');
 
@@ -12,7 +12,7 @@ export interface VoiceEngineOptions {
   bargeInDetector?: BargeInDetector;
 }
 
-export class VoiceEngine {
+export class VoiceEngine implements VoiceEngineInterface {
   private pageExtractor = new PageExtractorService();
   private recognition = new SpeechRecognitionService();
   private synthesis = new SpeechSynthesisService();
@@ -22,6 +22,16 @@ export class VoiceEngine {
   private sessionActive = false;
   private bargeInTriggered = false;
   private muted = false;
+
+  readonly capabilities: EngineCapabilities = {
+    supportedLanguages: ['en', 'es'],
+    supportsVoiceSelection: true,
+    supportsRatePitchVolume: true,
+    supportsBargeInPlugins: true,
+    supportsOffline: true,
+    maxSessionDurationSec: null,
+    requiresTokenServer: false,
+  };
 
   state: VoiceEngineState = {
     status: 'idle',
@@ -55,10 +65,6 @@ export class VoiceEngine {
     this.recognition.onError = (error) => {
       this.setError(error);
     };
-  }
-
-  get timerDisplay(): string {
-    return this.timer.formatted;
   }
 
   private notifyStateChange(): void {
@@ -166,15 +172,30 @@ export class VoiceEngine {
   }
 
   applyVoiceSettings(settings: VoiceSettings): void {
-    this.synthesis.setVoiceOverrides(settings);
+    const voice = settings.voiceId
+      ? this.synthesis.getAllVoices().find(v => v.voiceURI === settings.voiceId) ?? null
+      : null;
+    this.synthesis.setVoiceOverrides({ voice, rate: settings.rate, pitch: settings.pitch, volume: settings.volume });
   }
 
   getVoiceOverrides(): VoiceSettings | null {
-    return this.synthesis.getVoiceOverrides();
+    const overrides = this.synthesis.getVoiceOverrides();
+    if (!overrides) return null;
+    return {
+      voiceId: overrides.voice?.voiceURI ?? null,
+      rate: overrides.rate,
+      pitch: overrides.pitch,
+      volume: overrides.volume,
+    };
   }
 
-  getAllVoices(): SpeechSynthesisVoice[] {
-    return this.synthesis.getAllVoices();
+  getVoices(): VoiceInfo[] {
+    return this.synthesis.getAllVoices().map(v => ({
+      id: v.voiceURI,
+      name: v.name,
+      lang: v.lang,
+      local: v.localService,
+    }));
   }
 
   /** Switch recognition + synthesis + AI language mid-session. */
