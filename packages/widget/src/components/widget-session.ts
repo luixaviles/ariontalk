@@ -1,5 +1,5 @@
 import { LitElement, html, css, nothing } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, query } from 'lit/decorators.js';
 import { sharedStyles } from '../styles/shared-styles.js';
 import type { WidgetStatus } from '../types.js';
 
@@ -147,14 +147,25 @@ export class WidgetSession extends LitElement {
       /* Transcript */
       .transcript {
         font-size: 13px;
+        line-height: 1.4;
         color: var(--at-text-muted);
         font-style: italic;
         text-align: center;
-        min-height: 20px;
         max-width: 220px;
+        max-height: 55px;
         overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 30%);
+        mask-image: linear-gradient(to bottom, transparent 0%, black 30%);
+      }
+
+      .transcript .word {
+        opacity: 0;
+        animation: vcw-word-in 0.25s ease-in forwards;
+      }
+
+      @keyframes vcw-word-in {
+        from { opacity: 0; }
+        to   { opacity: 1; }
       }
 
       /* Controls row */
@@ -223,6 +234,19 @@ export class WidgetSession extends LitElement {
   @property({ type: Boolean }) bargeInEnabled = false;
   @property({ type: Boolean }) muted = false;
 
+  @query('.transcript') private transcriptEl?: HTMLElement;
+
+  private _prevTranscript = '';
+
+  protected updated(changed: Map<string, unknown>) {
+    if (changed.has('interimTranscript')) {
+      this._prevTranscript = this.interimTranscript;
+      if (this.transcriptEl) {
+        this.transcriptEl.scrollTo({ top: this.transcriptEl.scrollHeight, behavior: 'smooth' });
+      }
+    }
+  }
+
   render() {
     return html`
       <div class="panel">
@@ -236,7 +260,7 @@ export class WidgetSession extends LitElement {
         ${this.status === 'loading' && this.downloadProgress !== 0 ? this.renderProgressBar() : nothing}
 
         ${this.interimTranscript
-          ? html`<div class="transcript" aria-live="polite">${this.interimTranscript}</div>`
+          ? html`<div class="transcript" aria-live="polite">${this.renderTranscript()}</div>`
           : nothing}
 
         ${this.status === 'error' && this.error
@@ -300,6 +324,40 @@ export class WidgetSession extends LitElement {
       case 'error': return 'Error';
       default: return '';
     }
+  }
+
+  private renderTranscript() {
+    const current = this.interimTranscript;
+    const prev = this._prevTranscript;
+
+    // If current starts with previous, only the suffix is new
+    if (current.startsWith(prev) && prev.length > 0) {
+      const oldText = prev;
+      const newText = current.slice(prev.length);
+      if (!newText) return oldText;
+
+      const words = newText.split(/(\s+)/);
+      let wordIndex = 0;
+
+      return html`${oldText}${words.map((segment) => {
+        // Preserve whitespace as-is, animate words
+        if (/^\s+$/.test(segment)) return segment;
+        const delay = wordIndex * 60;
+        wordIndex++;
+        return html`<span class="word" style="animation-delay:${delay}ms">${segment}</span>`;
+      })}`;
+    }
+
+    // Text was reset (role change / clear) — animate all words
+    const words = current.split(/(\s+)/);
+    let wordIndex = 0;
+
+    return html`${words.map((segment) => {
+      if (/^\s+$/.test(segment)) return segment;
+      const delay = wordIndex * 60;
+      wordIndex++;
+      return html`<span class="word" style="animation-delay:${delay}ms">${segment}</span>`;
+    })}`;
   }
 
   private renderProgressBar() {

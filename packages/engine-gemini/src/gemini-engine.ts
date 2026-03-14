@@ -74,6 +74,7 @@ export class GeminiEngine implements VoiceEngineInterface {
   private static readonly MAX_RETRIES = 3;
   private transcriptBuffer = '';
   private transcriptRole: 'user' | 'model' | null = null;
+  private pendingTranscriptTimers: ReturnType<typeof setTimeout>[] = [];
 
   constructor(options: GeminiEngineOptions) {
     this.options = options;
@@ -89,8 +90,7 @@ export class GeminiEngine implements VoiceEngineInterface {
     this.sessionActive = true;
     this.retryCount = 0;
     this.savedSessionHandle = null;
-    this.transcriptBuffer = '';
-    this.transcriptRole = null;
+    this.clearPendingTranscripts();
 
     this.state = {
       status: 'loading',
@@ -168,6 +168,7 @@ export class GeminiEngine implements VoiceEngineInterface {
 
     this.pageExtractor.destroy();
     this.savedSessionHandle = null;
+    this.clearPendingTranscripts();
 
     this.state = {
       status: 'idle',
@@ -284,24 +285,32 @@ export class GeminiEngine implements VoiceEngineInterface {
         this.transcriptRole = 'user';
       }
       this.transcriptBuffer += content.inputTranscription.text;
+
       this.updateState({ interimTranscript: this.transcriptBuffer });
     }
 
-    // Output transcription (model speech)
+    // Output transcription (model speech) — delayed to sync with audio playback
     if (content?.outputTranscription?.text) {
-      if (this.transcriptRole !== 'model') {
-        this.transcriptBuffer = '';
-        this.transcriptRole = 'model';
-      }
-      this.transcriptBuffer += content.outputTranscription.text;
-      this.updateState({ interimTranscript: this.transcriptBuffer });
+      const fragment = content.outputTranscription.text;
+      const delayMs = this.audioPlayback.bufferedSeconds * 1000;
+
+      const timer = setTimeout(() => {
+        if (!this.sessionActive) return;
+        if (this.transcriptRole !== 'model') {
+          this.transcriptBuffer = '';
+          this.transcriptRole = 'model';
+        }
+        this.transcriptBuffer += fragment;
+  
+        this.updateState({ interimTranscript: this.transcriptBuffer });
+      }, delayMs);
+      this.pendingTranscriptTimers.push(timer);
     }
 
     // Interruption
     if (content?.interrupted) {
       this.audioPlayback.clear();
-      this.transcriptBuffer = '';
-      this.transcriptRole = null;
+      this.clearPendingTranscripts();
       this.updateState({ status: 'listening', interimTranscript: '' });
     }
 
@@ -309,8 +318,7 @@ export class GeminiEngine implements VoiceEngineInterface {
     if (content?.turnComplete) {
       this.audioPlayback.onDrained(() => {
         if (this.sessionActive) {
-          this.transcriptBuffer = '';
-          this.transcriptRole = null;
+          this.clearPendingTranscripts();
           this.updateState({ status: 'listening', interimTranscript: '' });
         }
       });
@@ -459,6 +467,15 @@ export class GeminiEngine implements VoiceEngineInterface {
       clearTimeout(this.sessionEndTimeout);
       this.sessionEndTimeout = null;
     }
+  }
+
+  private clearPendingTranscripts(): void {
+    for (const timer of this.pendingTranscriptTimers) {
+      clearTimeout(timer);
+    }
+    this.pendingTranscriptTimers = [];
+    this.transcriptBuffer = '';
+    this.transcriptRole = null;
   }
 
   private updateState(partial: Partial<VoiceEngineState>): void {

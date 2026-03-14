@@ -80,11 +80,14 @@ function base64ToFloat32(base64: string): Float32Array {
   return float32;
 }
 
+const SAMPLE_RATE = 24000;
+
 export class AudioPlayback {
   private audioContext: AudioContext | null = null;
   private workletNode: AudioWorkletNode | null = null;
   private drainedCallback: (() => void) | null = null;
   private _playing = false;
+  private _playbackEndTime = 0;
 
   async init(): Promise<void> {
     this.audioContext = new AudioContext({ sampleRate: 24000 });
@@ -116,9 +119,16 @@ export class AudioPlayback {
     return this._playing;
   }
 
+  get bufferedSeconds(): number {
+    return Math.max(0, this._playbackEndTime - performance.now() / 1000);
+  }
+
   enqueue(base64Pcm: string): void {
     if (!this.workletNode) return;
     const samples = base64ToFloat32(base64Pcm);
+    const duration = samples.length / SAMPLE_RATE;
+    const now = performance.now() / 1000;
+    this._playbackEndTime = Math.max(now, this._playbackEndTime) + duration;
     this.workletNode.port.postMessage({ type: 'enqueue', samples });
     this._playing = true;
   }
@@ -127,6 +137,7 @@ export class AudioPlayback {
     if (!this.workletNode) return;
     this.workletNode.port.postMessage({ type: 'clear' });
     this._playing = false;
+    this._playbackEndTime = 0;
     this.drainedCallback = null;
     log.debug('Playback cleared');
   }
