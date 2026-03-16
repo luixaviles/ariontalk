@@ -50,6 +50,7 @@ export interface EngineCapabilities {
   supportsVoiceSelection: boolean;
   supportsRatePitchVolume: boolean;
   supportsBargeInPlugins: boolean;
+  alwaysCaptureMic: boolean;
   supportsOffline: boolean;
   maxSessionDurationSec: number | null;   // null = unlimited
   requiresTokenServer: boolean;
