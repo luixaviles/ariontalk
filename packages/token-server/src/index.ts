@@ -30,10 +30,12 @@ function buildSystemPrompt(
   pageTitle: string,
   pageUrl: string,
 ): string {
-  const langName = LANG_DISPLAY_NAMES[lang] ?? lang;
+  const langInstruction = lang === 'auto'
+    ? 'Respond in the same language the user speaks'
+    : `Respond in ${LANG_DISPLAY_NAMES[lang] ?? lang}`;
 
   return PROMPT_TEMPLATE
-    .replace('{{lang}}', langName)
+    .replace('{{lang}}', langInstruction)
     .replace('{{pageTitle}}', pageTitle)
     .replace('{{pageUrl}}', pageUrl)
     .replace('{{pageContent}}', pageContent);

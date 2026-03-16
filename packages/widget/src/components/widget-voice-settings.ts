@@ -218,7 +218,23 @@ export class WidgetVoiceSettings extends LitElement {
   @property({ type: Array }) bargeInPlugins: BargeInPlugin[] = [];
   @property({ type: Object }) capabilities: EngineCapabilities | null = null;
 
-  @state() private selectedLang: SupportedLang = 'en';
+  private static readonly LANG_DISPLAY_NAMES: Record<string, string> = {
+    auto: 'Automatic',
+    en: 'English',
+    es: 'Español',
+    ja: '日本語',
+    fr: 'Français',
+    de: 'Deutsch',
+    pt: 'Português',
+    it: 'Italiano',
+    zh: '中文',
+    ko: '한국어',
+    hi: 'हिन्दी',
+    ar: 'العربية',
+    ru: 'Русский',
+  };
+
+  @state() private selectedLang: SupportedLang = 'auto';
   @state() private selectedVoiceId = '';
   @state() private rate = 1.0;
   @state() private pitch = 1.0;
@@ -264,12 +280,13 @@ export class WidgetVoiceSettings extends LitElement {
 
         <div class="field">
           <label class="field-label">Language</label>
-          <div class="lang-selector">
-            <button class="lang-option ${this.selectedLang === 'en' ? 'active' : ''}"
-              @click=${() => { this.selectedLang = 'en'; }}>English</button>
-            <button class="lang-option ${this.selectedLang === 'es' ? 'active' : ''}"
-              @click=${() => { this.selectedLang = 'es'; }}>Español</button>
-          </div>
+          <select @change=${this.handleLangChange} .value=${this.selectedLang}>
+            ${(this.capabilities?.supportedLanguages ?? ['auto', 'en']).map(code => html`
+              <option value=${code} ?selected=${code === this.selectedLang}>
+                ${WidgetVoiceSettings.LANG_DISPLAY_NAMES[code] ?? code}
+              </option>
+            `)}
+          </select>
         </div>
 
         ${this.capabilities?.supportsVoiceSelection !== false ? html`
@@ -366,6 +383,10 @@ export class WidgetVoiceSettings extends LitElement {
       { label: 'Network', voices: sort(network) },
       { label: 'Google', voices: sort(google) },
     ];
+  }
+
+  private handleLangChange(e: Event) {
+    this.selectedLang = (e.target as HTMLSelectElement).value as SupportedLang;
   }
 
   private handleVoiceChange(e: Event) {

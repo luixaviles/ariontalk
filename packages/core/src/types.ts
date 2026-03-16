@@ -1,4 +1,4 @@
-export type WellKnownLang = 'en' | 'es' | 'ja' | 'fr' | 'de' | 'pt'
+export type WellKnownLang = 'auto' | 'en' | 'es' | 'ja' | 'fr' | 'de' | 'pt'
                          | 'it' | 'zh' | 'ko' | 'hi' | 'ar' | 'ru';
 export type SupportedLang = WellKnownLang | (string & {});
 

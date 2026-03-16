@@ -24,7 +24,7 @@ export class VoiceEngine implements VoiceEngineInterface {
   private muted = false;
 
   readonly capabilities: EngineCapabilities = {
-    supportedLanguages: ['en', 'es'],
+    supportedLanguages: ['auto', 'en', 'es'],
     supportsVoiceSelection: true,
     supportsRatePitchVolume: true,
     supportsBargeInPlugins: true,
@@ -35,7 +35,7 @@ export class VoiceEngine implements VoiceEngineInterface {
 
   state: VoiceEngineState = {
     status: 'idle',
-    currentLang: 'en',
+    currentLang: 'auto',
     elapsedSeconds: 0,
     interimTranscript: '',
     error: null,
