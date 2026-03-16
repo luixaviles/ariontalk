@@ -147,6 +147,8 @@ export class ArionTalk extends LitElement {
   @property({ type: String, attribute: 'gemini-model' }) geminiModel = '';
   /** Gemini voice name for TTS output. */
   @property({ type: String, attribute: 'gemini-voice' }) geminiVoice = '';
+  /** When set, enables interactive scroll-and-highlight during Gemini speech. */
+  @property({ type: Boolean, attribute: 'interactive-highlights' }) interactiveHighlights = false;
 
   @state() private supported = false;
   @state() private active = false;
@@ -259,6 +261,7 @@ export class ArionTalk extends LitElement {
         tokenServer: this.tokenServer,
         model: this.geminiModel,
         voice: this.geminiVoice || undefined,
+        interactiveHighlights: this.interactiveHighlights,
       });
     } else {
       await this.controller.setEngine('local');

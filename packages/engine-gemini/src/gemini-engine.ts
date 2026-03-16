@@ -6,11 +6,12 @@ import type {
   VoiceEngineState,
   SupportedLang,
 } from '@ariontalk/core';
-import { PageExtractorService, SessionTimer, createLogger, blobToBase64 } from '@ariontalk/core';
+import { PageExtractorService, PageIndexerService, SessionTimer, createLogger, blobToBase64 } from '@ariontalk/core';
 import { GoogleGenAI, Modality, type LiveServerMessage, type Session } from '@google/genai';
 import { AudioCapture } from './audio/audio-capture.js';
 import { AudioPlayback } from './audio/audio-playback.js';
 import { TokenManager } from './session/token-manager.js';
+import { HighlightManager } from './highlights/highlight-manager.js';
 
 const log = createLogger('gemini-engine');
 
@@ -34,6 +35,7 @@ export interface GeminiEngineOptions {
   model?: string;
   voice?: string;
   pageExtractor?: PageExtractorService;
+  interactiveHighlights?: boolean;
 }
 
 export class GeminiEngine implements VoiceEngineInterface {
@@ -75,6 +77,10 @@ export class GeminiEngine implements VoiceEngineInterface {
   private transcriptBuffer = '';
   private transcriptRole: 'user' | 'model' | null = null;
   private pendingTranscriptTimers: ReturnType<typeof setTimeout>[] = [];
+  private highlightsEnabled: boolean;
+  private pageIndexer: PageIndexerService | null = null;
+  private highlightManager: HighlightManager | null = null;
+  private elementMap: Map<string, Element[]> = new Map();
 
   constructor(options: GeminiEngineOptions) {
     this.options = options;
@@ -84,6 +90,11 @@ export class GeminiEngine implements VoiceEngineInterface {
     this.timer = new SessionTimer((seconds) => {
       this.updateState({ elapsedSeconds: seconds });
     });
+    this.highlightsEnabled = options.interactiveHighlights ?? false;
+    if (this.highlightsEnabled) {
+      this.pageIndexer = new PageIndexerService();
+      this.highlightManager = new HighlightManager();
+    }
   }
 
   async startSession(lang: string): Promise<void> {
@@ -104,7 +115,14 @@ export class GeminiEngine implements VoiceEngineInterface {
 
     try {
       // Extract page context
-      const pageText = this.pageExtractor.extractText();
+      let pageText: string;
+      if (this.highlightsEnabled && this.pageIndexer) {
+        const index = this.pageIndexer.buildIndex();
+        pageText = index.annotatedText;
+        this.elementMap = index.elementMap;
+      } else {
+        pageText = this.pageExtractor.extractText();
+      }
       const pageTitle = document.title;
       const pageUrl = window.location.href;
 
@@ -117,6 +135,7 @@ export class GeminiEngine implements VoiceEngineInterface {
         pageTitle,
         pageUrl,
         pageContent: pageText,
+        ...(this.highlightsEnabled && { interactiveHighlights: true }),
       });
       if (!this.sessionActive) return;
 
@@ -124,6 +143,11 @@ export class GeminiEngine implements VoiceEngineInterface {
       await this.audioPlayback.init();
       await this.audioPlayback.resume();
       if (!this.sessionActive) return;
+
+      // Initialize highlight manager
+      if (this.highlightsEnabled && this.highlightManager) {
+        this.highlightManager.init();
+      }
 
       // Connect to Gemini Live
       await this.connect(token);
@@ -171,6 +195,9 @@ export class GeminiEngine implements VoiceEngineInterface {
     }
 
     this.pageExtractor.destroy();
+    if (this.highlightManager) this.highlightManager.destroy();
+    if (this.pageIndexer) this.pageIndexer.destroy();
+    this.elementMap.clear();
     this.savedSessionHandle = null;
     this.clearPendingTranscripts();
 
@@ -249,17 +276,23 @@ export class GeminiEngine implements VoiceEngineInterface {
 
     const parts: Array<{ text: string } | { inlineData: { data: string; mimeType: string } }> = [];
 
-    const imageDescriptions = validImages
-      .map((img, i) => img.alt ? `Image ${i + 1}: ${img.alt}` : `Image ${i + 1}: (no description)`)
-      .join('\n');
-
     parts.push({
       text: `The following images are from the webpage the user is viewing. `
-          + `Use them to answer visual questions about the page.\n\n`
-          + imageDescriptions,
+          + `Each image is preceded by its ID and the HTML alt text provided by the page author. `
+          + `IMPORTANT: Alt text is author-provided metadata and may not match the actual image. `
+          + `Always describe what you see in the image, not the alt text.`,
     });
 
-    for (const img of validImages) {
+    for (let i = 0; i < validImages.length; i++) {
+      const img = validImages[i];
+      const idx = i + 1;
+      const prefix = this.highlightsEnabled ? `[img-${idx}]` : `Image ${idx}:`;
+      const altNote = img.alt
+        ? ` (author alt text: "${img.alt}")`
+        : ' (no alt text)';
+
+      parts.push({ text: `${prefix}${altNote}` });
+
       const base64 = await blobToBase64(img.blob);
       parts.push({
         inlineData: {
@@ -284,7 +317,6 @@ export class GeminiEngine implements VoiceEngineInterface {
     const ai = new GoogleGenAI({ apiKey: token, apiVersion: 'v1alpha' });
     const model = this.options.model || DEFAULT_MODEL;
 
-    
     this.session = await ai.live.connect({
       model,
       config: {
@@ -318,6 +350,28 @@ export class GeminiEngine implements VoiceEngineInterface {
   private handleMessage(message: LiveServerMessage): void {
     const content = message.serverContent;
 
+    // Tool calls (highlight_and_scroll) — NON_BLOCKING: no sendToolResponse needed
+    if (this.highlightsEnabled && (message as any).toolCall?.functionCalls) {
+      for (const call of (message as any).toolCall.functionCalls) {
+        if (call.name === 'highlight_and_scroll') {
+          const elementId = call.args?.elementId as string | undefined;
+          const els = elementId ? this.elementMap.get(elementId) : undefined;
+
+          if (els && els.length > 0 && this.highlightManager) {
+            this.highlightManager.highlightElements(els);
+            log.info('Highlighted element:', elementId);
+          } else {
+            log.info('Element not found or detached:', elementId);
+          }
+        }
+      }
+    }
+
+    // Tool call cancellation
+    if (this.highlightsEnabled && (message as any).toolCallCancellation) {
+      log.info('Tool call cancelled');
+    }
+
     // Audio data -> playback
     if (content?.modelTurn?.parts) {
       for (const part of content.modelTurn.parts) {
@@ -332,6 +386,7 @@ export class GeminiEngine implements VoiceEngineInterface {
 
     // Input transcription (user speech)
     if (content?.inputTranscription?.text) {
+      log.debug('User transcript:', content.inputTranscription.text);
       if (this.transcriptRole !== 'user') {
         this.transcriptBuffer = '';
         this.transcriptRole = 'user';
@@ -343,6 +398,7 @@ export class GeminiEngine implements VoiceEngineInterface {
 
     // Output transcription (model speech) — delayed to sync with audio playback
     if (content?.outputTranscription?.text) {
+      log.debug('Agent transcript:', content.outputTranscription.text);
       const fragment = content.outputTranscription.text;
       const delayMs = this.audioPlayback.bufferedSeconds * 1000;
 
@@ -353,7 +409,7 @@ export class GeminiEngine implements VoiceEngineInterface {
           this.transcriptRole = 'model';
         }
         this.transcriptBuffer += fragment;
-  
+
         this.updateState({ interimTranscript: this.transcriptBuffer });
       }, delayMs);
       this.pendingTranscriptTimers.push(timer);
@@ -363,6 +419,9 @@ export class GeminiEngine implements VoiceEngineInterface {
     if (content?.interrupted) {
       this.audioPlayback.clear();
       this.clearPendingTranscripts();
+      if (this.highlightsEnabled && this.highlightManager) {
+        this.highlightManager.clearImmediately();
+      }
       this.updateState({ status: 'listening', interimTranscript: '' });
     }
 
@@ -371,6 +430,9 @@ export class GeminiEngine implements VoiceEngineInterface {
       this.audioPlayback.onDrained(() => {
         if (this.sessionActive) {
           this.clearPendingTranscripts();
+          if (this.highlightsEnabled && this.highlightManager) {
+            this.highlightManager.fadeOut();
+          }
           this.updateState({ status: 'listening', interimTranscript: '' });
         }
       });
@@ -419,8 +481,21 @@ export class GeminiEngine implements VoiceEngineInterface {
         this.session = null;
       }
 
+      // Clear highlights and rebuild index on reconnection
+      if (this.highlightsEnabled) {
+        this.highlightManager?.clearImmediately();
+        this.pageIndexer?.invalidate();
+      }
+
       const model = this.options.model || DEFAULT_MODEL;
-      const pageText = this.pageExtractor.extractText();
+      let pageText: string;
+      if (this.highlightsEnabled && this.pageIndexer) {
+        const index = this.pageIndexer.buildIndex();
+        pageText = index.annotatedText;
+        this.elementMap = index.elementMap;
+      } else {
+        pageText = this.pageExtractor.extractText();
+      }
       const pageTitle = document.title;
       const pageUrl = window.location.href;
 
@@ -431,6 +506,7 @@ export class GeminiEngine implements VoiceEngineInterface {
         pageTitle,
         pageUrl,
         pageContent: pageText,
+        ...(this.highlightsEnabled && { interactiveHighlights: true }),
       });
       if (!this.sessionActive) return;
 
@@ -462,8 +538,21 @@ export class GeminiEngine implements VoiceEngineInterface {
 
   private async restartSession(lang: string): Promise<void> {
     try {
+      // Clear highlights and rebuild index on restart
+      if (this.highlightsEnabled) {
+        this.highlightManager?.clearImmediately();
+        this.pageIndexer?.invalidate();
+      }
+
       const model = this.options.model || DEFAULT_MODEL;
-      const pageText = this.pageExtractor.extractText();
+      let pageText: string;
+      if (this.highlightsEnabled && this.pageIndexer) {
+        const index = this.pageIndexer.buildIndex();
+        pageText = index.annotatedText;
+        this.elementMap = index.elementMap;
+      } else {
+        pageText = this.pageExtractor.extractText();
+      }
       const pageTitle = document.title;
       const pageUrl = window.location.href;
 
@@ -474,6 +563,7 @@ export class GeminiEngine implements VoiceEngineInterface {
         pageTitle,
         pageUrl,
         pageContent: pageText,
+        ...(this.highlightsEnabled && { interactiveHighlights: true }),
       });
       if (!this.sessionActive) return;
 
