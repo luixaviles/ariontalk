@@ -52,6 +52,7 @@ export default defineConfig({
         es: resolve(__dirname, 'es.html'),
         esAi: resolve(__dirname, 'es-ai.html'),
         gemini: resolve(__dirname, 'gemini.html'),
+        astrophotography: resolve(__dirname, 'astrophotography.html'),
       },
     },
   },
