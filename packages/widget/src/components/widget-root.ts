@@ -127,8 +127,8 @@ export class ArionTalk extends LitElement {
     `,
   ];
 
-  /** Initial language: "en" or "es" */
-  @property({ type: String }) lang: SupportedLang = 'en';
+  /** Initial language: "auto" (detect from user speech), or a BCP-47 code like "en", "es", etc. */
+  @property({ type: String }) lang: SupportedLang = 'auto';
   @property({ type: String, reflect: true }) position = 'bottom-right';
   @property({ type: String, reflect: true }) theme = 'light';
   /** When set, skips browser support check and always shows the widget UI. */
@@ -161,11 +161,15 @@ export class ArionTalk extends LitElement {
     if (this.logLevel !== LogLevel.Disabled) setLogLevel(this.logLevel);
     this.loadSettings();
     this.checkSupport();
+    this.initEngine();
   }
 
   updated(changed: Map<string, unknown>) {
     if (changed.has('logLevel')) {
       setLogLevel(this.logLevel);
+    }
+    if (changed.has('engine')) {
+      this.initEngine();
     }
   }
 
@@ -249,9 +253,7 @@ export class ArionTalk extends LitElement {
     } catch { /* storage full */ }
   }
 
-  private async handleFabClick() {
-    const s = this.currentSettings;
-
+  private async initEngine(): Promise<void> {
     if (this.engine === 'gemini') {
       await this.controller.setEngine('gemini', {
         tokenServer: this.tokenServer,
@@ -259,9 +261,19 @@ export class ArionTalk extends LitElement {
         voice: this.geminiVoice || undefined,
       });
     } else {
+      await this.controller.setEngine('local');
+    }
+  }
+
+  private async handleFabClick() {
+    const s = this.currentSettings;
+
+    if (this.engine === 'local') {
       const plugin = this.bargeInPlugins.find(p => p.id === s.bargeInPluginId);
       const detector = plugin ? plugin.create() : null;
-      await this.controller.setEngine('local', { bargeInDetector: detector ?? undefined });
+      if (detector) {
+        await this.controller.setEngine('local', { bargeInDetector: detector });
+      }
     }
 
     this.controller.applyVoiceSettings({

@@ -38,7 +38,7 @@ export interface GeminiEngineOptions {
 
 export class GeminiEngine implements VoiceEngineInterface {
   readonly capabilities: EngineCapabilities = {
-    supportedLanguages: ['en', 'es', 'ja', 'fr', 'de', 'pt', 'it', 'zh', 'ko', 'hi', 'ar', 'ru'],
+    supportedLanguages: ['auto', 'en', 'es', 'ja', 'fr', 'de', 'pt', 'it', 'zh', 'ko', 'hi', 'ar', 'ru'],
     supportsVoiceSelection: true,
     supportsRatePitchVolume: false,
     supportsBargeInPlugins: false,
@@ -49,7 +49,7 @@ export class GeminiEngine implements VoiceEngineInterface {
 
   state: VoiceEngineState = {
     status: 'idle',
-    currentLang: 'en',
+    currentLang: 'auto',
     elapsedSeconds: 0,
     interimTranscript: '',
     error: null,
