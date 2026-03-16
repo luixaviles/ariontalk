@@ -6,7 +6,7 @@ import type {
   VoiceEngineState,
   SupportedLang,
 } from '@ariontalk/core';
-import { PageExtractorService, SessionTimer, createLogger } from '@ariontalk/core';
+import { PageExtractorService, SessionTimer, createLogger, blobToBase64 } from '@ariontalk/core';
 import { GoogleGenAI, Modality, type LiveServerMessage, type Session } from '@google/genai';
 import { AudioCapture } from './audio/audio-capture.js';
 import { AudioPlayback } from './audio/audio-playback.js';
@@ -79,7 +79,7 @@ export class GeminiEngine implements VoiceEngineInterface {
   constructor(options: GeminiEngineOptions) {
     this.options = options;
     this.tokenManager = new TokenManager(options.tokenServerUrl);
-    this.pageExtractor = options.pageExtractor ?? new PageExtractorService();
+    this.pageExtractor = options.pageExtractor ?? new PageExtractorService({ maxImages: 6 });
     this.voiceId = options.voice ?? 'Kore';
     this.timer = new SessionTimer((seconds) => {
       this.updateState({ elapsedSeconds: seconds });
@@ -127,6 +127,10 @@ export class GeminiEngine implements VoiceEngineInterface {
 
       // Connect to Gemini Live
       await this.connect(token);
+      if (!this.sessionActive) return;
+
+      // Send page images as context
+      await this.sendPageContext();
       if (!this.sessionActive) return;
 
       // Start mic capture
@@ -227,6 +231,54 @@ export class GeminiEngine implements VoiceEngineInterface {
   }
 
   // --- Private methods ---
+
+  /**
+   * Send page images to the model via sendClientContent.
+   * Called once after connect(), before audio capture starts.
+   */
+  private async sendPageContext(): Promise<void> {
+    if (!this.session) return;
+
+    const images = await this.pageExtractor.extractImages();
+    const validImages = images.filter(img => img.blob.size > 0);
+
+    if (validImages.length === 0) {
+      log.info('No page images to send');
+      return;
+    }
+
+    const parts: Array<{ text: string } | { inlineData: { data: string; mimeType: string } }> = [];
+
+    const imageDescriptions = validImages
+      .map((img, i) => img.alt ? `Image ${i + 1}: ${img.alt}` : `Image ${i + 1}: (no description)`)
+      .join('\n');
+
+    parts.push({
+      text: `The following images are from the webpage the user is viewing. `
+          + `Use them to answer visual questions about the page.\n\n`
+          + imageDescriptions,
+    });
+
+    for (const img of validImages) {
+      const base64 = await blobToBase64(img.blob);
+      parts.push({
+        inlineData: {
+          data: base64,
+          mimeType: img.blob.type || 'image/jpeg',
+        },
+      });
+    }
+
+    try {
+      this.session.sendClientContent({
+        turns: [{ role: 'user', parts }],
+        turnComplete: true,
+      });
+      log.info(`Sent ${validImages.length} page image(s) as context`);
+    } catch (err) {
+      log.error('Failed to send page context images:', err);
+    }
+  }
 
   private async connect(token: string): Promise<void> {
     const ai = new GoogleGenAI({ apiKey: token, apiVersion: 'v1alpha' });
@@ -385,6 +437,9 @@ export class GeminiEngine implements VoiceEngineInterface {
       await this.connect(token);
       if (!this.sessionActive) return;
 
+      await this.sendPageContext();
+      if (!this.sessionActive) return;
+
       // Restart audio capture after successful reconnect
       await this.audioCapture.start((base64Pcm) => {
         if (this.session && this.sessionActive) {
@@ -424,6 +479,9 @@ export class GeminiEngine implements VoiceEngineInterface {
 
       this.savedSessionHandle = null;
       await this.connect(token);
+      if (!this.sessionActive) return;
+
+      await this.sendPageContext();
       if (!this.sessionActive) return;
 
       await this.audioCapture.start((base64Pcm) => {

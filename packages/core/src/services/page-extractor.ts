@@ -1,7 +1,7 @@
 import type { ImageContext } from '../types.js';
 
 const MAX_TEXT_CHARS = 6000; // ~1,500 tokens
-const MAX_IMAGES = 2;
+const DEFAULT_MAX_IMAGES = 6;
 const IMG_MAX_SIZE = 512;
 const MIN_IMG_DIMENSION = 50; // skip tiny icons/trackers
 
@@ -10,6 +10,11 @@ const SKIP_TAGS = new Set([
   'SVG', 'IFRAME', 'FORM', 'INPUT', 'BUTTON', 'SELECT', 'TEXTAREA',
 ]);
 
+export interface PageExtractorOptions {
+  /** Maximum number of images to extract. Default: 6. */
+  maxImages?: number;
+}
+
 /**
  * Extracts page content (text + images) for use as AI context.
  */
@@ -17,8 +22,10 @@ export class PageExtractorService {
   private cachedText: string | null = null;
   private cachedImages: ImageContext[] | null = null;
   private observer: MutationObserver | null = null;
+  private maxImages: number;
 
-  constructor() {
+  constructor(options?: PageExtractorOptions) {
+    this.maxImages = options?.maxImages ?? DEFAULT_MAX_IMAGES;
     this.setupMutationObserver();
   }
 
@@ -82,7 +89,7 @@ export class PageExtractorService {
 
     const results: ImageContext[] = [];
 
-    for (const img of candidates.slice(0, MAX_IMAGES)) {
+    for (const img of candidates.slice(0, this.maxImages)) {
       try {
         const blob = await this.imageToBlob(img);
         if (blob) {
