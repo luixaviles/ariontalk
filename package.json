@@ -6,7 +6,10 @@
     "dev": "pnpm --filter @ariontalk/widget dev",
     "demo": "pnpm --filter @ariontalk/demo dev",
     "token-server": "pnpm --filter @ariontalk/token-server dev",
-    "test": "pnpm -r test"
+    "test": "pnpm -r test",
+    "website": "pnpm --filter @ariontalk/website dev",
+    "website-build": "pnpm --filter @ariontalk/website build",
+    "website-preview": "pnpm --filter @ariontalk/website preview"
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.0"

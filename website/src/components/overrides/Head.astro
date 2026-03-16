@@ -1,0 +1,42 @@
+---
+import type { Props } from '@astrojs/starlight/props';
+import Default from '@astrojs/starlight/components/Head.astro';
+---
+
+<Default {...Astro.props}><slot /></Default>
+
+<!-- Widget for docs pages: script runs after DOM is ready and appends to <body> directly -->
+<script>
+  import '@ariontalk/widget';
+
+  function initWidget() {
+    // Landing page already has a widget via its own layout
+    if (document.querySelector('ariontalk-widget')) return;
+
+    const widget = document.createElement('ariontalk-widget');
+    widget.setAttribute('engine', 'gemini');
+    widget.setAttribute('token-server', 'http://localhost:3001/api/token');
+    widget.setAttribute('settings', '');
+    widget.setAttribute('log-level', 'debug');
+
+    const theme = document.documentElement.dataset.theme || 'light';
+    widget.setAttribute('theme', theme);
+
+    document.body.appendChild(widget);
+
+    new MutationObserver(() => {
+      const t = document.documentElement.dataset.theme || 'light';
+      widget.setAttribute('theme', t);
+    }).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    });
+  }
+
+  // Ensure body exists before appending
+  if (document.body) {
+    initWidget();
+  } else {
+    document.addEventListener('DOMContentLoaded', initWidget);
+  }
+</script>

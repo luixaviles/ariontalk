@@ -1,0 +1,182 @@
+---
+title: Gemini Live Engine
+description: Cloud-powered voice conversations using Google's Gemini Live API.
+---
+
+The Gemini Live engine connects to Google's Gemini Live API over WebSocket for real-time, cloud-powered voice conversations. Audio streams directly between the browser and Gemini's servers — there is no intermediate speech-to-text or text-to-speech step.
+
+## How Gemini Live works
+
+Unlike the local engine's three-step pipeline, Gemini Live uses a single WebSocket connection for bidirectional audio streaming:
+
+1. The widget captures microphone audio as raw PCM at 16 kHz.
+2. Audio chunks are sent in real-time to the Gemini Live API via WebSocket.
+3. Gemini processes the audio server-side and streams back audio responses.
+4. The widget plays the response audio through the Web Audio API.
+
+The API handles speech recognition, language understanding, and speech synthesis entirely on the server. It also provides real-time transcription of both user input and model output.
+
+## Capabilities
+
+| Capability | Supported |
+|------------|-----------|
+| Languages | 12 languages |
+| Voice selection | Yes |
+| Rate / Pitch / Volume | No |
+| Barge-in plugins | No (native interruption built-in) |
+| Offline | No |
+| Max session duration | 15 minutes |
+| Token server required | Yes |
+
+## Supported languages
+
+The Gemini Live engine supports 12 languages:
+
+| Code | Language |
+|------|----------|
+| `en` | English |
+| `es` | Spanish |
+| `ja` | Japanese |
+| `fr` | French |
+| `de` | German |
+| `pt` | Portuguese |
+| `it` | Italian |
+| `zh` | Chinese |
+| `ko` | Korean |
+| `hi` | Hindi |
+| `ar` | Arabic |
+| `ru` | Russian |
+
+## Available voices
+
+Gemini Live provides 8 built-in voices. All voices support the full set of 12 languages listed above.
+
+| Voice | ID |
+|-------|----|
+| Kore | `Kore` |
+| Puck | `Puck` |
+| Charon | `Charon` |
+| Aoede | `Aoede` |
+| Fenrir | `Fenrir` |
+| Leda | `Leda` |
+| Orus | `Orus` |
+| Zephyr | `Zephyr` |
+
+The default voice is **Kore**. Set a different voice using the `gemini-voice` attribute.
+
+## Widget configuration
+
+```html
+<ariontalk-widget
+  engine="gemini"
+  token-server="https://your-server.example.com"
+  gemini-voice="Kore"
+  settings
+></ariontalk-widget>
+```
+
+| Attribute | Description |
+|-----------|-------------|
+| `engine` | Set to `"gemini"` to use the Gemini Live engine |
+| `token-server` | URL of your token server (required) |
+| `gemini-voice` | Voice name (e.g., `"Kore"`, `"Puck"`) |
+| `gemini-model` | Model identifier (defaults to `gemini-2.5-flash-native-audio-preview-12-2025`) |
+| `settings` | Show the settings gear icon for pre-session configuration |
+
+## Setting up the token server
+
+The Gemini Live engine requires a token server to securely generate ephemeral API tokens. This keeps your Gemini API key on the server and never exposes it to the browser.
+
+### Install
+
+```bash
+pnpm add @ariontalk/token-server
+```
+
+Or clone the repository and use the package directly from `packages/token-server`.
+
+### Configure
+
+Create a `.env` file with your Gemini API key:
+
+```bash
+GEMINI_API_KEY=your-api-key-here
+```
+
+### Run
+
+```bash
+pnpm token-server
+```
+
+Or, if running from a built distribution:
+
+```bash
+node dist/index.js
+```
+
+The server starts on port 3001 by default. Set the `PORT` environment variable to change it.
+
+### API endpoint
+
+**`POST /api/token`**
+
+The widget sends a JSON request with session parameters:
+
+```json
+{
+  "model": "gemini-2.5-flash-native-audio-preview-12-2025",
+  "voice": "Kore",
+  "lang": "en",
+  "pageTitle": "My Page",
+  "pageUrl": "https://example.com",
+  "pageContent": "Extracted page text..."
+}
+```
+
+The server builds a system prompt from the page content, creates an ephemeral token scoped to a single use with a 30-minute expiry, and returns:
+
+```json
+{
+  "token": "ephemeral-token-string"
+}
+```
+
+CORS is enabled on the `/api/token` endpoint, so the widget can call it from any origin.
+
+### Deployment options
+
+The token server is a lightweight Node.js HTTP server built with [Hono](https://hono.dev/). You can deploy it as:
+
+- A standalone Node.js server
+- A Docker container
+- A serverless function (adapt the Hono app to your platform's handler format)
+
+## Session limits and behavior
+
+| Behavior | Details |
+|----------|---------|
+| Max duration | 15 minutes per session |
+| Warning | Displayed at 12 minutes ("Session ending in 3 minutes") |
+| Auto-end | Session ends automatically at 15 minutes |
+| Reconnection | Automatic reconnection with exponential backoff (up to 3 retries) |
+| Session resumption | Saves a session handle for seamless reconnection after network interruptions |
+
+When the server sends a `goAway` message (requesting disconnect), the engine automatically reconnects using session resumption to continue the conversation without losing context.
+
+## Local vs. Gemini comparison
+
+| Feature | Local Engine | Gemini Live Engine |
+|---------|-------------|-------------------|
+| Processing | On-device (Gemini Nano) | Cloud (Gemini Live API) |
+| Languages | 2 (en, es) | 12 |
+| Voice selection | System TTS voices | 8 Gemini voices |
+| Rate / Pitch / Volume | Yes | No |
+| Barge-in | Plugin-based (Energy, Silero VAD) | Native (built into API) |
+| Offline | Yes | No |
+| Session limit | Unlimited | 15 minutes |
+| API key required | No | Yes (via token server) |
+| Initial download | ~1.7 GB model | None |
+| Response quality | Good (smaller model) | Higher (cloud model) |
+| Privacy | Fully on-device | Audio sent to Google servers |
+| Browser support | Chrome 139+ only | Any modern browser with WebSocket + mic |

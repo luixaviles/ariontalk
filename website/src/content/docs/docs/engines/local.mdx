@@ -1,0 +1,81 @@
+---
+title: Local Engine
+description: On-device voice conversations using Chrome's built-in APIs.
+---
+
+The local engine runs the entire voice conversation pipeline on-device using Chrome's built-in APIs. No backend server, API keys, or network connection is required after the initial model download.
+
+## How the pipeline works
+
+The local engine chains three browser APIs into a real-time conversation loop:
+
+1. **Speech Recognition (WebSpeech API)** — Captures the user's voice through the microphone and converts it to text using Chrome's speech recognizer.
+2. **AI Processing (Prompt API / Gemini Nano)** — Sends the transcribed text to the on-device Gemini Nano model, which generates a contextual response based on the page content.
+3. **Speech Synthesis (WebSpeech API)** — Converts the AI response back into spoken audio using the browser's local text-to-speech voices.
+
+The AI response is streamed sentence-by-sentence — the widget starts speaking the first sentence as soon as it is ready, while the model continues generating the rest.
+
+## Browser requirements
+
+| Requirement | Details |
+|-------------|---------|
+| Browser | Chrome 139+ |
+| API | Prompt API origin trial enabled |
+| Model | Gemini Nano (~1.7 GB, downloaded and cached automatically) |
+
+The widget automatically hides itself on unsupported browsers unless the `force` attribute is set.
+
+## Capabilities
+
+| Capability | Supported |
+|------------|-----------|
+| Languages | `en`, `es` |
+| Voice selection | Yes |
+| Rate / Pitch / Volume | Yes |
+| Barge-in plugins | Yes |
+| Offline | Yes |
+| Max session duration | Unlimited |
+| Token server required | No |
+
+## Supported languages
+
+The local engine currently supports two languages:
+
+- **English** (`en`)
+- **Spanish** (`es`)
+
+Language can be set via the `lang` attribute and switched mid-session through the settings panel.
+
+## Offline behavior
+
+The local engine is designed to work offline after initial setup:
+
+- **AI responses** — Fully on-device via Gemini Nano. The model is downloaded once (~1.7 GB) and cached by Chrome. Subsequent sessions use the cached model with no network requests.
+- **Speech synthesis** — Uses local TTS voices bundled with the operating system. No network required.
+- **Speech recognition** — Partial offline support. Chrome 128+ offers on-device recognition via `processLocally`, but may fall back to server-based recognition on older builds.
+
+## Page context extraction
+
+When a session starts, the engine automatically extracts content from the current page:
+
+- **Text content** — Up to 6,000 characters of visible page text
+- **Images** — Extracted from the page for multimodal context
+
+This context is passed to Gemini Nano so the AI can answer questions about what the visitor is looking at. All extraction happens locally — no data is sent to external servers.
+
+## Barge-in detection
+
+Barge-in lets users interrupt the AI while it is speaking. The local engine supports pluggable barge-in strategies:
+
+- **Off** — No interruption detection. The user must wait for the AI to finish speaking.
+- **Energy** — Built-in RMS energy detector that monitors microphone volume to detect when the user starts talking. Uses `echoCancellation` to filter out speaker output. Triggers after 250ms of sustained speech above the energy threshold.
+- **Plugin-based** — Register third-party detectors like [Silero VAD](/docs/plugins/silero-vad) for more accurate, AI-powered voice activity detection.
+
+See the [Plugins](/docs/plugins/overview) documentation for details on registering barge-in plugins.
+
+## Limitations
+
+- **Chrome-only** — Firefox and Safari do not support the Prompt API or WebSpeech Recognition.
+- **Limited languages** — Only English and Spanish are currently supported for the full pipeline.
+- **Smaller model** — Gemini Nano is optimized for on-device performance, so responses may be less detailed than cloud-based models like Gemini Live.
+- **Initial download** — The first session requires downloading the ~1.7 GB Gemini Nano model, which may take time on slower connections.

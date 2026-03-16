@@ -1,0 +1,41 @@
+---
+title: Overview
+description: Documentation for ArionTalk — a lightweight, privacy-focused voice chat widget.
+---
+
+ArionTalk is a lightweight, privacy-focused voice chat widget you can embed on any website. Visitors speak to an AI agent that understands your page content — powered by Chrome's built-in APIs or Gemini Live. No backend required for the default local engine; everything runs on-device.
+
+## Packages
+
+| Package | Description |
+|---------|-------------|
+| `@ariontalk/core` | Headless voice engine — services, types, and session logic with no UI dependency |
+| `@ariontalk/widget` | Drop-in Web Component that wraps `@ariontalk/core` with a ready-made UI |
+| `@ariontalk/engine-gemini` | Cloud engine add-on using Gemini Live for real-time voice conversations |
+| `@ariontalk/plugin-silero-vad` | Silero VAD plugin for AI-powered barge-in detection |
+| `@ariontalk/token-server` | Lightweight Hono server that issues ephemeral Gemini API tokens |
+
+## Engine Comparison
+
+ArionTalk supports two engines. Choose the one that fits your use case:
+
+| Feature | Local (On-Device) | Gemini Live (Cloud) |
+|---------|-------------------|---------------------|
+| AI model | Gemini Nano (Chrome built-in) | Gemini 2.5 Flash (cloud) |
+| Privacy | Fully on-device, no external requests | Audio sent to Google servers |
+| Backend required | No | Yes (token server) |
+| Speech recognition | WebSpeech Recognition API | Gemini native audio input |
+| Speech synthesis | WebSpeech Synthesis API | Gemini native audio output |
+| Offline support | Yes (after initial model download) | No |
+| Latency | Low (on-device) | Low (streaming) |
+| API key required | No | Yes (Gemini API key on server) |
+
+## Browser Support
+
+| Browser | Supported | Notes |
+|---------|-----------|-------|
+| Chrome 139+ | Yes | Full support via Prompt API origin trial |
+| Firefox | No | No Speech Recognition or Prompt API |
+| Safari | No | No Prompt API |
+
+The widget automatically hides itself on unsupported browsers.

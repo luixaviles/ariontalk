@@ -1,0 +1,249 @@
+---
+title: "@ariontalk/core"
+description: API reference for the headless voice engine package.
+---
+
+`@ariontalk/core` is the headless voice engine that powers ArionTalk. It provides speech recognition, speech synthesis, on-device AI (Gemini Nano), and page-context extraction with no UI dependency. Use it directly when you need full programmatic control or want to build a custom interface.
+
+## Installation
+
+```bash
+pnpm add @ariontalk/core
+```
+
+## Types
+
+### `VoiceEngineInterface`
+
+The contract every engine must implement. Both the built-in `VoiceEngine` (local) and `GeminiEngine` (cloud) conform to this interface.
+
+```typescript
+interface VoiceEngineInterface {
+  // Lifecycle
+  startSession(lang: string): Promise<void>;
+  endSession(): void;
+  destroy(): void;
+
+  // Runtime
+  switchLanguage(lang: string): void;
+  setMuted(muted: boolean): void;
+
+  // Voice settings
+  applyVoiceSettings(settings: VoiceSettings): void;
+  getVoiceOverrides(): VoiceSettings | null;
+  getVoices(): VoiceInfo[];
+
+  // State
+  readonly state: VoiceEngineState;
+  onStateChange: ((state: VoiceEngineState) => void) | null;
+
+  // Capabilities (engines declare what they support)
+  readonly capabilities: EngineCapabilities;
+}
+```
+
+### `VoiceEngineState`
+
+Reactive state snapshot emitted via `onStateChange`.
+
+```typescript
+interface VoiceEngineState {
+  status: EngineStatus;
+  currentLang: SupportedLang;
+  elapsedSeconds: number;
+  interimTranscript: string;
+  error: string | null;
+  downloadProgress: number;
+}
+```
+
+### `EngineStatus`
+
+Union of all possible engine statuses.
+
+```typescript
+type EngineStatus = 'idle' | 'loading' | 'listening' | 'thinking' | 'speaking' | 'error';
+```
+
+### `EngineCapabilities`
+
+Declares what an engine supports so the UI can adapt.
+
+```typescript
+interface EngineCapabilities {
+  supportedLanguages: readonly string[];
+  supportsVoiceSelection: boolean;
+  supportsRatePitchVolume: boolean;
+  supportsBargeInPlugins: boolean;
+  supportsOffline: boolean;
+  maxSessionDurationSec: number | null;   // null = unlimited
+  requiresTokenServer: boolean;
+}
+```
+
+### `VoiceSettings`
+
+User-configurable voice parameters persisted across sessions.
+
+```typescript
+interface VoiceSettings {
+  voiceId: string | null;
+  rate: number;
+  pitch: number;
+  volume: number;
+}
+```
+
+### `VoiceInfo`
+
+Describes a single voice available for synthesis.
+
+```typescript
+interface VoiceInfo {
+  id: string;           // Unique identifier (voiceURI for local, name for Gemini)
+  name: string;         // Display name
+  lang: string;         // BCP-47 language code
+  local: boolean;       // True for on-device voices
+}
+```
+
+### `SupportedLang` / `WellKnownLang`
+
+Language code types. `WellKnownLang` enumerates known codes; `SupportedLang` also accepts arbitrary BCP-47 strings.
+
+```typescript
+type WellKnownLang = 'en' | 'es' | 'ja' | 'fr' | 'de' | 'pt'
+                   | 'it' | 'zh' | 'ko' | 'hi' | 'ar' | 'ru';
+type SupportedLang = WellKnownLang | (string & {});
+```
+
+### `BargeInDetector`
+
+Plugin interface for barge-in (interruption) detection strategies.
+
+```typescript
+interface BargeInDetector {
+  /** Acquire resources (mic stream, models, etc.). Called once per session. */
+  init(): Promise<void>;
+  /** Start monitoring. Call onBargeIn once when interruption is detected. */
+  startMonitoring(onBargeIn: () => void): void;
+  /** Stop monitoring without releasing resources. */
+  stopMonitoring(): void;
+  /** Release all resources. Called when the engine is destroyed. */
+  destroy(): void;
+}
+```
+
+### `ImageContext`
+
+Metadata for images extracted from the host page and sent to the AI model.
+
+```typescript
+interface ImageContext {
+  blob: Blob;
+  alt: string;
+  src: string;
+}
+```
+
+## Classes
+
+### `VoiceEngine`
+
+The default, browser-native engine. Uses the Web Speech API for recognition and synthesis and the on-device Prompt API (Gemini Nano) for AI responses.
+
+```typescript
+import { VoiceEngine } from '@ariontalk/core';
+
+const engine = new VoiceEngine({ bargeInDetector });
+```
+
+**Constructor options:**
+
+```typescript
+interface VoiceEngineOptions {
+  bargeInDetector?: BargeInDetector;
+}
+```
+
+Implements `VoiceEngineInterface`.
+
+**Capabilities (default values):**
+
+| Capability | Value |
+|---|---|
+| `supportedLanguages` | `['en', 'es']` |
+| `supportsVoiceSelection` | `true` |
+| `supportsRatePitchVolume` | `true` |
+| `supportsBargeInPlugins` | `true` |
+| `supportsOffline` | `true` |
+| `maxSessionDurationSec` | `null` (unlimited) |
+| `requiresTokenServer` | `false` |
+
+## Services
+
+These lower-level services are exported for advanced consumers who want to compose their own engine or extend individual capabilities.
+
+| Service | Description |
+|---|---|
+| `SpeechRecognitionService` | Wraps the Web Speech Recognition API with start/stop/pause/resume and interim/final result callbacks. |
+| `SpeechSynthesisService` | Queues utterances via the Web Speech Synthesis API with per-utterance voice, rate, pitch, and volume overrides. |
+| `AISessionService` | Manages the on-device Prompt API (Gemini Nano) session — availability check, model download progress, streaming prompt responses. |
+| `PageExtractorService` | Extracts visible text and image context from the host page for use as AI grounding context. |
+| `EnergyBargeInDetector` | A `BargeInDetector` implementation that uses microphone audio energy levels to detect when the user speaks during AI playback. |
+
+## Utilities
+
+### `isVoiceChatSupported(engine?)`
+
+Async function that checks whether all required browser APIs are available.
+
+```typescript
+import { isVoiceChatSupported } from '@ariontalk/core';
+
+const ok = await isVoiceChatSupported();        // checks local engine APIs
+const ok = await isVoiceChatSupported('gemini'); // checks Gemini engine APIs
+```
+
+**Checks performed:**
+
+| Engine | Required APIs |
+|---|---|
+| `'local'` (default) | `SpeechRecognition`, `speechSynthesis`, `LanguageModel` (Prompt API) with model availability |
+| `'gemini'` | `navigator.mediaDevices.getUserMedia`, `AudioContext` |
+
+Returns `true` if all required APIs are present and functional, `false` otherwise.
+
+### `SessionTimer`
+
+Tracks elapsed session time in seconds. Accepts a callback that fires every second with the current count. Provides `start()`, `reset()`, and the static `SessionTimer.format(seconds)` helper to produce `MM:SS` display strings.
+
+### `createLogger(scope)` / `setLogLevel(level)` / `LogLevel`
+
+Scoped, level-gated console logging.
+
+```typescript
+import { createLogger, setLogLevel, LogLevel } from '@ariontalk/core';
+
+setLogLevel(LogLevel.Debug);       // Enable all logs globally
+const log = createLogger('my-mod'); // Prefixed as [ariontalk:my-mod]
+
+log.debug('verbose info');
+log.info('general info');
+log.warn('warning');
+log.error('error');
+```
+
+**`LogLevel` enum:**
+
+```typescript
+enum LogLevel {
+  Disabled = 'disabled',
+  Errors   = 'error',
+  Warnings = 'warning',
+  Info     = 'info',
+  Debug    = 'debug',
+}
+```
+
+`setLogLevel` updates every logger created via `createLogger`, both past and future.

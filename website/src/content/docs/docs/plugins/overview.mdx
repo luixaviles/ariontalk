@@ -1,0 +1,147 @@
+---
+title: Plugins
+description: Extend ArionTalk with plugins for barge-in detection and more.
+---
+
+ArionTalk's plugin system lets you extend the widget with custom barge-in detection strategies. Barge-in detection determines whether the user is trying to interrupt the AI while it is speaking, allowing for more natural conversations.
+
+## What is barge-in detection?
+
+By default, the AI speaks its full response before listening again. With barge-in detection enabled, the widget monitors the microphone during AI speech and cancels playback when the user starts talking — just like interrupting someone in a real conversation.
+
+## Plugin architecture
+
+The plugin system is built around two interfaces: `BargeInPlugin` (registration descriptor) and `BargeInDetector` (runtime implementation).
+
+### BargeInPlugin interface
+
+A `BargeInPlugin` describes a barge-in strategy and provides a factory to create detector instances. This is what you register with the widget.
+
+```typescript
+interface BargeInPlugin {
+  /** Unique identifier, used for settings persistence. */
+  id: string;
+  /** Display label shown in the settings UI. */
+  label: string;
+  /** Optional tooltip describing the strategy. */
+  tooltip?: string;
+  /** Factory function that creates a new detector instance. Called per session. */
+  create: () => BargeInDetector;
+}
+```
+
+### BargeInDetector interface
+
+A `BargeInDetector` is the runtime object that performs the actual detection. The engine calls its methods during a session lifecycle.
+
+```typescript
+interface BargeInDetector {
+  /** Acquire resources (mic stream, models, etc.). Called once per session. */
+  init(): Promise<void>;
+  /** Start monitoring. Call onBargeIn once when interruption is detected. */
+  startMonitoring(onBargeIn: () => void): void;
+  /** Stop monitoring without releasing resources. */
+  stopMonitoring(): void;
+  /** Release all resources. Called when the engine is destroyed. */
+  destroy(): void;
+}
+```
+
+The engine manages the detector lifecycle:
+
+1. **`init()`** — Called when a session starts. Acquire the microphone stream, load models, or set up any resources.
+2. **`startMonitoring(onBargeIn)`** — Called when the AI begins speaking. Monitor for user speech and call `onBargeIn()` once when detected.
+3. **`stopMonitoring()`** — Called when the AI finishes speaking or after a barge-in triggers. Pause monitoring but keep resources alive.
+4. **`destroy()`** — Called when the session ends. Release all resources (mic streams, audio contexts, etc.).
+
+## Built-in options
+
+The widget settings UI always includes two base options for interruption handling:
+
+| Option | Description |
+|--------|-------------|
+| **Off** | No barge-in detection. The user waits for the AI to finish speaking. |
+| **Energy** | Built-in RMS energy detector. Monitors microphone volume using the Web Audio API with `echoCancellation`. Triggers after 250ms of sustained speech above an energy threshold (RMS > 0.035). Zero dependencies, works in all browsers with microphone access. |
+
+The Energy detector is exported from `@ariontalk/core` as `EnergyBargeInDetector`.
+
+## Available plugins
+
+| Plugin | Package | Description |
+|--------|---------|-------------|
+| [Silero VAD](/docs/plugins/silero-vad) | `@ariontalk/plugin-silero-vad` | AI-powered voice activity detection using a Silero ONNX model. More accurate than energy-based detection with fewer false triggers. |
+
+## Registering plugins with the widget
+
+Plugins are registered by setting the `bargeInPlugins` property on the widget element. Each entry provides an `id`, `label`, optional `tooltip`, and a `create` factory function.
+
+```html
+<ariontalk-widget id="widget" settings></ariontalk-widget>
+
+<script type="module">
+  import '@ariontalk/widget';
+  import { EnergyBargeInDetector } from '@ariontalk/core';
+  import { SileroVadDetector } from '@ariontalk/plugin-silero-vad';
+
+  document.querySelector('#widget').bargeInPlugins = [
+    {
+      id: 'energy',
+      label: 'Energy',
+      tooltip: 'Interrupt by speaking — uses mic energy detection',
+      create: () => new EnergyBargeInDetector(),
+    },
+    {
+      id: 'silero-vad',
+      label: 'Smart VAD',
+      tooltip: 'AI-powered speech detection — more accurate, fewer false triggers',
+      create: () => new SileroVadDetector({ onnxWASMBasePath: '/' }),
+    },
+  ];
+</script>
+```
+
+The `settings` attribute must be present on the widget for the settings panel (including the barge-in selector) to be accessible.
+
+Barge-in plugins are only supported by the **local engine**. The Gemini Live engine handles interruption natively through its WebSocket protocol and ignores registered plugins.
+
+## Creating a custom plugin
+
+To create your own barge-in detector, implement the `BargeInDetector` interface and wrap it in a `BargeInPlugin` descriptor.
+
+```typescript
+import type { BargeInDetector } from '@ariontalk/core';
+
+class MyCustomDetector implements BargeInDetector {
+  async init(): Promise<void> {
+    // Acquire microphone, load models, etc.
+  }
+
+  startMonitoring(onBargeIn: () => void): void {
+    // Begin listening for user speech.
+    // Call onBargeIn() exactly once when interruption is detected.
+  }
+
+  stopMonitoring(): void {
+    // Pause monitoring, keep resources alive.
+  }
+
+  destroy(): void {
+    // Release all resources (streams, contexts, models).
+  }
+}
+```
+
+Register it with the widget:
+
+```javascript
+document.querySelector('#widget').bargeInPlugins = [
+  {
+    id: 'my-custom',
+    label: 'My Detector',
+    tooltip: 'Custom barge-in detection strategy',
+    create: () => new MyCustomDetector(),
+  },
+];
+```
+
+The `create` factory is called once per session. Return a fresh instance each time — the engine will call `destroy()` at the end of each session.

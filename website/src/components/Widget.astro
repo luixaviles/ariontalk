@@ -1,0 +1,33 @@
+---
+/**
+ * Global widget instance — included once per page via:
+ * - Landing.astro layout (landing page)
+ * - Starlight Footer override (docs pages)
+ */
+---
+
+<ariontalk-widget
+  engine="gemini"
+  token-server="http://localhost:3001/api/token"
+  theme="light"
+  settings
+  log-level="debug"
+></ariontalk-widget>
+
+<script>
+  import '@ariontalk/widget';
+
+  function syncWidgetTheme() {
+    const widget = document.querySelector('ariontalk-widget');
+    if (!widget) return;
+    const theme = document.documentElement.dataset.theme || 'light';
+    widget.setAttribute('theme', theme);
+  }
+
+  syncWidgetTheme();
+
+  new MutationObserver(() => syncWidgetTheme()).observe(
+    document.documentElement,
+    { attributes: true, attributeFilter: ['data-theme'] },
+  );
+</script>

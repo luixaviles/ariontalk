@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- Shield + Wave Bars v1: Solid shield with the widget's 4 wave-bars centered inside -->
+  <g fill="#1a1a1a">
+    <!-- Shield shape -->
+    <path d="M64 6L12 28v36c0 28 22 48 52 58c30-10 52-30 52-58V28z"/>
+    <!-- 5 wave-bars (white negative space, symmetric: short-tall-short-tall-short) -->
+    <!-- Bar widths: 8px, gap: 5px, total width = 5*8 + 4*5 = 60, centered at x=64 => starts at 34 -->
+    <!-- All bars vertically centered at y=58 -->
+    <rect x="34" y="47" width="8" height="22" rx="4" fill="white"/>
+    <rect x="47" y="39" width="8" height="38" rx="4" fill="white"/>
+    <rect x="60" y="47" width="8" height="22" rx="4" fill="white"/>
+    <rect x="73" y="39" width="8" height="38" rx="4" fill="white"/>
+    <rect x="86" y="47" width="8" height="22" rx="4" fill="white"/>
+  </g>
+</svg>

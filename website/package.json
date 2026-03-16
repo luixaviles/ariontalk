@@ -1,0 +1,17 @@
+{
+  "name": "@ariontalk/website",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@ariontalk/widget": "workspace:*",
+    "@astrojs/starlight": "^0.38.1",
+    "astro": "^6.0.1",
+    "lit": "^3.2.0",
+    "sharp": "^0.34.2"
+  }
+}

@@ -1,0 +1,68 @@
+---
+title: Configuration
+description: Widget attributes, settings, and customization options.
+---
+
+## Widget Attributes
+
+Configure `<ariontalk-widget>` using HTML attributes:
+
+| Attribute | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `lang` | `string` | `"en"` | Language for the session (`"en"` or `"es"`) |
+| `position` | `string` | `"bottom-right"` | Widget position on screen (`"bottom-right"` or `"bottom-left"`) |
+| `theme` | `string` | `"light"` | Color theme (`"light"` or `"dark"`) |
+| `settings` | `boolean` | `false` | Show settings gear icon next to the FAB before a session starts |
+| `force` | `boolean` | `false` | Skip browser support check and always show the widget |
+| `engine` | `string` | `"local"` | Engine type: `"local"` (on-device) or `"gemini"` (cloud) |
+| `token-server` | `string` | `""` | URL of the token server for Gemini engine authentication |
+| `gemini-model` | `string` | `""` | Gemini model identifier (e.g. `"gemini-2.5-flash-native-audio-preview-12-2025"`) |
+| `gemini-voice` | `string` | `""` | Gemini voice name for TTS output |
+| `log-level` | `string` | `"disabled"` | Logging level: `"disabled"`, `"error"`, `"warning"`, `"info"`, or `"debug"` |
+
+## Minimal Example
+
+The simplest configuration with just a language:
+
+```html
+<ariontalk-widget lang="en"></ariontalk-widget>
+<script
+  type="module"
+  src="https://cdn.jsdelivr.net/npm/@ariontalk/widget@latest/dist/ariontalk.js"
+  async
+></script>
+```
+
+## Full-Featured Example (Gemini Engine)
+
+Using the Gemini Live engine with all options:
+
+```html
+<ariontalk-widget
+  lang="en"
+  position="bottom-right"
+  theme="dark"
+  settings
+  engine="gemini"
+  token-server="https://your-server.com/api/token"
+  gemini-model="gemini-2.5-flash-native-audio-preview-12-2025"
+  gemini-voice="Kore"
+  log-level="info"
+></ariontalk-widget>
+<script
+  type="module"
+  src="https://cdn.jsdelivr.net/npm/@ariontalk/widget@latest/dist/ariontalk.js"
+  async
+></script>
+```
+
+## Settings Persistence
+
+When the `settings` attribute is enabled, users can configure voice preferences (language, voice, rate, pitch, volume, barge-in) through a settings panel.
+
+These preferences are automatically saved to `localStorage` under the key `ariontalk:settings` and restored on subsequent page loads. The saved settings include:
+
+- Language
+- Voice selection
+- Speech rate, pitch, and volume
+- Barge-in plugin preference
