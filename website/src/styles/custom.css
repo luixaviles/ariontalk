@@ -795,10 +795,10 @@
 	padding: 1rem 0;
 }
 
-.arch-svg {
+.arch-img {
 	width: 100%;
 	height: auto;
-	min-width: 600px;
+	border-radius: 12px;
 }
 
 .architecture-alt {
