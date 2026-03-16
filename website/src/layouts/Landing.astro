@@ -18,15 +18,10 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Force light theme — dark mode toggle is disabled for now -->
     <script is:inline>
-      (function () {
-        var theme = localStorage.getItem('starlight-theme');
-        if (theme === 'dark' || theme === 'light') {
-          document.documentElement.dataset.theme = theme;
-        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-          document.documentElement.dataset.theme = 'dark';
-        }
-      })();
+      document.documentElement.dataset.theme = 'light';
+      localStorage.setItem('starlight-theme', 'light');
     </script>
   </head>
   <body>
