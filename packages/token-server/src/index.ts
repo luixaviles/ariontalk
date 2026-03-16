@@ -7,6 +7,16 @@ import { cors } from 'hono/cors';
 import { serve } from '@hono/node-server';
 import { GoogleGenAI, Modality, Type, Behavior } from '@google/genai';
 
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught exception:', err);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled rejection:', reason);
+  process.exit(1);
+});
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROMPT_TEMPLATE = readFileSync(
   resolve(__dirname, './prompts/voice-assistant.md'), 'utf-8',
