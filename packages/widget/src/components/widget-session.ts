@@ -193,8 +193,8 @@ export class WidgetSession extends LitElement {
       }
 
       .mute-btn.active {
-        background: var(--at-primary-color);
-        color: var(--at-primary-text);
+        background: var(--at-text-muted);
+        color: #fff;
       }
 
       .mute-btn svg {
@@ -272,7 +272,7 @@ export class WidgetSession extends LitElement {
             <button
               class="mute-btn ${this.muted ? 'active' : ''}"
               @click=${this.handleMuteToggle}
-              aria-label=${this.muted ? 'Unmute barge-in detection' : 'Mute barge-in detection'}
+              aria-label=${this.muted ? 'Unmute microphone' : 'Mute microphone'}
               aria-pressed=${this.muted ? 'true' : 'false'}
               title=${this.muted ? 'Unmute' : 'Mute'}
             >

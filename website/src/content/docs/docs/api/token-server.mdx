@@ -1,0 +1,109 @@
+---
+title: "@ariontalk/token-server"
+description: API reference for the Gemini Live authentication token server.
+---
+
+`@ariontalk/token-server` is a lightweight Node.js server that mints ephemeral authentication tokens for Gemini Live sessions. It keeps your `GEMINI_API_KEY` on the server and issues short-lived, single-use tokens to the browser client.
+
+## Installation & Setup
+
+```bash
+pnpm add @ariontalk/token-server
+```
+
+Create a `.env` file (or set the variable in your hosting environment):
+
+```
+GEMINI_API_KEY=your-api-key-here
+```
+
+Start the server:
+
+```bash
+node dist/index.js
+```
+
+The server listens on port `3001` by default. Set the `PORT` environment variable to override.
+
+## Environment Variables
+
+| Variable | Required | Description |
+|---|---|---|
+| `GEMINI_API_KEY` | Yes | Google AI API key used to mint ephemeral tokens via the Gemini SDK. |
+| `PORT` | No | HTTP listen port. Defaults to `3001`. |
+
+## API Endpoint
+
+### `POST /api/token`
+
+Mints an ephemeral token scoped to a single Gemini Live session.
+
+#### Request Body
+
+```typescript
+{
+  model?: string;       // Gemini model identifier (defaults to 'gemini-2.5-flash-native-audio-preview-12-2025')
+  voice?: string;       // Voice name for TTS (defaults to 'Kore')
+  lang?: string;        // BCP-47 language code (defaults to 'en')
+  pageTitle?: string;   // Host page title — injected into the system prompt
+  pageUrl?: string;     // Host page URL — injected into the system prompt
+  pageContent?: string; // Extracted page text — injected into the system prompt
+}
+```
+
+#### Response
+
+```json
+{ "token": "<ephemeral-token-string>" }
+```
+
+On error:
+
+```json
+{ "error": "<message>" }
+```
+
+Status `500` is returned if `GEMINI_API_KEY` is not set or token creation fails.
+
+#### Token Constraints
+
+The server creates tokens with these constraints baked in:
+
+| Constraint | Value |
+|---|---|
+| `uses` | `1` (single-use) |
+| `expireTime` | 30 minutes from creation |
+| `newSessionExpireTime` | 2 minutes from creation |
+| `responseModalities` | `[Modality.AUDIO]` |
+| `speechConfig` | Prebuilt voice config with the requested voice name |
+| `inputAudioTranscription` | Enabled (empty config) |
+| `outputAudioTranscription` | Enabled (empty config) |
+
+## System Prompt
+
+When `pageContent` is provided in the request body, the server builds a system instruction from a Markdown template file (`prompts/voice-assistant.md`). The template uses placeholder variables that are replaced at runtime:
+
+| Placeholder | Replaced With |
+|---|---|
+| `{{lang}}` | Display name of the language (e.g. `'English'`, `'Spanish'`) |
+| `{{pageTitle}}` | Value of `pageTitle` from the request |
+| `{{pageUrl}}` | Value of `pageUrl` from the request |
+| `{{pageContent}}` | Value of `pageContent` from the request |
+
+The resulting system instruction is embedded in the token's `liveConnectConstraints`, so the Gemini model receives it automatically when the client connects — no client-side prompt configuration is needed.
+
+If `pageContent` is omitted or empty, no system instruction is set.
+
+## CORS
+
+The `/api/token` endpoint uses Hono's `cors()` middleware with default settings, allowing requests from any origin. For production deployments, configure CORS to restrict allowed origins.
+
+## Deployment
+
+The server is built on [Hono](https://hono.dev/) with the `@hono/node-server` adapter. It can be deployed as any standard Node.js HTTP server:
+
+- **Local development:** `node dist/index.js` or via the monorepo `pnpm dev` script
+- **Docker / cloud:** Set `GEMINI_API_KEY` and `PORT` as environment variables
+- **Serverless:** Hono supports adapters for Cloudflare Workers, Vercel, Deno Deploy, and others — swap the server adapter if needed
+
+The server is stateless; every token request is independent.

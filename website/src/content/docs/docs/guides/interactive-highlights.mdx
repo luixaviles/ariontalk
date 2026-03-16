@@ -1,0 +1,92 @@
+---
+title: Interactive Highlights
+description: Enable real-time content highlighting during Gemini voice conversations.
+---
+
+Interactive Highlights is ArionTalk's standout feature — as the AI discusses your page content, it scrolls to and visually highlights the exact section or image being referenced. It creates a guided tour experience powered by Gemini function calling.
+
+## Enable
+
+Add the `interactive-highlights` attribute to your widget:
+
+```html
+<ariontalk-widget
+  engine="gemini"
+  token-server="https://your-server.com/api/token"
+  interactive-highlights
+></ariontalk-widget>
+```
+
+Interactive Highlights requires the **Gemini engine**. It is not available with the local engine.
+
+## How It Works
+
+The feature connects three systems in real time:
+
+1. **Page Indexer** scans the DOM and assigns stable element IDs to sections (based on heading hierarchy) and images in the main content area.
+2. **Token Server** registers a `highlight_and_scroll` tool as a non-blocking function declaration when creating the ephemeral session.
+3. **Gemini Live** calls the tool in real time as it speaks, passing the target element ID.
+4. **Highlight Manager** receives the tool call, scrolls the element into view, and applies a visual highlight.
+5. Highlights **fade out** (600ms transition) when the model's turn ends or the user interrupts with barge-in.
+
+The entire flow happens concurrently with the audio response — the model keeps speaking while highlights render.
+
+## Element ID System
+
+The Page Indexer assigns IDs using a predictable naming convention:
+
+| Pattern | Source | Example |
+|---------|--------|---------|
+| `sec-1`, `sec-2`, `sec-3` | Sections based on heading hierarchy (`h1`–`h6`) | First `<h2>` section → `sec-1` |
+| `img-1`, `img-2`, `img-3` | Images in main content area | First content image → `img-1` |
+
+These IDs are embedded in the annotated page text sent to Gemini as context. The system instruction tells the model to call `highlight_and_scroll` whenever it starts discussing a specific section or image.
+
+## Visual Behavior
+
+When a highlight is triggered:
+
+- The element **scrolls into view** with smooth behavior, centered on screen
+- **Text sections** receive an indigo border and background highlight
+- **Images** receive an outline highlight
+- Highlights render with a **fade-in** and clear with a **600ms fade-out** transition
+- If the element has been removed from the DOM, the highlight is silently skipped
+
+## The Tool Declaration
+
+The token server registers the following tool with the Gemini session:
+
+```json
+{
+  "name": "highlight_and_scroll",
+  "description": "Scrolls to and highlights a section or image on the page",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "elementId": {
+        "type": "string",
+        "description": "The ID of the element to highlight (e.g., sec-1, img-2)"
+      }
+    },
+    "required": ["elementId"]
+  }
+}
+```
+
+The tool is declared as **non-blocking** — Gemini does not wait for a response before continuing to generate audio. This ensures highlights appear synchronously with speech without introducing pauses.
+
+## Architecture
+
+```
+User speaks → Gemini Live API → Audio response + Tool call
+                                        ↓
+                              highlight_and_scroll({ elementId: "sec-2" })
+                                        ↓
+                              Highlight Manager → Scroll + CSS highlight
+```
+
+## Requirements
+
+- **Gemini engine** — Set `engine="gemini"` on the widget
+- **Token server** — Must be running and accessible. The server automatically includes the tool declaration when `interactive-highlights` is enabled
+- **Page content** — The page must have identifiable content (headings, text, images) for the indexer to annotate

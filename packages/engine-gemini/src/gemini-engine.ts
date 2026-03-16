@@ -44,6 +44,7 @@ export class GeminiEngine implements VoiceEngineInterface {
     supportsVoiceSelection: true,
     supportsRatePitchVolume: false,
     supportsBargeInPlugins: false,
+    alwaysCaptureMic: true,
     supportsOffline: false,
     maxSessionDurationSec: SESSION_MAX_SEC,
     requiresTokenServer: true,

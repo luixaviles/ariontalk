@@ -84,6 +84,8 @@ export class PageExtractorService {
     const candidates = imgs.filter((img) => {
       if (img.naturalWidth < MIN_IMG_DIMENSION || img.naturalHeight < MIN_IMG_DIMENSION) return false;
       if (!img.src || img.src.startsWith('data:')) return false;
+      // Skip SVGs — Gemini Live API only accepts raster formats (JPEG/PNG/WebP)
+      if (img.src.endsWith('.svg') || img.src.includes('.svg?')) return false;
       return true;
     });
 

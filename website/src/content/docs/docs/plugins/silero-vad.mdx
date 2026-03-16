@@ -1,0 +1,93 @@
+---
+title: Silero VAD
+description: AI-powered barge-in detection using Silero Voice Activity Detection.
+---
+
+The Silero VAD plugin provides AI-powered voice activity detection for barge-in (interruption) detection. It uses the [Silero VAD](https://github.com/snakers4/silero-vad) machine learning model running via ONNX Runtime WebAssembly to distinguish real speech from background noise, coughs, and other non-speech sounds.
+
+## Installation
+
+```bash
+pnpm add @ariontalk/plugin-silero-vad
+```
+
+The package exports `SileroVadDetector` and the `SileroVadOptions` type.
+
+## Usage with the widget
+
+Register the Silero VAD plugin alongside other barge-in strategies by setting the `bargeInPlugins` property on the widget element:
+
+```html
+<ariontalk-widget id="widget" settings></ariontalk-widget>
+
+<script type="module">
+  import '@ariontalk/widget';
+  import { EnergyBargeInDetector } from '@ariontalk/core';
+  import { SileroVadDetector } from '@ariontalk/plugin-silero-vad';
+
+  document.querySelector('#widget').bargeInPlugins = [
+    {
+      id: 'energy',
+      label: 'Energy',
+      tooltip: 'Interrupt by speaking — uses mic energy detection',
+      create: () => new EnergyBargeInDetector(),
+    },
+    {
+      id: 'silero-vad',
+      label: 'Smart VAD',
+      tooltip: 'AI-powered speech detection — more accurate, fewer false triggers',
+      create: () => new SileroVadDetector({ onnxWASMBasePath: '/' }),
+    },
+  ];
+</script>
+```
+
+## Configuration options
+
+Pass a `SileroVadOptions` object to the constructor to customize detection behavior.
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `baseAssetPath` | `string` | `'./'` | Base path where `vad.worklet.bundle.min.js` and `silero_vad.onnx` are served. |
+| `onnxWASMBasePath` | `string` | `'./'` | Base path where ONNX Runtime WebAssembly files are served. |
+| `positiveSpeechThreshold` | `number` | `0.7` | Probability threshold for speech detection (0-1). Higher values reduce false positives but are slower to trigger. |
+| `negativeSpeechThreshold` | `number` | `0.55` | Probability below which speech is considered absent (0-1). Should be lower than `positiveSpeechThreshold` (Silero recommends ~0.15 less). |
+| `minSpeechMs` | `number` | `500` | Minimum sustained speech duration in milliseconds before triggering barge-in. Shorter sounds (coughs, thumps) are discarded. |
+| `redemptionMs` | `number` | `1400` | Grace period in milliseconds after speech drops below `negativeSpeechThreshold` before considering speech ended. Bridges brief pauses mid-sentence. |
+
+### Example with custom options
+
+```javascript
+create: () => new SileroVadDetector({
+  onnxWASMBasePath: '/assets/wasm/',
+  baseAssetPath: '/assets/vad/',
+  positiveSpeechThreshold: 0.8,
+  negativeSpeechThreshold: 0.6,
+  minSpeechMs: 400,
+  redemptionMs: 1000,
+})
+```
+
+## Asset serving
+
+Silero VAD requires several files to be served from your web server:
+
+- **ONNX Runtime WASM files** — The WebAssembly runtime for running the ML model. Set their location with `onnxWASMBasePath`.
+- **VAD worklet and model** — The `vad.worklet.bundle.min.js` audio worklet and `silero_vad.onnx` model file. Set their location with `baseAssetPath`.
+
+These files come from the `@ricky0123/vad-web` package (a dependency of the plugin). Copy them to a publicly served directory or configure your bundler to serve them from `node_modules`.
+
+The model and WASM files are loaded lazily — they are only downloaded when the user starts a session with Smart VAD selected, not at page load.
+
+## Energy vs. Silero VAD comparison
+
+| Aspect | Energy (built-in) | Silero VAD |
+|--------|--------------------|------------|
+| Detection method | RMS volume threshold | ML-based speech probability |
+| Accuracy | Good — may trigger on loud non-speech sounds | High — distinguishes speech from noise |
+| False positives | More likely (keyboard typing, music, etc.) | Rare — trained to detect human speech |
+| CPU usage | Minimal (simple math on audio samples) | Moderate (ONNX model inference via WASM) |
+| Bundle size | Zero (included in `@ariontalk/core`) | ~2 MB (ONNX Runtime WASM + Silero model) |
+| Setup | None — works out of the box | Requires serving WASM and ONNX assets |
+| Dependencies | None | `@ricky0123/vad-web`, `onnxruntime-web` |
+| Latency to trigger | ~250ms of sustained volume | ~500ms of sustained speech (configurable) |

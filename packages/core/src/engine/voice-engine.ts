@@ -28,6 +28,7 @@ export class VoiceEngine implements VoiceEngineInterface {
     supportsVoiceSelection: true,
     supportsRatePitchVolume: true,
     supportsBargeInPlugins: true,
+    alwaysCaptureMic: false,
     supportsOffline: true,
     maxSessionDurationSec: null,
     requiresTokenServer: false,

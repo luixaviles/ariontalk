@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A Beginner's Guide to Astrophotography - ArionTalk Gemini Demo</title>
+  <meta name="description" content="Explore the art of capturing the night sky — from planets and deep-sky nebulae to comets and star trails. A demo page for ArionTalk multimodal voice conversations." />
+  <link rel="stylesheet" href="./styles/shared.css" />
+  <style>
+    .image-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    @media (max-width: 600px) {
+      .image-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .image-grid figure {
+      margin: 0;
+    }
+    .image-grid img {
+      width: 100%;
+      border-radius: 8px;
+    }
+    .image-grid figcaption {
+      font-size: 13px;
+      color: #6b7280;
+      margin-top: 0.4rem;
+      text-align: center;
+    }
+    body.dark .image-grid figcaption {
+      color: #a1a1aa;
+    }
+    figure.full-width {
+      margin: 1.5rem 0;
+    }
+    figure.full-width img {
+      width: 100%;
+      border-radius: 8px;
+    }
+    figure.full-width figcaption {
+      font-size: 13px;
+      color: #6b7280;
+      margin-top: 0.4rem;
+      text-align: center;
+    }
+    body.dark figure.full-width figcaption {
+      color: #a1a1aa;
+    }
+    .video-container {
+      position: relative;
+      padding-bottom: 56.25%;
+      height: 0;
+      overflow: hidden;
+      margin: 1.5rem 0;
+      border-radius: 8px;
+    }
+    .video-container iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      border-radius: 8px;
+    }
+    .equipment-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 14px;
+    }
+    .equipment-table th,
+    .equipment-table td {
+      padding: 0.6rem 0.8rem;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    body.dark .equipment-table th,
+    body.dark .equipment-table td {
+      border-bottom-color: #3f3f46;
+    }
+    .equipment-table th {
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <header class="toolbar">
+    <div class="toolbar-brand"><a href="./index.html" style="color:inherit;text-decoration:none">ArionTalk</a><span>Gemini Demo</span></div>
+    <div class="toolbar-controls">
+      <span class="toolbar-label">Theme</span>
+      <div class="segmented">
+        <button id="btn-light" class="active" onclick="setTheme('light')">Light</button>
+        <button id="btn-dark" onclick="setTheme('dark')">Dark</button>
+      </div>
+      <button id="btn-brand" class="toggle-btn" onclick="toggleBrand()">Brand</button>
+    </div>
+  </header>
+
+  <main>
+    <h1>A Beginner's Guide to Astrophotography</h1>
+    <p class="byline">Published on March 15, 2026 by Daniel Reyes</p>
+
+    <article>
+      <h2>What is Astrophotography?</h2>
+      <p>
+        Astrophotography is the art and science of photographing celestial objects and phenomena.
+        From the craters on the Moon to the swirling arms of distant galaxies, astrophotography
+        lets us capture what the naked eye can barely see. With modern cameras, telescopes, and
+        image-processing software, amateur astronomers are producing images that rival professional
+        observatories from just a few decades ago.
+      </p>
+      <p>
+        The field spans several categories, each with its own techniques and equipment requirements:
+        planetary imaging, deep-sky photography, widefield Milky Way shots, comet tracking, and
+        time-lapse star trails.
+      </p>
+
+      <h2>Planetary Imaging</h2>
+      <p>
+        Planets are among the first targets for new astrophotographers. Jupiter, Saturn, and Mars
+        are bright enough to photograph through even a modest telescope. The technique involves
+        capturing thousands of video frames, then stacking the sharpest ones to produce a final
+        image with remarkable detail.
+      </p>
+      <p>
+        Jupiter reveals its iconic Great Red Spot and cloud bands, while Saturn's rings are a
+        breathtaking sight even through a small telescope. Mars, during opposition, shows its polar
+        ice caps and dark surface features like Syrtis Major.
+      </p>
+
+      <figure class="full-width">
+        <img
+          src="./assets/astrophotography/saturn.jpg"
+          alt="Saturn with its ring system visible, showing the Cassini Division gap in the rings, the planet appears golden-yellow against the black of space"
+        />
+        <figcaption>Saturn — ring system and Cassini Division. Credit: NASA/JPL/SSI</figcaption>
+      </figure>
+
+      <h2>Deep-Sky Photography</h2>
+      <p>
+        Deep-sky objects — nebulae, galaxies, and star clusters — require long exposures to capture
+        their faint light. A tracking mount that compensates for Earth's rotation is essential,
+        allowing exposures of several minutes without star trails. Images are typically stacked:
+        dozens or even hundreds of individual exposures are combined to reduce noise and reveal
+        fine detail.
+      </p>
+      <p>
+        The Orion Nebula (M42) is one of the most popular deep-sky targets. Located about 1,344
+        light-years away, this stellar nursery spans roughly 24 light-years across and is visible
+        to the naked eye as a fuzzy patch in Orion's sword. Long-exposure photographs reveal its
+        vivid colors — reds from hydrogen-alpha emission and blues from reflected starlight.
+      </p>
+
+      <figure class="full-width">
+        <img
+          src="./assets/astrophotography/orion-nebula.jpg"
+          alt="The Orion Nebula (M42), a massive cloud of gas and dust glowing in shades of red, orange, purple, and blue. The Trapezium star cluster is visible at the center illuminating the surrounding gas. Dark dust lanes weave through the nebula."
+        />
+        <figcaption>The Orion Nebula (M42) — a stellar nursery 1,344 light-years from Earth. Credit: ESO</figcaption>
+      </figure>
+
+      <p>
+        The Andromeda Galaxy (M31) is another iconic target. At 2.5 million light-years away, it
+        is the nearest large galaxy to the Milky Way and is on a collision course with our galaxy,
+        expected to merge in about 4.5 billion years. Wide-field images reveal its spiral arms,
+        dust lanes, and two satellite galaxies — M32 and M110.
+      </p>
+
+      <h2>Comets</h2>
+      <p>
+        Comets are among the most dramatic visitors to our night sky. As they approach the Sun,
+        their icy nuclei heat up and release gas and dust, forming a glowing coma and one or more
+        tails that can stretch millions of kilometers across space. The dust tail, pushed by
+        solar radiation pressure, curves gently along the comet's orbit, while the ion tail,
+        swept by the solar wind, always points directly away from the Sun.
+      </p>
+      <p>
+        Photographing comets requires tracking their motion against the background stars. Short
+        exposures freeze the comet's position but limit detail; longer exposures capture the
+        faint tail structure but may show the comet as a streak. Advanced techniques stack
+        frames aligned on the comet's nucleus, revealing tail detail while keeping the comet sharp.
+      </p>
+
+      <figure class="full-width">
+        <img
+          src="./assets/astrophotography/hale-bopp.jpg"
+          alt="Comet Hale-Bopp against a dark sky showing two distinct tails: a bright white curved dust tail and a straight blue ion tail extending in different directions"
+        />
+        <figcaption>Comet Hale-Bopp (C/1995 O1) — dust tail (white) and ion tail (blue). Credit: E. Kolmhofer/H. Raab/J. Stichler</figcaption>
+      </figure>
+
+      <h2>Star Trails and the Milky Way</h2>
+      <p>
+        Widefield astrophotography captures the grandeur of the night sky without a telescope.
+        A DSLR or mirrorless camera on a tripod is all you need to photograph the Milky Way's
+        core — that bright band of billions of stars stretching across the summer sky. Dark skies
+        far from city lights are essential; light pollution is the biggest obstacle.
+      </p>
+      <p>
+        Star trail photography takes a different approach: instead of freezing the stars, you let
+        Earth's rotation paint concentric arcs across the frame. Stacking hundreds of short
+        exposures (typically 15-30 seconds each) over several hours produces the classic
+        circular pattern centered on the celestial pole.
+      </p>
+
+      <figure class="full-width">
+        <img
+          src="./assets/astrophotography/milky-way.jpg"
+          alt="A panoramic view of the Milky Way arching across the night sky above the European Southern Observatory in Chile, showing the dense star clouds, dark dust lanes, and the orange glow of the galactic center"
+        />
+        <figcaption>The Milky Way over the European Southern Observatory, Chile. Credit: ESO/S. Brunier</figcaption>
+      </figure>
+
+      <h2>Equipment Overview</h2>
+      <p>
+        Getting started with astrophotography doesn't require a massive investment. Here's a
+        breakdown of equipment by category:
+      </p>
+
+      <table class="equipment-table">
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Beginner Setup</th>
+            <th>Intermediate Setup</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Planetary</td>
+            <td>6" Dobsonian + smartphone adapter</td>
+            <td>8" SCT + dedicated planetary camera (e.g., ZWO ASI224MC)</td>
+          </tr>
+          <tr>
+            <td>Deep Sky</td>
+            <td>DSLR + kit lens + star tracker (e.g., Sky-Watcher Star Adventurer)</td>
+            <td>Dedicated astro camera + ED refractor + EQ mount (e.g., HEQ5)</td>
+          </tr>
+          <tr>
+            <td>Widefield / Milky Way</td>
+            <td>Any camera with manual mode + fast lens (f/2.8 or wider) + tripod</td>
+            <td>Full-frame mirrorless + 14-24mm f/2.8 + star tracker</td>
+          </tr>
+          <tr>
+            <td>Comets</td>
+            <td>DSLR + 200mm lens + tripod</td>
+            <td>Fast refractor + tracking mount + cooled camera</td>
+          </tr>
+          <tr>
+            <td>Star Trails</td>
+            <td>Any camera + intervalometer + sturdy tripod</td>
+            <td>Same setup + wide-angle lens + foreground composition</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Image Processing</h2>
+      <p>
+        Raw astrophotography frames look nothing like the final images you see online. Processing
+        is where the magic happens. Software like DeepSkyStacker, PixInsight, or Siril handles the
+        stacking phase — aligning and combining dozens of frames to boost signal and reduce noise.
+        Then tools like Photoshop, GIMP, or dedicated astro-processing suites are used for
+        stretching, color calibration, noise reduction, and sharpening.
+      </p>
+      <p>
+        The key steps in a typical deep-sky processing workflow are: calibration (darks, flats,
+        bias frames), registration (aligning frames), integration (stacking), background
+        extraction, color calibration, histogram stretching, and noise reduction. Each step
+        pulls more detail out of the raw data.
+      </p>
+
+      <h2>Video: The Night Sky in Motion</h2>
+      <p>
+        Time-lapse videos reveal the motion of the night sky in a way that still images cannot.
+        Watch as the Milky Way rises over a mountain landscape, stars wheel around the celestial
+        pole, and meteors streak across the frame. This short video captures the beauty and scale
+        of the cosmos.
+      </p>
+
+      <div class="video-container">
+        <iframe
+          src="https://www.youtube.com/embed/nkn2ZXWDl6k"
+          title="Time-lapse sky shows Earth rotating instead of stars"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+        ></iframe>
+      </div>
+
+      <h2>Getting Started Tonight</h2>
+      <p>
+        You don't need to wait for perfect equipment to start. Go outside on a clear night, point
+        your phone at the Moon, and take a photo. Modern smartphone computational photography can
+        produce surprisingly good lunar images. From there, try the Milky Way with a DSLR on a
+        tripod, or hold your phone up to a pair of binoculars to photograph Jupiter's moons. The
+        night sky is always there — you just have to look up.
+      </p>
+    </article>
+  </main>
+
+  <ariontalk-widget id="widget" engine="gemini" token-server="http://localhost:3001/api/token" lang="en" settings log-level="debug"></ariontalk-widget>
+  <script type="module">
+    import '@ariontalk/widget';
+    import { initToolbar } from './scripts/toolbar.js';
+    initToolbar();
+  </script>
+</body>
+</html>

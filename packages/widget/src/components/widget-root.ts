@@ -186,7 +186,7 @@ export class ArionTalk extends LitElement {
           .interimTranscript=${this.controller.state.interimTranscript}
           .error=${this.controller.state.error}
           .downloadProgress=${this.controller.state.downloadProgress}
-          .bargeInEnabled=${this.currentSettings.bargeInPluginId !== 'off'}
+          .bargeInEnabled=${this.currentSettings.bargeInPluginId !== 'off' || this.controller.capabilities.alwaysCaptureMic === true}
           .muted=${this.muted}
           @mute-toggle=${this.handleMuteToggle}
           @session-end=${this.handleEnd}

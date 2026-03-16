@@ -1,0 +1,77 @@
+---
+/**
+ * Global widget instance — included once per page via:
+ * - Landing.astro layout (landing page)
+ * - Starlight Footer override (docs pages)
+ */
+---
+
+<ariontalk-widget
+  engine="gemini"
+  token-server="http://localhost:3001/api/token"
+  theme="light"
+  settings
+  interactive-highlights
+  log-level="debug"
+></ariontalk-widget>
+
+<script>
+  import '@ariontalk/widget';
+
+  const solsticeTokens = {
+    light: {
+      '--at-primary-color': '#F55036',
+      '--at-primary-text': '#FFFFFF',
+      '--at-text-color': '#151515',
+      '--at-text-secondary': '#6B6560',
+      '--at-text-muted': '#A39E98',
+      '--at-bg-color': '#FFFDF5',
+      '--at-surface-color': '#FAF9F4',
+      '--at-surface-hover': '#F3F1EA',
+      '--at-border-color': '#EAE6DE',
+      '--at-font-family': "'Inter', system-ui, sans-serif",
+      '--at-shadow-color': 'rgba(21, 21, 21, 0.1)',
+      '--at-shadow-hover': 'rgba(21, 21, 21, 0.16)',
+      '--at-focus-ring': 'rgba(245, 80, 54, 0.3)',
+      '--at-success-color': '#10B981',
+      '--at-error-color': '#EF4444',
+      '--at-error-hover': '#DC2626',
+    },
+    dark: {
+      '--at-primary-color': '#F55036',
+      '--at-primary-text': '#FFFFFF',
+      '--at-text-color': '#FAF8F2',
+      '--at-text-secondary': '#A8A29E',
+      '--at-text-muted': '#78716C',
+      '--at-bg-color': '#0F0D0A',
+      '--at-surface-color': '#1C1A16',
+      '--at-surface-hover': '#292623',
+      '--at-border-color': '#292623',
+      '--at-font-family': "'Inter', system-ui, sans-serif",
+      '--at-shadow-color': 'rgba(0, 0, 0, 0.4)',
+      '--at-shadow-hover': 'rgba(0, 0, 0, 0.5)',
+      '--at-focus-ring': 'rgba(245, 80, 54, 0.35)',
+      '--at-success-color': '#34D399',
+      '--at-error-color': '#F87171',
+      '--at-error-hover': '#EF4444',
+    },
+  } as const;
+
+  function syncWidgetTheme() {
+    const widget = document.querySelector('ariontalk-widget') as HTMLElement | null;
+    if (!widget) return;
+    const theme = (document.documentElement.dataset.theme || 'light') as 'light' | 'dark';
+    widget.setAttribute('theme', theme);
+    const tokens = solsticeTokens[theme] ?? solsticeTokens.light;
+    for (const [prop, value] of Object.entries(tokens)) {
+      widget.style.setProperty(prop, value);
+    }
+  }
+
+  syncWidgetTheme();
+
+  new MutationObserver(() => syncWidgetTheme()).observe(
+    document.documentElement,
+    { attributes: true, attributeFilter: ['data-theme'] },
+  );
+</script>

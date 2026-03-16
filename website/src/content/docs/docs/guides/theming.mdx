@@ -1,0 +1,119 @@
+---
+title: Theming
+description: Customize ArionTalk's appearance with CSS custom properties.
+---
+
+## Built-in Themes
+
+ArionTalk ships with two built-in themes using a neutral gray/black/white palette:
+
+- **Light** (default) — clean white background with dark text
+- **Dark** — dark zinc background with light text
+
+```html
+<!-- Light theme (default) -->
+<ariontalk-widget theme="light"></ariontalk-widget>
+
+<!-- Dark theme -->
+<ariontalk-widget theme="dark"></ariontalk-widget>
+```
+
+## CSS Custom Properties
+
+All colors and design tokens flow through `--at-*` CSS custom properties. Override any of them to customize the look.
+
+| Property | Light Default | Dark Default | Description |
+|----------|--------------|--------------|-------------|
+| `--at-primary-color` | `#111827` | `#FAFAFA` | Accent / FAB background |
+| `--at-primary-text` | `#FFFFFF` | `#18181B` | Text on accent backgrounds |
+| `--at-text-color` | `#1F2937` | `#FAFAFA` | Primary text |
+| `--at-text-secondary` | `#6B7280` | `#A1A1AA` | Medium emphasis text |
+| `--at-text-muted` | `#9CA3AF` | `#71717A` | Low emphasis text |
+| `--at-bg-color` | `#FFFFFF` | `#18181B` | Panel backgrounds |
+| `--at-surface-color` | `#F3F4F6` | `#27272A` | Button / chip backgrounds |
+| `--at-surface-hover` | `#E5E7EB` | `#3F3F46` | Hover states |
+| `--at-border-color` | `#D1D5DB` | `#3F3F46` | Input borders, progress tracks |
+| `--at-border-radius` | `16px` | `16px` | Panel border radius |
+| `--at-font-family` | `system-ui, sans-serif` | `system-ui, sans-serif` | Font stack |
+| `--at-shadow-color` | `rgba(0,0,0,0.12)` | `rgba(0,0,0,0.4)` | Box shadows |
+| `--at-shadow-hover` | `rgba(0,0,0,0.18)` | `rgba(0,0,0,0.5)` | Hover shadows |
+| `--at-focus-ring` | `rgba(17,24,39,0.2)` | `rgba(250,250,250,0.25)` | Focus outlines |
+| `--at-success-color` | `#10B981` | `#34D399` | Listening indicator |
+| `--at-error-color` | `#EF4444` | `#F87171` | Error text, end button |
+| `--at-error-hover` | `#DC2626` | `#EF4444` | End button hover |
+
+## Custom Theming Examples
+
+### Full Custom Theme
+
+Override any `--at-*` property via CSS — no special `theme` attribute value needed:
+
+```css
+ariontalk-widget {
+  --at-primary-color: #7C3AED;
+  --at-primary-text: #FFFFFF;
+  --at-bg-color: #1A1A2E;
+  --at-text-color: #E0E0E0;
+  --at-surface-color: #16213E;
+  --at-surface-hover: #0F3460;
+  --at-border-color: #533483;
+}
+```
+
+### Partial Override
+
+Change just the accent color while keeping everything else from the built-in theme:
+
+```css
+ariontalk-widget {
+  --at-primary-color: #7C3AED;
+  --at-primary-text: #FFFFFF;
+}
+```
+
+### Dark Base with Custom Accent
+
+Combine CSS overrides with `theme="dark"` to use dark as a base and tweak specific tokens:
+
+```html
+<ariontalk-widget theme="dark"></ariontalk-widget>
+```
+
+```css
+ariontalk-widget {
+  --at-primary-color: #F59E0B;
+  --at-primary-text: #18181B;
+  --at-success-color: #22D3EE;
+}
+```
+
+## How Shadow DOM Theming Works
+
+ArionTalk uses Shadow DOM for style encapsulation. The widget's internal styles define CSS custom properties on the `:host` selector with default values for each theme.
+
+When you set `--at-*` properties on the `ariontalk-widget` element from your external CSS, those values take precedence over the `:host()` rules inside the Shadow DOM. This is standard CSS custom property inheritance — the external declaration wins because it is closer to the element in the cascade.
+
+This means you can always override any token without needing to pierce the Shadow DOM or use `::part` selectors.
+
+## Matching Host Page Theme
+
+To sync the widget with your site's theme toggle, set the `theme` attribute dynamically:
+
+```javascript
+const widget = document.querySelector('ariontalk-widget');
+
+// React to your own theme toggle
+function onThemeChange(isDark) {
+  widget.setAttribute('theme', isDark ? 'dark' : 'light');
+}
+```
+
+Or use CSS custom properties that your site already defines:
+
+```css
+ariontalk-widget {
+  --at-primary-color: var(--your-brand-color);
+  --at-bg-color: var(--your-bg-color);
+  --at-text-color: var(--your-text-color);
+}
+```

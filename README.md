@@ -1,18 +1,17 @@
 # ArionTalk
 
-A lightweight, offline-first, privacy-focused voice chat widget. Embed it on any website with a single script tag and let visitors have voice conversations with an AI agent about your page content — powered entirely by Chrome's built-in APIs.
+A voice AI agent that understands your webpage — reads your content, sees your images, and highlights what it's talking about. Powered by Gemini Live.
 
-**No backend. No API keys. No subscriptions. Everything runs on-device.**
+## What It Does
 
-## How It Works
+ArionTalk adds a voice assistant to any website with a single HTML tag. Visitors speak naturally, and the AI responds with voice while scrolling to and highlighting the exact content being discussed. It works with two engines: **Gemini Live** (cloud, multimodal, 12 languages) and a **Local** engine (offline, on-device, privacy-first).
 
-ArionTalk combines three Chrome built-in APIs into a seamless voice conversation loop:
+## Key Features
 
-1. **WebSpeech Recognition** — Converts the user's voice to text
-2. **Prompt API (Gemini Nano)** — Processes the message on-device and generates a response
-3. **WebSpeech Synthesis** — Speaks the AI response back to the user
-
-The widget automatically extracts your page content (text + images) so the AI can answer questions about what the visitor is looking at.
+- **Page Understanding** — Automatically extracts text, images, and structure from any webpage. The AI knows what's on the page before you even ask.
+- **Interactive Highlights** — As the AI discusses content, it scrolls to and highlights the exact section or image — powered by Gemini function calling.
+- **Natural Voice with Barge-in** — Talk naturally, interrupt anytime. The AI stops, listens, and adapts — just like a real conversation.
+- **Offline Mode** — The local engine runs entirely on-device via Gemini Nano. No server, no API keys, no internet required.
 
 ## Packages
 
@@ -20,10 +19,44 @@ The widget automatically extracts your page content (text + images) so the AI ca
 |---------|-------------|
 | [`@ariontalk/core`](./packages/core) | Headless voice engine — services, types, and session logic with no UI dependency |
 | [`@ariontalk/widget`](./packages/widget) | Drop-in Web Component that wraps `@ariontalk/core` with a ready-made UI |
+| [`@ariontalk/engine-gemini`](./packages/engine-gemini) | Cloud engine add-on using Gemini Live API for real-time voice conversations |
+| [`@ariontalk/token-server`](./packages/token-server) | Lightweight Hono server that issues ephemeral Gemini API tokens |
+| [`@ariontalk/plugin-silero-vad`](./packages/plugin-silero-vad) | Silero VAD plugin for AI-powered barge-in detection |
 
 ## Quick Start
 
-### CDN (simplest)
+### Gemini Live Engine (recommended)
+
+**1. Add the widget to your page:**
+
+```html
+<ariontalk-widget
+  engine="gemini"
+  token-server="http://localhost:3001/api/token"
+  interactive-highlights
+  settings
+></ariontalk-widget>
+<script
+  type="module"
+  src="https://cdn.jsdelivr.net/npm/@ariontalk/widget@latest/dist/ariontalk.js"
+  async
+></script>
+```
+
+**2. Start the token server:**
+
+```bash
+cd packages/token-server
+cp .env.example .env
+# Edit .env and add your GEMINI_API_KEY (get one at https://aistudio.google.com/apikey)
+pnpm dev
+```
+
+The token server runs on `http://localhost:3001` and issues ephemeral tokens so your API key is never exposed to the browser.
+
+### Local Engine (offline)
+
+For a fully offline experience with no server required:
 
 ```html
 <ariontalk-widget lang="en"></ariontalk-widget>
@@ -34,191 +67,111 @@ The widget automatically extracts your page content (text + images) so the AI ca
 ></script>
 ```
 
-### npm / pnpm
-
-```bash
-pnpm add @ariontalk/widget
-```
-
-```javascript
-import '@ariontalk/widget';
-```
-
-```html
-<ariontalk-widget lang="en"></ariontalk-widget>
-```
-
-### Headless (core only)
-
-Use `@ariontalk/core` if you want the voice engine without the widget UI:
-
-```bash
-pnpm add @ariontalk/core
-```
-
-```javascript
-import { VoiceEngine, isVoiceChatSupported } from '@ariontalk/core';
-```
+Requires Chrome 139+ with the Prompt API origin trial enabled.
 
 ## Configuration
 
-### Attributes
-
 | Attribute | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `lang` | `string` | `"en"` | Language (`"en"` or `"es"`) |
-| `position` | `string` | `"bottom-right"` | Widget position on screen |
-| `theme` | `string` | `"light"` | `"light"` or `"dark"` |
-| `settings` | `boolean` | `false` | Show settings gear icon next to FAB (pre-session) |
-| `force` | `boolean` | `false` | Skip browser support check |
-
-### Theming
-
-ArionTalk ships with light (default) and dark themes using a neutral gray/black/white palette.
-
-#### Dark Theme
-
-```html
-<ariontalk-widget theme="dark"></ariontalk-widget>
-```
-
-#### CSS Custom Properties
-
-All colors flow through `--at-*` CSS custom properties. Override any of them to customize the look:
-
-| Property | Light Default | Dark Default | Description |
-|----------|--------------|--------------|-------------|
-| `--at-primary-color` | `#111827` | `#FAFAFA` | Accent / FAB background |
-| `--at-primary-text` | `#FFFFFF` | `#18181B` | Text on accent backgrounds |
-| `--at-text-color` | `#1F2937` | `#FAFAFA` | Primary text |
-| `--at-text-secondary` | `#6B7280` | `#A1A1AA` | Medium emphasis text |
-| `--at-text-muted` | `#9CA3AF` | `#71717A` | Low emphasis text |
-| `--at-bg-color` | `#FFFFFF` | `#18181B` | Panel backgrounds |
-| `--at-surface-color` | `#F3F4F6` | `#27272A` | Button / chip backgrounds |
-| `--at-surface-hover` | `#E5E7EB` | `#3F3F46` | Hover states |
-| `--at-border-color` | `#D1D5DB` | `#3F3F46` | Input borders, progress tracks |
-| `--at-border-radius` | `16px` | `16px` | Panel border radius |
-| `--at-font-family` | `system-ui, sans-serif` | `system-ui, sans-serif` | Font stack |
-| `--at-shadow-color` | `rgba(0,0,0,0.12)` | `rgba(0,0,0,0.4)` | Box shadows |
-| `--at-shadow-hover` | `rgba(0,0,0,0.18)` | `rgba(0,0,0,0.5)` | Hover shadows |
-| `--at-focus-ring` | `rgba(17,24,39,0.2)` | `rgba(250,250,250,0.25)` | Focus outlines |
-| `--at-success-color` | `#10B981` | `#34D399` | Listening indicator |
-| `--at-error-color` | `#EF4444` | `#F87171` | Error text, end button |
-| `--at-error-hover` | `#DC2626` | `#EF4444` | End button hover |
-
-#### Custom Theming
-
-Override any `--at-*` property via CSS — no special `theme` value needed:
-
-```css
-/* Full custom theme */
-ariontalk-widget {
-  --at-primary-color: #7C3AED;
-  --at-primary-text: #FFFFFF;
-  --at-bg-color: #1A1A2E;
-  --at-text-color: #E0E0E0;
-}
-
-/* Partial override — change just the accent, keep the rest from light/dark */
-ariontalk-widget {
-  --at-primary-color: #7C3AED;
-  --at-primary-text: #FFFFFF;
-}
-```
-
-This works because external CSS custom properties take precedence over `:host()` rules inside Shadow DOM. You can combine overrides with `theme="dark"` to use dark as a base and tweak specific tokens.
-
-### Events
-
-Listen for widget lifecycle events:
-
-```javascript
-const widget = document.querySelector('ariontalk-widget');
-
-widget.addEventListener('at-session-start', (e) => {
-  console.log('Session started:', e.detail.lang);
-});
-
-widget.addEventListener('at-session-end', (e) => {
-  console.log('Session ended:', e.detail.duration, e.detail.messageCount);
-});
-
-widget.addEventListener('at-error', (e) => {
-  console.error('Error:', e.detail.error);
-});
-```
-
-## Browser Support
-
-| Browser | Supported | Notes |
-|---------|-----------|-------|
-| Chrome 139+ | Yes | Full support via Prompt API origin trial |
-| Firefox | No | No Speech Recognition or Prompt API |
-| Safari | No | No Prompt API |
-
-The widget automatically hides itself on unsupported browsers.
-
-## Offline Capabilities
-
-| Feature | Offline? | Details |
-|---------|----------|---------|
-| AI responses (Gemini Nano) | Yes | Fully on-device after initial model download (~1.7 GB, cached) |
-| Speech synthesis | Yes | Uses local voices when available |
-| Speech recognition | Partial | On-device mode available in Chrome 128+ (`processLocally`), falls back to server-based |
+| `engine` | `string` | `"local"` | Engine type: `"local"` (on-device) or `"gemini"` (cloud) |
+| `token-server` | `string` | `""` | URL of the token server for Gemini engine (required when `engine="gemini"`) |
+| `lang` | `string` | `"en"` | Language for the session |
+| `interactive-highlights` | `boolean` | `false` | Enable real-time content highlighting during Gemini conversations |
+| `gemini-voice` | `string` | `""` | Gemini voice name (`Kore`, `Puck`, `Charon`, `Aoede`, `Fenrir`, `Leda`, `Orus`, `Zephyr`) |
+| `gemini-model` | `string` | `""` | Gemini model identifier |
+| `position` | `string` | `"bottom-right"` | Widget position (`"bottom-right"` or `"bottom-left"`) |
+| `theme` | `string` | `"light"` | Color theme (`"light"` or `"dark"`) |
+| `settings` | `boolean` | `false` | Show settings gear icon for pre-session configuration |
+| `force` | `boolean` | `false` | Skip browser support check and always show the widget |
+| `log-level` | `string` | `"disabled"` | Console logging: `"disabled"`, `"error"`, `"warning"`, `"info"`, `"debug"` |
 
 ## Architecture
-
-This is a monorepo managed with [pnpm workspaces](https://pnpm.io/workspaces) and [changesets](https://github.com/changesets/changesets).
 
 ```
 ariontalk/
 ├── packages/
-│   ├── core/                              # @ariontalk/core
-│   │   ├── src/
-│   │   │   ├── index.ts                   # Public API exports
-│   │   │   ├── engine/
-│   │   │   │   └── voice-engine.ts        # Voice session orchestrator
-│   │   │   ├── services/
-│   │   │   │   ├── speech-recognition.ts  # WebSpeech Recognition wrapper
-│   │   │   │   ├── speech-synthesis.ts    # WebSpeech Synthesis wrapper
-│   │   │   │   ├── ai-session.ts          # Prompt API (Gemini Nano) wrapper
-│   │   │   │   └── page-extractor.ts      # Page content extraction
-│   │   │   ├── utils/
-│   │   │   │   ├── browser-support.ts     # Feature detection
-│   │   │   │   └── timer.ts              # Session timer
-│   │   │   └── types.ts                   # TypeScript types
-│   │   ├── package.json
-│   │   └── tsdown.config.ts
-│   └── widget/                            # @ariontalk/widget
-│       ├── src/
-│       │   ├── index.ts                   # Main entry point, registers custom element
-│       │   ├── components/
-│       │   │   ├── widget-root.ts         # Root component: FAB + session panel
-│       │   │   ├── widget-fab.ts          # Floating action button
-│       │   │   ├── widget-session.ts      # Expanded session panel
-│       │   │   └── widget-voice-settings.ts
-│       │   ├── controllers/
-│       │   │   └── voice-session.controller.ts
-│       │   ├── styles/
-│       │   │   └── shared-styles.ts       # Shared CSS
-│       │   └── types.ts
-│       ├── dev/
-│       │   └── index.html                 # Development page
-│       ├── package.json
-│       └── vite.config.ts
-├── package.json                           # Root workspace config
+│   ├── core/                        # @ariontalk/core
+│   │   └── src/
+│   │       ├── engine/
+│   │       │   └── voice-engine.ts          # Local voice session orchestrator
+│   │       ├── services/
+│   │       │   ├── page-extractor.ts        # Page content extraction (text + images)
+│   │       │   ├── page-indexer.ts          # Annotated page index for interactive highlights
+│   │       │   ├── speech-recognition.ts    # WebSpeech Recognition wrapper
+│   │       │   ├── speech-synthesis.ts      # WebSpeech Synthesis wrapper
+│   │       │   ├── ai-session.ts            # Prompt API (Gemini Nano) wrapper
+│   │       │   └── barge-in-detector.ts     # Energy-based interruption detection
+│   │       └── utils/
+│   │           ├── browser-support.ts       # Feature detection
+│   │           └── timer.ts                 # Session timer
+│   ├── engine-gemini/               # @ariontalk/engine-gemini
+│   │   └── src/
+│   │       ├── gemini-engine.ts             # Gemini Live WebSocket engine
+│   │       ├── audio/
+│   │       │   ├── audio-capture.ts         # Mic capture at 16kHz PCM
+│   │       │   └── audio-playback.ts        # Web Audio playback with worklet
+│   │       ├── highlights/
+│   │       │   └── highlight-manager.ts     # Scroll + highlight via function calling
+│   │       └── session/
+│   │           └── token-manager.ts         # Ephemeral token lifecycle
+│   ├── token-server/                # @ariontalk/token-server
+│   │   └── src/
+│   │       └── index.ts                     # Hono server — token endpoint + system prompt
+│   ├── widget/                      # @ariontalk/widget
+│   │   └── src/
+│   │       ├── components/
+│   │       │   ├── widget-root.ts           # Root component: FAB + session panel
+│   │       │   ├── widget-fab.ts            # Floating action button
+│   │       │   ├── widget-session.ts        # Expanded session panel
+│   │       │   └── widget-voice-settings.ts # Settings UI
+│   │       └── controllers/
+│   │           └── voice-session.controller.ts  # Engine lifecycle management
+│   └── plugin-silero-vad/           # @ariontalk/plugin-silero-vad
+│       └── src/
+│           └── silero-vad-detector.ts       # AI-powered voice activity detection
+├── demo/                            # Demo pages with widget examples
+├── website/                         # Astro + Starlight documentation site
 ├── pnpm-workspace.yaml
-└── tsconfig.base.json
+└── package.json
 ```
 
 ## Development
 
-```bash
-# Install dependencies
-pnpm install
+### Prerequisites
 
-# Start dev server (widget)
-pnpm dev
+- Node.js 20+
+- pnpm 9+
+- Gemini API key (for Gemini engine — get one at [Google AI Studio](https://aistudio.google.com/apikey))
+
+### Setup
+
+```bash
+# Clone and install
+git clone https://github.com/luixaviles/ariontalk.git
+cd ariontalk
+pnpm install
+pnpm build
+```
+
+### Run with Gemini Live
+
+```bash
+# Terminal 1: Start the token server
+cp packages/token-server/.env.example packages/token-server/.env
+# Edit .env and add your GEMINI_API_KEY
+pnpm token-server
+# Runs on http://localhost:3001
+
+# Terminal 2: Start the demo
+pnpm demo
+# Opens at http://localhost:5173
+```
+
+### Other Commands
+
+```bash
+# Run the docs website
+pnpm website
 
 # Build all packages
 pnpm build
@@ -227,27 +180,51 @@ pnpm build
 pnpm test
 ```
 
+## Deployment
+
+### Token Server on Google Cloud Run
+
+The token server is a lightweight Node.js HTTP server built with [Hono](https://hono.dev/). Deploy it to Google Cloud Run:
+
+```bash
+# Build and deploy
+gcloud run deploy ariontalk-token-server \
+  --source packages/token-server \
+  --set-env-vars GEMINI_API_KEY=your-key \
+  --allow-unauthenticated \
+  --region us-central1
+```
+
+Then point your widget to the deployed URL:
+
+```html
+<ariontalk-widget
+  engine="gemini"
+  token-server="https://ariontalk-token-server-xxxxx.run.app/api/token"
+  interactive-highlights
+></ariontalk-widget>
+```
+
 ## Tech Stack
 
-- **[Lit](https://lit.dev/)** — Web Components library (widget only)
-- **TypeScript** — Type safety
-- **Vite** — Build tool for widget (library mode)
-- **[tsdown](https://github.com/nicepkg/tsdown)** — Build tool for core
-- **[pnpm](https://pnpm.io/)** — Package manager & workspaces
-- **[Changesets](https://github.com/changesets/changesets)** — Versioning & publishing
-- **Chrome Built-in APIs** — WebSpeech, Prompt API (Gemini Nano)
+- **[Gemini Live API](https://ai.google.dev/)** — Real-time multimodal voice streaming with function calling
+- **[Lit](https://lit.dev/)** — Web Components library
+- **TypeScript** — Type safety across all packages
+- **[Hono](https://hono.dev/)** — Lightweight HTTP server for token endpoint
+- **[Google Cloud Run](https://cloud.google.com/run)** — Serverless deployment for token server
+- **Web Audio API** — Low-latency audio capture and playback
+- **Chrome Built-in APIs** — WebSpeech, Prompt API (Gemini Nano) for local engine
+
+## Browser Support
+
+| Engine | Browser | Notes |
+|--------|---------|-------|
+| Gemini Live | Any modern browser | Requires WebSocket + microphone access |
+| Local | Chrome 139+ | Requires Prompt API origin trial |
 
 ## Bundle Size
 
-~12-16 KB gzipped (including Lit).
-
-## How It Stays Private
-
-- All AI processing happens on-device via Gemini Nano
-- Speech synthesis uses local voices when available
-- Page content is extracted locally and never sent to any server
-- No analytics, no tracking, no external requests (except speech recognition fallback)
-- Shadow DOM encapsulation prevents interference with host pages
+~12-16 KB gzipped (widget + Lit, excluding engine add-ons).
 
 ## License
 

@@ -1,0 +1,113 @@
+---
+title: Events
+description: Listen for widget lifecycle events.
+---
+
+ArionTalk dispatches custom events at key points in the session lifecycle. All events bubble and are composed (cross Shadow DOM boundaries), so you can listen on the widget element or any ancestor.
+
+## `at-session-start`
+
+Fired when a voice session begins (the user clicks the FAB).
+
+**Detail type:**
+
+```typescript
+{
+  lang: string; // Language code, e.g. "en" or "es"
+}
+```
+
+**Example:**
+
+```javascript
+const widget = document.querySelector('ariontalk-widget');
+
+widget.addEventListener('at-session-start', (e) => {
+  console.log('Session started:', e.detail.lang);
+});
+```
+
+## `at-session-end`
+
+Fired when a voice session ends (the user clicks the end button).
+
+**Detail type:**
+
+```typescript
+{
+  duration: number;     // Session length in seconds
+  messageCount: number; // Number of messages exchanged
+}
+```
+
+**Example:**
+
+```javascript
+const widget = document.querySelector('ariontalk-widget');
+
+widget.addEventListener('at-session-end', (e) => {
+  console.log('Session ended');
+  console.log('Duration:', e.detail.duration, 'seconds');
+  console.log('Messages:', e.detail.messageCount);
+});
+```
+
+## `at-error`
+
+Fired when an error occurs during a session.
+
+**Detail type:**
+
+```typescript
+{
+  error: string; // Error message
+}
+```
+
+**Example:**
+
+```javascript
+const widget = document.querySelector('ariontalk-widget');
+
+widget.addEventListener('at-error', (e) => {
+  console.error('ArionTalk error:', e.detail.error);
+});
+```
+
+## Integration Patterns
+
+### Analytics
+
+Track voice session usage alongside your existing analytics:
+
+```javascript
+const widget = document.querySelector('ariontalk-widget');
+
+widget.addEventListener('at-session-start', (e) => {
+  analytics.track('voice_session_started', {
+    language: e.detail.lang,
+    page: window.location.pathname,
+  });
+});
+
+widget.addEventListener('at-session-end', (e) => {
+  analytics.track('voice_session_ended', {
+    duration: e.detail.duration,
+    messageCount: e.detail.messageCount,
+  });
+});
+```
+
+### Error Tracking
+
+Forward errors to your error monitoring service:
+
+```javascript
+const widget = document.querySelector('ariontalk-widget');
+
+widget.addEventListener('at-error', (e) => {
+  errorTracker.captureMessage('ArionTalk error', {
+    extra: { error: e.detail.error },
+  });
+});
+```

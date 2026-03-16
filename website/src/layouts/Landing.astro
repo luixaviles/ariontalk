@@ -1,0 +1,47 @@
+---
+import '../styles/custom.css';
+import Widget from '../components/Widget.astro';
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ArionTalk — Voice Conversations for Any Website</title>
+    <meta name="description" content="A lightweight, privacy-focused voice chat widget. Embed it with a single script tag and let visitors talk to an AI about your page content." />
+    <meta property="og:title" content="ArionTalk — Voice Conversations for Any Website" />
+    <meta property="og:description" content="A lightweight, privacy-focused voice chat widget. Embed it with a single script tag and let visitors talk to an AI about your page content." />
+    <meta property="og:type" content="website" />
+    <link rel="canonical" href={canonicalURL} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script is:inline>
+      (function () {
+        var theme = localStorage.getItem('starlight-theme');
+        if (theme === 'dark' || theme === 'light') {
+          document.documentElement.dataset.theme = theme;
+        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          document.documentElement.dataset.theme = 'dark';
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <slot />
+    <Widget />
+  </body>
+</html>
+<style is:global>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    background: var(--landing-bg);
+    color: var(--landing-text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+</style>
