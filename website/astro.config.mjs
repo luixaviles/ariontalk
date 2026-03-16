@@ -20,8 +20,7 @@ export default defineConfig({
 		starlight({
 			title: 'ArionTalk',
 			logo: {
-				light: './src/assets/logo-dark.svg',
-				dark: './src/assets/logo-light.svg',
+				src: './src/assets/logo-accent.svg',
 				replacesTitle: false,
 			},
 			social: [
