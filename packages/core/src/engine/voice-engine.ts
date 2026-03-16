@@ -13,7 +13,7 @@ export interface VoiceEngineOptions {
 }
 
 export class VoiceEngine implements VoiceEngineInterface {
-  private pageExtractor = new PageExtractorService();
+  private pageExtractor = new PageExtractorService({ maxImages: 2 });
   private recognition = new SpeechRecognitionService();
   private synthesis = new SpeechSynthesisService();
   private ai = new AISessionService();
