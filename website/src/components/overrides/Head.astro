@@ -17,6 +17,7 @@ import Default from '@astrojs/starlight/components/Head.astro';
     widget.setAttribute('engine', 'gemini');
     widget.setAttribute('token-server', 'http://localhost:3001/api/token');
     widget.setAttribute('settings', '');
+    widget.setAttribute('interactive-highlights', '');
     widget.setAttribute('log-level', 'debug');
 
     const theme = document.documentElement.dataset.theme || 'light';
