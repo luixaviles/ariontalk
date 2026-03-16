@@ -42,6 +42,7 @@ export default defineConfig({
 					label: 'Guides',
 					items: [
 						{ label: 'Installation', slug: 'docs/guides/installation' },
+						{ label: 'Interactive Highlights', slug: 'docs/guides/interactive-highlights' },
 						{ label: 'Configuration', slug: 'docs/guides/configuration' },
 						{ label: 'Theming', slug: 'docs/guides/theming' },
 						{ label: 'Events', slug: 'docs/guides/events' },

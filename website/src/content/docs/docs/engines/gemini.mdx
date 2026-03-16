@@ -21,9 +21,11 @@ The API handles speech recognition, language understanding, and speech synthesis
 | Capability | Supported |
 |------------|-----------|
 | Languages | 12 languages |
-| Voice selection | Yes |
+| Voice selection | Yes (8 voices) |
+| Interactive highlights | Yes (via function calling) |
+| Image understanding | Yes (page images sent as context) |
 | Rate / Pitch / Volume | No |
-| Barge-in plugins | No (native interruption built-in) |
+| Barge-in | Native (built into API) |
 | Offline | No |
 | Max session duration | 15 minutes |
 | Token server required | Yes |
@@ -64,12 +66,21 @@ Gemini Live provides 8 built-in voices. All voices support the full set of 12 la
 
 The default voice is **Kore**. Set a different voice using the `gemini-voice` attribute.
 
+## Interactive Highlights
+
+When `interactive-highlights` is enabled, Gemini calls a `highlight_and_scroll` function in real time as it speaks. The widget scrolls to and visually highlights the referenced page section or image — creating a guided tour experience.
+
+The Page Indexer assigns stable IDs (`sec-1`, `sec-2`, `img-1`, `img-2`) to content elements and embeds them in the context sent to Gemini. The model then calls the tool whenever it discusses a specific section.
+
+See the full [Interactive Highlights guide](/docs/guides/interactive-highlights/) for details on how the element ID system, visual behavior, and function calling architecture work.
+
 ## Widget configuration
 
 ```html
 <ariontalk-widget
   engine="gemini"
   token-server="https://your-server.example.com"
+  interactive-highlights
   gemini-voice="Kore"
   settings
 ></ariontalk-widget>
@@ -79,6 +90,7 @@ The default voice is **Kore**. Set a different voice using the `gemini-voice` at
 |-----------|-------------|
 | `engine` | Set to `"gemini"` to use the Gemini Live engine |
 | `token-server` | URL of your token server (required) |
+| `interactive-highlights` | Enable real-time content highlighting during conversations |
 | `gemini-voice` | Voice name (e.g., `"Kore"`, `"Puck"`) |
 | `gemini-model` | Model identifier (defaults to `gemini-2.5-flash-native-audio-preview-12-2025`) |
 | `settings` | Show the settings gear icon for pre-session configuration |
