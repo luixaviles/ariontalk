@@ -5,6 +5,12 @@ import Default from '@astrojs/starlight/components/Head.astro';
 
 <Default {...Astro.props}><slot /></Default>
 
+<!-- Force light theme regardless of system preference -->
+<script is:inline>
+  document.documentElement.dataset.theme = 'light';
+  localStorage.setItem('starlight-theme', 'light');
+</script>
+
 <!-- Widget for docs pages: script runs after DOM is ready and appends to <body> directly -->
 <script>
   import '@ariontalk/widget';

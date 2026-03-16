@@ -4,7 +4,8 @@ dist/
 *.tsbuildinfo
 .pnpm-store/
 .env
-
+.firebase/
+.firebaserc
 # Copied VAD/ONNX assets for dev server
 demo/public/
 demo/.ort-wasm/
