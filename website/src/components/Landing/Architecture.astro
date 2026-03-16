@@ -5,7 +5,7 @@
     <p class="section-subtitle">A lightweight client-side widget connected to Gemini Live through a thin token server.</p>
 
     <div class="architecture-diagram" aria-label="Architecture diagram showing browser widget connecting to token server on Cloud Run and Gemini Live API">
-      <svg viewBox="0 0 960 440" fill="none" xmlns="http://www.w3.org/2000/svg" class="arch-svg">
+      <svg viewBox="0 0 960 440" fill="none" xmlns="http://www.w3.org/2000/svg" class="arch-svg" role="img" aria-label="ArionTalk system architecture: Browser with ArionTalk Widget connects via REST to Token Server on Google Cloud Run, and via WebSocket to Gemini Live API for multimodal streaming and function calling">
         <!-- Swimlane backgrounds -->
         <rect x="16" y="16" width="320" height="408" rx="16" fill="var(--landing-surface)" stroke="var(--landing-border)" stroke-width="1"/>
         <text x="176" y="42" text-anchor="middle" fill="var(--landing-text-muted)" font-size="11" font-weight="600" font-family="Inter, system-ui, sans-serif" letter-spacing="0.08em">CLIENT</text>
@@ -94,6 +94,7 @@
         <rect x="360" y="373" width="200" height="20" rx="10" fill="var(--landing-bg)" stroke="var(--landing-accent)" stroke-width="0.75" opacity="0.45"/>
         <text x="460" y="387" text-anchor="middle" fill="var(--landing-accent)" font-size="9" font-family="Inter, system-ui, sans-serif" opacity="0.65">highlight_and_scroll(elementId)</text>
       </svg>
+      <img src="/images/architecture-diagram.svg" alt="ArionTalk system architecture: Browser with ArionTalk Widget (Page Extractor, Web Audio, Highlight Manager, Barge-in Detect) connects via REST to Token Server on Google Cloud Run, and via WebSocket to Gemini Live API for multimodal streaming and function calling. A return path shows highlight_and_scroll tool calls flowing back to the Highlight Manager." class="sr-only" width="960" height="440" />
     </div>
 
     <div class="tech-badges">
