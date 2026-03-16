@@ -13,6 +13,7 @@ export interface TokenRequestPayload {
   pageTitle?: string;
   pageUrl?: string;
   pageContent?: string;
+  interactiveHighlights?: boolean;
 }
 
 export class TokenManager {

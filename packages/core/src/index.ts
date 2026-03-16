@@ -15,6 +15,8 @@ export { SpeechSynthesisService } from './services/speech-synthesis.js';
 export { AISessionService } from './services/ai-session.js';
 export { PageExtractorService } from './services/page-extractor.js';
 export type { PageExtractorOptions } from './services/page-extractor.js';
+export { PageIndexerService } from './services/page-indexer.js';
+export type { PageIndex } from './services/page-indexer.js';
 export { EnergyBargeInDetector } from './services/barge-in-detector.js';
 
 // Utils

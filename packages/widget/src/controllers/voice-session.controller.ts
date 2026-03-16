@@ -36,6 +36,7 @@ export class VoiceSessionController implements ReactiveController {
         tokenServerUrl: config.tokenServer,
         model: config.model,
         voice: config.voice,
+        interactiveHighlights: config.interactiveHighlights,
       });
     } else {
       this.engine = new VoiceEngine({
