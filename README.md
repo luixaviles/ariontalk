@@ -2,9 +2,9 @@
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/luixaviles/ariontalk/main/website/src/assets/logo-full-light.svg" />
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/luixaviles/ariontalk/main/website/src/assets/logo-full-dark.svg" />
-    <img src="https://raw.githubusercontent.com/luixaviles/ariontalk/main/website/src/assets/logo-full-light.svg" alt="ArionTalk Logo" width="300" />
+    <source media="(prefers-color-scheme: light)" srcset="https://ariontalk.com/images/logo-full-light.svg" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://ariontalk.com/images/logo-full-dark.svg" />
+    <img src="https://ariontalk.com/images/logo-full-light.svg" alt="ArionTalk Logo" width="200" />
   </picture>
 </p>
 
