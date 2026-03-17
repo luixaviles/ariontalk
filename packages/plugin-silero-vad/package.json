@@ -1,6 +1,19 @@
 {
   "name": "@ariontalk/plugin-silero-vad",
   "version": "0.1.0",
+  "description": "Silero VAD barge-in plugin for ArionTalk — AI-powered voice activity detection",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/luixaviles/ariontalk.git",
+    "directory": "packages/plugin-silero-vad"
+  },
+  "homepage": "https://ariontalk.com",
+  "keywords": ["voice", "vad", "barge-in", "silero", "voice-activity-detection"],
+  "files": ["dist"],
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "exports": {
     ".": {

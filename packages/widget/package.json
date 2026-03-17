@@ -4,16 +4,29 @@
   "type": "module",
   "main": "./dist/ariontalk.js",
   "module": "./dist/ariontalk.js",
-  "types": "./dist/ariontalk.d.ts",
+  "description": "Drop-in voice AI widget for any website — powered by Gemini Live with interactive highlights",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/luixaviles/ariontalk.git",
+    "directory": "packages/widget"
+  },
+  "homepage": "https://ariontalk.com",
+  "keywords": ["voice", "ai", "widget", "web-component", "gemini", "highlights", "lit"],
+  "files": ["dist"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/ariontalk.d.ts",
+      "types": "./dist/index.d.ts",
       "default": "./dist/ariontalk.js"
     }
   },
   "scripts": {
     "dev": "vite",
-    "build": "rm -rf dist && tsc -b && vite build",
+    "build": "rm -rf dist tsconfig.tsbuildinfo && vite build && tsc --emitDeclarationOnly",
     "test": "vitest run"
   },
   "dependencies": {

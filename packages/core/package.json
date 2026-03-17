@@ -1,6 +1,19 @@
 {
   "name": "@ariontalk/core",
   "version": "0.1.0",
+  "description": "Headless voice AI engine with page understanding — services, types, and session logic",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/luixaviles/ariontalk.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://ariontalk.com",
+  "keywords": ["voice", "ai", "speech", "page-understanding"],
+  "files": ["dist"],
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "exports": {
     ".": {
