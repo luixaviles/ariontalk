@@ -1,4 +1,30 @@
-# ArionTalk
+# ArionTalk - Voice AI Agent for Any Website
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/luixaviles/ariontalk/main/website/src/assets/logo-full-light.svg" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/luixaviles/ariontalk/main/website/src/assets/logo-full-dark.svg" />
+    <img src="https://raw.githubusercontent.com/luixaviles/ariontalk/main/website/src/assets/logo-full-light.svg" alt="ArionTalk Logo" width="300" />
+  </picture>
+</p>
+
+<p align="center">
+  <a href="https://www.typescriptlang.org/">
+    <img src="https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript" alt="TypeScript" />
+  </a>
+  <a href="https://nodejs.org/">
+    <img src="https://img.shields.io/badge/Node.js-22%2B-green?logo=node.js" alt="Node.js" />
+  </a>
+  <a href="https://ai.google.dev/gemini-api/docs/live">
+    <img src="https://img.shields.io/badge/Gemini_Live-API-8E75B2?logo=googlegemini&logoColor=white" alt="Gemini Live" />
+  </a>
+  <a href="https://www.google.com/chrome/">
+    <img src="https://img.shields.io/badge/Chrome-139%2B-4285F4?logo=googlechrome&logoColor=white" alt="Chrome 139+" />
+  </a>
+  <a href="https://opensource.org/licenses/MIT">
+    <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" />
+  </a>
+</p>
 
 A voice AI agent that understands your webpage — reads your content, sees your images, and highlights what it's talking about. Powered by Gemini Live.
 
@@ -151,14 +177,19 @@ git clone https://github.com/luixaviles/ariontalk.git
 cd ariontalk
 pnpm install
 pnpm build
+
+# Configure environment
+cp packages/token-server/.env.example packages/token-server/.env
+# Edit packages/token-server/.env and add your GEMINI_API_KEY
+
+cp website/.env.example website/.env
+# Defaults to http://localhost:3001 — no changes needed for local dev
 ```
 
 ### Run with Gemini Live
 
 ```bash
 # Terminal 1: Start the token server
-cp packages/token-server/.env.example packages/token-server/.env
-# Edit .env and add your GEMINI_API_KEY
 pnpm token-server
 # Runs on http://localhost:3001
 
@@ -184,26 +215,31 @@ pnpm test
 
 ### Token Server on Google Cloud Run
 
-The token server is a lightweight Node.js HTTP server built with [Hono](https://hono.dev/). Deploy it to Google Cloud Run:
+**One-time GCP setup:**
 
 ```bash
-# Build and deploy
-gcloud run deploy ariontalk-token-server \
-  --source packages/token-server \
-  --set-env-vars GEMINI_API_KEY=your-key \
-  --allow-unauthenticated \
-  --region us-central1
+gcloud auth login
+GCP_PROJECT_ID=your-project ./scripts/setup-gcp.sh
 ```
 
-Then point your widget to the deployed URL:
+This enables required APIs, creates an Artifact Registry repository, and stores your `GEMINI_API_KEY` in Secret Manager.
 
-```html
-<ariontalk-widget
-  engine="gemini"
-  token-server="https://ariontalk-token-server-xxxxx.run.app/api/token"
-  interactive-highlights
-></ariontalk-widget>
+Save your project ID so the deploy script picks it up automatically:
+
+```bash
+cp .env.example .env
+# Edit .env and set GCP_PROJECT_ID
 ```
+
+**Deploy:**
+
+```bash
+pnpm deploy-token-server
+```
+
+Builds a Docker image, pushes to Artifact Registry, and deploys to Cloud Run. The `GEMINI_API_KEY` is pulled from Secret Manager at runtime — never passed in plain text.
+
+You can also pass the project ID inline: `GCP_PROJECT_ID=your-project pnpm deploy-token-server`.
 
 ## Tech Stack
 
@@ -222,9 +258,6 @@ Then point your widget to the deployed URL:
 | Gemini Live | Any modern browser | Requires WebSocket + microphone access |
 | Local | Chrome 139+ | Requires Prompt API origin trial |
 
-## Bundle Size
-
-~12-16 KB gzipped (widget + Lit, excluding engine add-ons).
 
 ## License
 
