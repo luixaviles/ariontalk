@@ -10,7 +10,8 @@
     "website": "pnpm --filter @ariontalk/website dev",
     "website-build": "pnpm --filter @ariontalk/website build",
     "website-preview": "pnpm --filter @ariontalk/website preview",
-    "deploy-website": "./scripts/deploy-website.sh"
+    "deploy-website": "./scripts/deploy-website.sh",
+    "deploy-token-server": "./scripts/deploy-token-server.sh"
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.0"
