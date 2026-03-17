@@ -67,7 +67,7 @@ import Default from '@astrojs/starlight/components/Head.astro';
 
     const widget = document.createElement('ariontalk-widget');
     widget.setAttribute('engine', 'gemini');
-    widget.setAttribute('token-server', 'http://localhost:3001/api/token');
+    widget.setAttribute('token-server', `${import.meta.env.PUBLIC_SERVER_URL}/api/token`);
     widget.setAttribute('settings', '');
     widget.setAttribute('interactive-highlights', '');
     widget.setAttribute('log-level', 'debug');

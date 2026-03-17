@@ -6,8 +6,15 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 cd "${ROOT_DIR}"
 
+# Load root .env if GCP_PROJECT_ID is not already set
+if [ -z "${GCP_PROJECT_ID:-}" ] && [ -f "${ROOT_DIR}/.env" ]; then
+  set -a
+  source "${ROOT_DIR}/.env"
+  set +a
+fi
+
 # ── Configuration ──
-PROJECT_ID="${GCP_PROJECT_ID:?Set GCP_PROJECT_ID env var}"
+PROJECT_ID="${GCP_PROJECT_ID:?Set GCP_PROJECT_ID env var or add it to .env}"
 REGION="${GCP_REGION:-us-central1}"
 SERVICE_NAME="ariontalk-token-server"
 REPO_NAME="ariontalk"
