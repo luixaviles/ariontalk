@@ -11,7 +11,9 @@
     "website-build": "pnpm --filter @ariontalk/website build",
     "website-preview": "pnpm --filter @ariontalk/website preview",
     "deploy-website": "./scripts/deploy-website.sh",
-    "deploy-token-server": "./scripts/deploy-token-server.sh"
+    "deploy-token-server": "./scripts/deploy-token-server.sh",
+    "verify-packages": "./scripts/verify-packages.sh",
+    "publish-packages": "./scripts/publish-packages.sh"
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.0"
