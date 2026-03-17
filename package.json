@@ -9,7 +9,8 @@
     "test": "pnpm -r test",
     "website": "pnpm --filter @ariontalk/website dev",
     "website-build": "pnpm --filter @ariontalk/website build",
-    "website-preview": "pnpm --filter @ariontalk/website preview"
+    "website-preview": "pnpm --filter @ariontalk/website preview",
+    "deploy-website": "./scripts/deploy-website.sh"
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.0"

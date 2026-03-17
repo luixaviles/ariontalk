@@ -4,11 +4,12 @@
  * - Landing.astro layout (landing page)
  * - Starlight Footer override (docs pages)
  */
+const tokenServerUrl = `${import.meta.env.PUBLIC_SERVER_URL}/api/token`;
 ---
 
 <ariontalk-widget
   engine="gemini"
-  token-server="http://localhost:3001/api/token"
+  token-server={tokenServerUrl}
   theme="light"
   settings
   interactive-highlights
