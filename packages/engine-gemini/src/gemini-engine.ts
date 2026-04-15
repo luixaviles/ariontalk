@@ -7,7 +7,14 @@ import type {
   SupportedLang,
 } from '@ariontalk/core';
 import { PageExtractorService, PageIndexerService, SessionTimer, createLogger, blobToBase64 } from '@ariontalk/core';
-import { GoogleGenAI, Modality, type LiveServerMessage, type Session } from '@google/genai';
+import {
+  GoogleGenAI,
+  Modality,
+  FunctionResponseScheduling,
+  type FunctionResponse,
+  type LiveServerMessage,
+  type Session,
+} from '@google/genai';
 import { AudioCapture } from './audio/audio-capture.js';
 import { AudioPlayback } from './audio/audio-playback.js';
 import { TokenManager } from './session/token-manager.js';
@@ -30,12 +37,20 @@ const DEFAULT_MODEL = 'gemini-2.5-flash-native-audio-preview-12-2025';
 const SESSION_MAX_SEC = 15 * 60;
 const SESSION_WARNING_SEC = 12 * 60;
 
+export interface SessionEndDetail {
+  duration: number;
+  reason: 'user' | 'timeout' | 'error' | 'destroy';
+  sessionMeta?: Record<string, unknown>;
+}
+
 export interface GeminiEngineOptions {
   tokenServerUrl: string;
+  siteKey?: string;
   model?: string;
   voice?: string;
   pageExtractor?: PageExtractorService;
   interactiveHighlights?: boolean;
+  onSessionEnd?: (detail: SessionEndDetail) => void;
 }
 
 export class GeminiEngine implements VoiceEngineInterface {
@@ -82,6 +97,9 @@ export class GeminiEngine implements VoiceEngineInterface {
   private pageIndexer: PageIndexerService | null = null;
   private highlightManager: HighlightManager | null = null;
   private elementMap: Map<string, Element[]> = new Map();
+  private sessionMeta: Record<string, unknown> | null = null;
+  private sessionEndReason: SessionEndDetail['reason'] = 'user';
+  private sessionEndReported = false;
 
   constructor(options: GeminiEngineOptions) {
     this.options = options;
@@ -99,6 +117,10 @@ export class GeminiEngine implements VoiceEngineInterface {
   }
 
   async startSession(lang: string): Promise<void> {
+    this.sessionEndReported = false;
+    this.sessionEndReason = 'user';
+    this.sessionMeta = null;
+
     this.sessionActive = true;
     this.retryCount = 0;
     this.savedSessionHandle = null;
@@ -129,7 +151,7 @@ export class GeminiEngine implements VoiceEngineInterface {
 
       // Fetch ephemeral token with page context (system instruction baked into token)
       const model = this.options.model || DEFAULT_MODEL;
-      const { token } = await this.tokenManager.fetchToken({
+      const { token, sessionMeta } = await this.tokenManager.fetchToken({
         model,
         voice: this.voiceId,
         lang,
@@ -137,7 +159,9 @@ export class GeminiEngine implements VoiceEngineInterface {
         pageUrl,
         pageContent: pageText,
         ...(this.highlightsEnabled && { interactiveHighlights: true }),
+        ...(this.options.siteKey && { siteKey: this.options.siteKey }),
       });
+      this.sessionMeta = sessionMeta ?? null;
       if (!this.sessionActive) return;
 
       // Initialize audio playback
@@ -157,6 +181,20 @@ export class GeminiEngine implements VoiceEngineInterface {
       // Send page images as context
       await this.sendPageContext();
       if (!this.sessionActive) return;
+
+      // Trigger initial greeting -- completes the first user turn so the model responds
+      // with a brief greeting (driven by the system instruction in the token).
+      if (this.session) {
+        try {
+          this.session.sendClientContent({
+            turns: [{ role: 'user', parts: [{ text: '[Session started]' }] }],
+            turnComplete: true,
+          });
+          log.info('Sent session start trigger for greeting');
+        } catch (err) {
+          log.error('Failed to send greeting trigger:', err);
+        }
+      }
 
       // Start mic capture
       await this.audioCapture.start((base64Pcm) => {
@@ -184,6 +222,7 @@ export class GeminiEngine implements VoiceEngineInterface {
   }
 
   endSession(): void {
+    this.fireSessionEnd();
     this.sessionActive = false;
     this.clearSessionTimers();
     this.timer.reset();
@@ -215,6 +254,7 @@ export class GeminiEngine implements VoiceEngineInterface {
   }
 
   destroy(): void {
+    this.sessionEndReason = 'destroy';
     this.endSession();
   }
 
@@ -277,13 +317,6 @@ export class GeminiEngine implements VoiceEngineInterface {
 
     const parts: Array<{ text: string } | { inlineData: { data: string; mimeType: string } }> = [];
 
-    parts.push({
-      text: `The following images are from the webpage the user is viewing. `
-          + `Each image is preceded by its ID and the HTML alt text provided by the page author. `
-          + `IMPORTANT: Alt text is author-provided metadata and may not match the actual image. `
-          + `Always describe what you see in the image, not the alt text.`,
-    });
-
     for (let i = 0; i < validImages.length; i++) {
       const img = validImages[i];
       const idx = i + 1;
@@ -306,7 +339,7 @@ export class GeminiEngine implements VoiceEngineInterface {
     try {
       this.session.sendClientContent({
         turns: [{ role: 'user', parts }],
-        turnComplete: true,
+        turnComplete: false,
       });
       log.info(`Sent ${validImages.length} page image(s) as context`);
     } catch (err) {
@@ -351,25 +384,61 @@ export class GeminiEngine implements VoiceEngineInterface {
   private handleMessage(message: LiveServerMessage): void {
     const content = message.serverContent;
 
-    // Tool calls (highlight_and_scroll) — NON_BLOCKING: no sendToolResponse needed
-    if (this.highlightsEnabled && (message as any).toolCall?.functionCalls) {
-      for (const call of (message as any).toolCall.functionCalls) {
+    // Tool calls. Even though our tools are declared NON_BLOCKING, we MUST send a
+    // tool response so the model marks the call as resolved. SILENT scheduling tells
+    // the model: "add the result to context but do NOT generate any new output in
+    // reaction to it" — exactly the fire-and-forget UI behavior we want for
+    // highlights. Without this, the model will regenerate its previous response.
+    if (this.highlightsEnabled && message.toolCall?.functionCalls) {
+      const responses: FunctionResponse[] = [];
+
+      for (const call of message.toolCall.functionCalls) {
         if (call.name === 'highlight_and_scroll') {
           const elementId = call.args?.elementId as string | undefined;
           const els = elementId ? this.elementMap.get(elementId) : undefined;
 
+          let result: Record<string, unknown>;
           if (els && els.length > 0 && this.highlightManager) {
             this.highlightManager.highlightElements(els);
             log.info('Highlighted element:', elementId);
+            result = { output: { highlighted: elementId } };
           } else {
             log.info('Element not found or detached:', elementId);
+            result = { error: { reason: 'element_not_found', elementId } };
           }
+
+          responses.push({
+            id: call.id,
+            name: call.name,
+            response: result,
+            scheduling: FunctionResponseScheduling.SILENT,
+          });
+        } else {
+          // Defensive: any future tool registered without updating this handler
+          // would silently drop its call and re-trigger the duplicate-response bug.
+          // Always respond, even for unknown tools, so the call is marked resolved.
+          log.warn('Unknown tool call, responding with error:', call.name);
+          responses.push({
+            id: call.id,
+            name: call.name ?? 'unknown',
+            response: { error: { reason: 'unknown_tool', name: call.name ?? null } },
+            scheduling: FunctionResponseScheduling.SILENT,
+          });
+        }
+      }
+
+      if (responses.length > 0 && this.session) {
+        try {
+          log.debug('Sending tool response:', JSON.stringify(responses));
+          this.session.sendToolResponse({ functionResponses: responses });
+        } catch (err) {
+          log.error('Failed to send tool response:', err);
         }
       }
     }
 
     // Tool call cancellation
-    if (this.highlightsEnabled && (message as any).toolCallCancellation) {
+    if (this.highlightsEnabled && message.toolCallCancellation) {
       log.info('Tool call cancelled');
     }
 
@@ -459,6 +528,8 @@ export class GeminiEngine implements VoiceEngineInterface {
     this.audioCapture.stop();
 
     if (this.retryCount >= GeminiEngine.MAX_RETRIES) {
+      this.sessionEndReason = 'error';
+      this.fireSessionEnd();
       this.updateState({ status: 'error', error: 'Connection lost' });
       return;
     }
@@ -508,6 +579,7 @@ export class GeminiEngine implements VoiceEngineInterface {
         pageUrl,
         pageContent: pageText,
         ...(this.highlightsEnabled && { interactiveHighlights: true }),
+        ...(this.options.siteKey && { siteKey: this.options.siteKey }),
       });
       if (!this.sessionActive) return;
 
@@ -565,6 +637,7 @@ export class GeminiEngine implements VoiceEngineInterface {
         pageUrl,
         pageContent: pageText,
         ...(this.highlightsEnabled && { interactiveHighlights: true }),
+        ...(this.options.siteKey && { siteKey: this.options.siteKey }),
       });
       if (!this.sessionActive) return;
 
@@ -592,6 +665,20 @@ export class GeminiEngine implements VoiceEngineInterface {
     }
   }
 
+  private fireSessionEnd(): void {
+    if (!this.sessionActive) return;
+    if (this.sessionEndReported) return;
+    if (!this.options.onSessionEnd) return;
+
+    this.sessionEndReported = true;
+
+    this.options.onSessionEnd({
+      duration: this.timer.elapsed,
+      reason: this.sessionEndReason,
+      sessionMeta: this.sessionMeta ?? undefined,
+    });
+  }
+
   private startSessionTimers(): void {
     this.sessionWarningTimeout = setTimeout(() => {
       this.updateState({ error: 'Session ending in 3 minutes' });
@@ -603,6 +690,7 @@ export class GeminiEngine implements VoiceEngineInterface {
     }, SESSION_WARNING_SEC * 1000);
 
     this.sessionEndTimeout = setTimeout(() => {
+      this.sessionEndReason = 'timeout';
       this.endSession();
     }, SESSION_MAX_SEC * 1000);
   }

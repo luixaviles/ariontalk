@@ -1,0 +1,145 @@
+---
+title: Installation
+description: All the ways to add ArionTalk to your project.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+## CDN
+
+The simplest approach. Add a script tag and the custom element to your HTML:
+
+```html
+<ariontalk-widget></ariontalk-widget>
+<script
+  type="module"
+  src="https://cdn.jsdelivr.net/npm/@ariontalk/widget@latest/dist/ariontalk.js"
+  async
+></script>
+```
+
+The element above uses the default **local** (on-device) engine. To use the cloud-based Gemini engine, add a `site-key`:
+
+```html
+<ariontalk-widget site-key="YOUR_SITE_KEY" interactive-highlights></ariontalk-widget>
+```
+
+When `site-key` is set, the widget automatically uses the ArionTalk cloud service (`engine="gemini"`) — no token server to run. See the [Gemini engine guide](/docs/engines/gemini/) for site-key setup and self-hosted alternatives.
+
+### Version Pinning
+
+For production, pin to a specific version instead of `@latest`:
+
+```html
+<script
+  type="module"
+  src="https://cdn.jsdelivr.net/npm/@ariontalk/widget@0.2.0/dist/ariontalk.js"
+  async
+></script>
+```
+
+Using `@latest` always fetches the newest release, which is convenient during development but may introduce breaking changes without warning.
+
+## Package Manager
+
+<Tabs>
+  <TabItem label="pnpm">
+    ```bash
+    pnpm add @ariontalk/widget
+    ```
+  </TabItem>
+  <TabItem label="npm">
+    ```bash
+    npm install @ariontalk/widget
+    ```
+  </TabItem>
+  <TabItem label="yarn">
+    ```bash
+    yarn add @ariontalk/widget
+    ```
+  </TabItem>
+</Tabs>
+
+Then import the package in your JavaScript/TypeScript entry point:
+
+```javascript
+import '@ariontalk/widget';
+```
+
+And add the element to your HTML:
+
+```html
+<ariontalk-widget></ariontalk-widget>
+```
+
+## Framework Integration
+
+ArionTalk is a standard Web Component. It works in any framework — just import the package and use the element.
+
+<Tabs>
+  <TabItem label="React">
+    ```jsx
+    import '@ariontalk/widget';
+
+    function App() {
+      return <ariontalk-widget></ariontalk-widget>;
+    }
+    ```
+  </TabItem>
+  <TabItem label="Vue">
+    ```vue
+    <script setup>
+    import '@ariontalk/widget';
+    </script>
+
+    <template>
+      <ariontalk-widget></ariontalk-widget>
+    </template>
+    ```
+  </TabItem>
+  <TabItem label="Svelte">
+    ```svelte
+    <script>
+      import '@ariontalk/widget';
+    </script>
+
+    <ariontalk-widget></ariontalk-widget>
+    ```
+  </TabItem>
+</Tabs>
+
+## Bundle Size
+
+The full widget including Lit weighs approximately **12-16 KB gzipped**.
+
+## Headless Mode
+
+If you only need the voice engine without the built-in UI, install `@ariontalk/core`:
+
+```bash
+pnpm add @ariontalk/core
+```
+
+```javascript
+import { VoiceEngine, isVoiceChatSupported } from '@ariontalk/core';
+
+// Check browser support
+const supported = await isVoiceChatSupported('local');
+
+if (supported) {
+  const engine = new VoiceEngine();
+  // Build your own UI on top of the core engine
+}
+```
+
+This is useful when you want complete control over the user interface while reusing ArionTalk's voice session logic.
+
+## Gemini Engine Add-on
+
+To use the cloud-based Gemini Live engine instead of the default local (on-device) engine, install the Gemini engine package:
+
+```bash
+pnpm add @ariontalk/engine-gemini
+```
+
+The Gemini engine requires a token server to securely issue ephemeral API tokens. See the [Gemini Live engine guide](/docs/engines/gemini/) for setup instructions.

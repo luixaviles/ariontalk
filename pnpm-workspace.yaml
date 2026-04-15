@@ -1,4 +1,4 @@
 packages:
   - 'packages/*'
+  - 'docs-site'
   - 'demo'
-  - 'website'

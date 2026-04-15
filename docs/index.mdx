@@ -1,0 +1,48 @@
+---
+title: Overview
+description: Documentation for ArionTalk — a voice AI agent that understands your webpage.
+---
+
+ArionTalk is a voice AI agent you can embed on any website with a single HTML tag. It reads your page content, sees your images, and responds with voice — scrolling to and highlighting the exact content being discussed. Powered by Gemini Live or a fully offline local engine.
+
+## Key Capabilities
+
+- **Page Understanding** — Automatically extracts text, images, and structure from any webpage. The AI knows what's on the page before you even ask.
+- **[Interactive Highlights](/docs/guides/interactive-highlights/)** — As the AI discusses content, it scrolls to and highlights the exact section or image — powered by Gemini function calling.
+- **Natural Voice with Barge-in** — Talk naturally, interrupt anytime. The AI stops, listens, and adapts.
+- **Offline Mode** — The local engine runs entirely on-device via Gemini Nano. No server, no API keys, no internet required.
+
+## Packages
+
+| Package | Description |
+|---------|-------------|
+| `@ariontalk/core` | Headless voice engine — services, types, and session logic with no UI dependency |
+| `@ariontalk/widget` | Drop-in Web Component that wraps `@ariontalk/core` with a ready-made UI |
+| `@ariontalk/engine-gemini` | Cloud engine add-on using Gemini Live API for real-time voice conversations |
+| `@ariontalk/plugin-silero-vad` | Silero VAD plugin for AI-powered barge-in detection |
+| `@ariontalk/token-server` | Lightweight Hono server that issues ephemeral Gemini API tokens (not on npm — self-hosted) |
+
+## Engine Comparison
+
+ArionTalk supports two engines. Choose the one that fits your use case:
+
+| Feature | Local (On-Device) | Gemini Live (Cloud) |
+|---------|-------------------|---------------------|
+| AI model | Gemini Nano (Chrome built-in) | Gemini 2.5 Flash (cloud) |
+| Interactive highlights | No | Yes (via function calling) |
+| Image understanding | No | Yes |
+| Languages | 2 (en, es) | 12 |
+| Voices | System TTS | 8 Gemini voices |
+| Privacy | Fully on-device | Audio sent to Google servers |
+| Backend required | No | Yes (token server) |
+| Offline support | Yes | No |
+| API key required | No | Yes (Gemini API key on server) |
+
+## Browser Support
+
+| Engine | Browser | Notes |
+|--------|---------|-------|
+| Gemini Live | Any modern browser | Requires WebSocket + microphone access |
+| Local | Chrome 139+ | Requires Prompt API origin trial |
+
+The widget automatically hides itself on unsupported browsers (unless `force` is set).

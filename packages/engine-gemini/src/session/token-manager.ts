@@ -4,6 +4,7 @@ const log = createLogger('token-manager');
 
 export interface EphemeralToken {
   token: string;
+  sessionMeta?: Record<string, unknown>;
 }
 
 export interface TokenRequestPayload {
@@ -14,6 +15,7 @@ export interface TokenRequestPayload {
   pageUrl?: string;
   pageContent?: string;
   interactiveHighlights?: boolean;
+  siteKey?: string;
 }
 
 export class TokenManager {
@@ -34,7 +36,16 @@ export class TokenManager {
     }
 
     if (!response.ok) {
-      throw new Error(`Token server error (${response.status})`);
+      let message = `Connection error (${response.status}). Please try again.`;
+      try {
+        const data = await response.json();
+        if (data.message || data.error) {
+          message = data.message || data.error;
+        }
+      } catch {
+        // use default message
+      }
+      throw new Error(message);
     }
 
     const data = await response.json();
@@ -43,6 +54,6 @@ export class TokenManager {
     }
 
     log.info('Ephemeral token acquired');
-    return { token: data.token };
+    return { token: data.token, sessionMeta: data.sessionMeta };
   }
 }

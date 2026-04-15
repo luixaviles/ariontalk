@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CDN Build Test - ArionTalk</title>
+  <meta name="description" content="Smoke test for the self-contained CDN bundle" />
+  <link rel="stylesheet" href="./styles/shared.css" />
+</head>
+<body>
+  <header class="toolbar">
+    <div class="toolbar-brand"><a href="./index.html" style="color:inherit;text-decoration:none">ArionTalk</a><span>CDN Test</span></div>
+    <div class="toolbar-controls">
+      <span class="toolbar-label">Theme</span>
+      <div class="segmented">
+        <button id="btn-light" class="active" onclick="setTheme('light')">Light</button>
+        <button id="btn-dark" onclick="setTheme('dark')">Dark</button>
+      </div>
+      <button id="btn-brand" class="toggle-btn" onclick="toggleBrand()">Brand</button>
+    </div>
+  </header>
+
+  <main>
+    <h1>CDN Bundle Smoke Test</h1>
+    <p class="byline">Tests the self-contained CDN build with no bundler</p>
+
+    <article>
+      <h2>What this page tests</h2>
+      <p>
+        This page loads <code>ariontalk.js</code> directly from the widget dist output —
+        the same file that jsdelivr/unpkg serve via CDN. It does not use a bundler or import maps.
+        If the FAB button appears in the bottom-right corner, the CDN build works.
+      </p>
+
+      <h2>How to verify</h2>
+      <p>Open the browser console and check:</p>
+      <ul>
+        <li>No module resolution errors (bare specifier failures)</li>
+        <li><code>customElements.get('ariontalk-widget')</code> returns the class</li>
+        <li>The FAB button renders and is clickable</li>
+      </ul>
+    </article>
+  </main>
+
+  <ariontalk-widget id="widget" engine="gemini" token-server="http://localhost:3001/api/token" lang="en" force settings></ariontalk-widget>
+
+  <!-- Load from the built CDN bundle via middleware — no bundler, no import maps -->
+  <script type="module" src="/cdn/ariontalk.js"></script>
+  <script src="./scripts/toolbar.js" type="module"></script>
+</body>
+</html>

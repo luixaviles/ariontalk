@@ -18,10 +18,11 @@ export class SessionTimer {
     return SessionTimer.format(this._elapsed);
   }
 
-  static format(seconds: number): string {
+  static format(seconds: number, padMinutes: boolean = false): string {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    const minsStr = padMinutes ? String(mins).padStart(2, '0') : String(mins);
+    return `${minsStr}:${String(secs).padStart(2, '0')}`;
   }
 
   start(): void {

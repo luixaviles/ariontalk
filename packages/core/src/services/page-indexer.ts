@@ -118,12 +118,13 @@ export class PageIndexerService {
   /** Collect the heading and all sibling elements until the next heading of same or higher level. */
   private collectSectionElements(heading: Element): Element[] {
     const level = parseInt(heading.tagName[1], 10);
-    const els: Element[] = [heading];
-    let sibling = heading.nextElementSibling;
+    const siblingRoot = this.getSiblingRoot(heading);
+
+    const els: Element[] = [siblingRoot];
+    let sibling = siblingRoot.nextElementSibling;
 
     while (sibling) {
-      const tag = sibling.tagName;
-      if (/^H[1-6]$/.test(tag) && parseInt(tag[1], 10) <= level) break;
+      if (this.isHeadingBoundary(sibling, level)) break;
       els.push(sibling);
       sibling = sibling.nextElementSibling;
     }
@@ -134,14 +135,13 @@ export class PageIndexerService {
   /** Extract text between this heading and the next sibling heading of same or higher level. */
   private extractSectionBody(heading: Element): string {
     const level = parseInt(heading.tagName[1], 10);
+    const siblingRoot = this.getSiblingRoot(heading);
     const chunks: string[] = [];
-    let sibling = heading.nextElementSibling;
+    let sibling = siblingRoot.nextElementSibling;
 
     while (sibling) {
-      const tag = sibling.tagName;
-      // Stop at next heading of same or higher level
-      if (/^H[1-6]$/.test(tag) && parseInt(tag[1], 10) <= level) break;
-      if (!SKIP_TAGS.has(tag)) {
+      if (this.isHeadingBoundary(sibling, level)) break;
+      if (!SKIP_TAGS.has(sibling.tagName)) {
         const text = (sibling.textContent || '').trim();
         if (text.length > 1) chunks.push(text);
       }
@@ -172,6 +172,76 @@ export class PageIndexerService {
     }
 
     return chunks.join(' ');
+  }
+
+  /**
+   * Check whether a div is a "thin wrapper" around a heading — a container
+   * added by doc frameworks (Starlight, Docusaurus, etc.) for anchor links.
+   *
+   * A thin wrapper contains only the heading itself plus decorative elements
+   * (anchors, spans). Content elements like <p>, <ul>, <div> disqualify it.
+   */
+  private isHeadingWrapper(div: Element, heading?: Element): boolean {
+    if (div.tagName !== 'DIV') return false;
+
+    const children = div.children;
+    let hasHeading = false;
+
+    for (let i = 0; i < children.length; i++) {
+      const child = children[i];
+      if (/^H[1-6]$/.test(child.tagName)) {
+        if (heading && child !== heading) return false;
+        hasHeading = true;
+      } else if (child.tagName !== 'A' && child.tagName !== 'SPAN') {
+        return false;
+      }
+    }
+
+    return hasHeading;
+  }
+
+  /**
+   * If the heading is wrapped in a non-semantic container (e.g. Starlight's
+   * `<div class="sl-heading-wrapper">`), return the wrapper so that sibling
+   * traversal reaches the actual section content instead of staying inside
+   * the wrapper.
+   */
+  private getSiblingRoot(heading: Element): Element {
+    const parent = heading.parentElement;
+    if (!parent) return heading;
+
+    if (parent === this.findRoot()) return heading;
+
+    if (this.isHeadingWrapper(parent, heading)) return parent;
+
+    return heading;
+  }
+
+  /**
+   * Check whether an element represents a heading boundary at or above
+   * the given level. Handles both bare headings and wrapped headings
+   * (e.g. `<div class="sl-heading-wrapper"><h2>...</h2></div>`).
+   *
+   * For wrapped headings, the div must be a thin wrapper (same heuristic
+   * as getSiblingRoot). Content divs that happen to contain headings
+   * (cards, panels, etc.) are NOT treated as boundaries.
+   */
+  private isHeadingBoundary(el: Element, level: number): boolean {
+    if (/^H[1-6]$/.test(el.tagName)) {
+      return parseInt(el.tagName[1], 10) <= level;
+    }
+
+    if (this.isHeadingWrapper(el)) {
+      const children = el.children;
+      for (let i = 0; i < children.length; i++) {
+        const child = children[i];
+        if (/^H[1-6]$/.test(child.tagName)) {
+          return parseInt(child.tagName[1], 10) <= level;
+        }
+      }
+    }
+
+    return false;
   }
 
   private isVisible(el: Element): boolean {

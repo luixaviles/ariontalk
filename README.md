@@ -53,14 +53,12 @@ ArionTalk adds a voice assistant to any website with a single HTML tag. Visitors
 
 ### Gemini Live Engine (recommended)
 
-**1. Add the widget to your page:**
+The fastest path is the ArionTalk cloud service. Register your site at [ariontalk.com](https://ariontalk.com) to get a site key — no server to run.
 
 ```html
 <ariontalk-widget
-  engine="gemini"
-  token-server="http://localhost:3001/api/token"
+  site-key="YOUR_SITE_KEY"
   interactive-highlights
-  settings
 ></ariontalk-widget>
 <script
   type="module"
@@ -69,7 +67,18 @@ ArionTalk adds a voice assistant to any website with a single HTML tag. Visitors
 ></script>
 ```
 
-**2. Start the token server:**
+When `site-key` is set, `engine="gemini"` resolves automatically and the widget points at the cloud service.
+
+**Self-hosted alternative.** If you'd rather run your own token server, use the `token-server` attribute and start the included server:
+
+```html
+<ariontalk-widget
+  engine="gemini"
+  token-server="http://localhost:3001/api/token"
+  interactive-highlights
+  settings
+></ariontalk-widget>
+```
 
 ```bash
 cd packages/token-server
@@ -85,7 +94,7 @@ The token server runs on `http://localhost:3001` and issues ephemeral tokens so 
 For a fully offline experience with no server required:
 
 ```html
-<ariontalk-widget lang="en"></ariontalk-widget>
+<ariontalk-widget></ariontalk-widget>
 <script
   type="module"
   src="https://cdn.jsdelivr.net/npm/@ariontalk/widget@latest/dist/ariontalk.js"
@@ -99,9 +108,14 @@ Requires Chrome 139+ with the Prompt API origin trial enabled.
 
 | Attribute | Type | Default | Description |
 |-----------|------|---------|-------------|
+| `site-key` | `string` | `""` | Site key for the ArionTalk cloud service. When set, `engine` defaults to `"gemini"` and `service-url` is defaulted automatically. |
+| `service-url` | `string` | auto | Base URL for the ArionTalk cloud service. Defaulted automatically when `site-key` is present. |
 | `engine` | `string` | `"local"` | Engine type: `"local"` (on-device) or `"gemini"` (cloud) |
-| `token-server` | `string` | `""` | URL of the token server for Gemini engine (required when `engine="gemini"`) |
-| `lang` | `string` | `"en"` | Language for the session |
+| `token-server` | `string` | `""` | URL of a self-hosted token server. Kept for back-compat; prefer `site-key` for the cloud service. |
+| `lang` | `string` | `"auto"` | BCP-47 language code, or `"auto"` to detect from `<html lang>`. |
+| `label` | `string` | `"Voice Chat"` | Text shown on the floating action button. |
+| `variant` | `string` | `"default"` | FAB size variant: `"default"` or `"compact"`. |
+| `icon` | `string` | `"mic"` | FAB icon: `"mic"` or `"wave"`. |
 | `interactive-highlights` | `boolean` | `false` | Enable real-time content highlighting during Gemini conversations |
 | `gemini-voice` | `string` | `""` | Gemini voice name (`Kore`, `Puck`, `Charon`, `Aoede`, `Fenrir`, `Leda`, `Orus`, `Zephyr`) |
 | `gemini-model` | `string` | `""` | Gemini model identifier |
@@ -142,13 +156,17 @@ ariontalk/
 │   │           └── token-manager.ts         # Ephemeral token lifecycle
 │   ├── token-server/                # @ariontalk/token-server
 │   │   └── src/
-│   │       └── index.ts                     # Hono server — token endpoint + system prompt
+│   │       ├── app.ts                       # Hono app (exported for tests)
+│   │       ├── index.ts                     # Node server entry point
+│   │       └── prompts/
+│   │           └── voice-assistant.md       # System instruction template
 │   ├── widget/                      # @ariontalk/widget
 │   │   └── src/
 │   │       ├── components/
-│   │       │   ├── widget-root.ts           # Root component: FAB + session panel
-│   │       │   ├── widget-fab.ts            # Floating action button
+│   │       │   ├── widget-root.ts           # Root component: FAB + session + minimize
+│   │       │   ├── widget-fab.ts            # Floating action button (label/variant/icon)
 │   │       │   ├── widget-session.ts        # Expanded session panel
+│   │       │   ├── widget-minimized.ts      # Collapsed status-aware indicator
 │   │       │   └── widget-voice-settings.ts # Settings UI
 │   │       └── controllers/
 │   │           └── voice-session.controller.ts  # Engine lifecycle management
@@ -156,7 +174,8 @@ ariontalk/
 │       └── src/
 │           └── silero-vad-detector.ts       # AI-powered voice activity detection
 ├── demo/                            # Demo pages with widget examples
-├── website/                         # Astro + Starlight documentation site
+├── docs/                            # Documentation content (MDX)
+├── docs-site/                       # Astro + Starlight shell for docs/
 ├── pnpm-workspace.yaml
 └── package.json
 ```
@@ -181,9 +200,6 @@ pnpm build
 # Configure environment
 cp packages/token-server/.env.example packages/token-server/.env
 # Edit packages/token-server/.env and add your GEMINI_API_KEY
-
-cp website/.env.example website/.env
-# Defaults to http://localhost:3001 — no changes needed for local dev
 ```
 
 ### Run with Gemini Live
@@ -201,8 +217,8 @@ pnpm demo
 ### Other Commands
 
 ```bash
-# Run the docs website
-pnpm website
+# Run the docs site locally
+pnpm docs
 
 # Build all packages
 pnpm build
