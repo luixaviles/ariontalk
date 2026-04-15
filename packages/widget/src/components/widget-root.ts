@@ -6,6 +6,7 @@ import { VoiceSessionController } from '../controllers/voice-session.controller.
 import type { SupportedLang, VoiceSettings, BargeInPlugin } from '../types.js';
 import './widget-fab.js';
 import './widget-session.js';
+import './widget-minimized.js';
 import './widget-voice-settings.js';
 
 const STORAGE_KEY = 'ariontalk:settings';
@@ -143,20 +144,55 @@ export class ArionTalk extends LitElement {
   @property({ type: String }) engine: 'local' | 'gemini' = 'local';
   /** URL of the token server for Gemini engine authentication. */
   @property({ type: String, attribute: 'token-server' }) tokenServer = '';
+  /** Site key for hosted ArionTalk service (alternative to token-server). */
+  @property({ type: String, attribute: 'site-key' }) siteKey = '';
+  /** Base URL of the cloud service. When set, /api/token and /api/sessions/end are derived from it.
+   *  Defaults to https://api.ariontalk.com when site-key is present. */
+  @property({ type: String, attribute: 'service-url' }) serviceUrl = '';
   /** Gemini model identifier (e.g. 'gemini-2.0-flash-exp'). */
   @property({ type: String, attribute: 'gemini-model' }) geminiModel = '';
   /** Gemini voice name for TTS output. */
   @property({ type: String, attribute: 'gemini-voice' }) geminiVoice = '';
   /** When set, enables interactive scroll-and-highlight during Gemini speech. */
   @property({ type: Boolean, attribute: 'interactive-highlights' }) interactiveHighlights = false;
-
+  /** Visible label text on the idle FAB (default variant) or aria-label (compact variant). */
+  @property({ type: String }) label = 'Voice Chat';
+  /** FAB variant: "default" pill-with-text or "compact" icon-only circle. */
+  @property({ type: String, reflect: true }) variant: 'default' | 'compact' = 'default';
+  /** Icon to display in the FAB: "mic" | "wave". */
+  @property({ type: String }) icon: 'mic' | 'wave' = 'mic';
   @state() private supported = false;
   @state() private active = false;
   @state() private showSettings = false;
   @state() private muted = false;
+  @state() private minimized = false;
 
   private savedSettings: SavedSettings | null = null;
   private controller = new VoiceSessionController(this);
+
+  /** Resolves the effective engine: site-key implies gemini unless engine is explicitly set. */
+  private get effectiveEngine(): 'local' | 'gemini' {
+    return (this.siteKey && !this.hasAttribute('engine')) ? 'gemini' : this.engine;
+  }
+
+  private get resolvedServiceUrl(): string {
+    if (this.serviceUrl) return this.serviceUrl;
+    if (this.tokenServer.endsWith('/api/token')) {
+      return this.tokenServer.slice(0, -'/api/token'.length);
+    }
+    if (this.siteKey) return 'https://api.ariontalk.com';
+    return '';
+  }
+
+  private get tokenServerUrl(): string {
+    const base = this.resolvedServiceUrl;
+    return base ? `${base}/api/token` : this.tokenServer;
+  }
+
+  private get sessionMeterUrl(): string {
+    const base = this.resolvedServiceUrl;
+    return base ? `${base}/api/sessions/end` : '';
+  }
 
   connectedCallback() {
     super.connectedCallback();
@@ -170,7 +206,7 @@ export class ArionTalk extends LitElement {
     if (changed.has('logLevel')) {
       setLogLevel(this.logLevel);
     }
-    if (changed.has('engine')) {
+    if (changed.has('engine') || changed.has('siteKey')) {
       this.initEngine();
     }
   }
@@ -179,6 +215,15 @@ export class ArionTalk extends LitElement {
     if (!this.supported) return nothing;
 
     if (this.active) {
+      if (this.minimized) {
+        return html`
+          <vcw-minimized
+            .status=${this.controller.state.status}
+            .muted=${this.muted}
+            @restore=${this.handleRestore}
+          ></vcw-minimized>
+        `;
+      }
       return html`
         <vcw-session
           .status=${this.controller.state.status}
@@ -188,8 +233,10 @@ export class ArionTalk extends LitElement {
           .downloadProgress=${this.controller.state.downloadProgress}
           .bargeInEnabled=${this.currentSettings.bargeInPluginId !== 'off' || this.controller.capabilities.alwaysCaptureMic === true}
           .muted=${this.muted}
+          .showMinimize=${this.controller.state.status !== 'loading'}
           @mute-toggle=${this.handleMuteToggle}
           @session-end=${this.handleEnd}
+          @minimize=${this.handleMinimize}
         ></vcw-session>
       `;
     }
@@ -209,7 +256,12 @@ export class ArionTalk extends LitElement {
 
     return html`
       <div class="fab-row">
-        <vcw-fab @fab-click=${this.handleFabClick}></vcw-fab>
+        <vcw-fab
+          .label=${this.label}
+          .variant=${this.variant}
+          .icon=${this.icon}
+          @fab-click=${this.handleFabClick}
+        ></vcw-fab>
         ${this.settings ? html`
           <button class="gear-btn" @click=${this.handleGearClick} aria-label="Settings">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -224,7 +276,7 @@ export class ArionTalk extends LitElement {
   }
 
   private async checkSupport() {
-    this.supported = this.force || await isVoiceChatSupported(this.engine);
+    this.supported = this.force || await isVoiceChatSupported(this.effectiveEngine);
   }
 
   private get currentSettings(): SavedSettings {
@@ -256,12 +308,43 @@ export class ArionTalk extends LitElement {
   }
 
   private async initEngine(): Promise<void> {
-    if (this.engine === 'gemini') {
+    if (this.effectiveEngine === 'gemini') {
+      if (!this.tokenServerUrl) {
+        console.error('[ariontalk] Gemini engine requires a "service-url", "token-server", or "site-key" attribute.');
+        return;
+      }
       await this.controller.setEngine('gemini', {
-        tokenServer: this.tokenServer,
+        tokenServer: this.tokenServerUrl,
+        siteKey: this.siteKey,
         model: this.geminiModel,
         voice: this.geminiVoice || undefined,
         interactiveHighlights: this.interactiveHighlights,
+        onSessionEnd: (detail: any) => {
+          this.active = false;
+          this.muted = false;
+          this.minimized = false;
+
+          const meterUrl = this.sessionMeterUrl;
+          if (meterUrl && detail.sessionMeta?.sessionId) {
+            fetch(meterUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                siteKey: this.siteKey,
+                sessionId: detail.sessionMeta.sessionId,
+                duration: detail.duration,
+              }),
+            }).catch(() => {});
+          }
+
+          this.dispatchEvent(
+            new CustomEvent('at-session-end', {
+              detail: { ...detail, messageCount: 0 },
+              bubbles: true,
+              composed: true,
+            }),
+          );
+        },
       });
     } else {
       await this.controller.setEngine('local');
@@ -271,7 +354,7 @@ export class ArionTalk extends LitElement {
   private async handleFabClick() {
     const s = this.currentSettings;
 
-    if (this.engine === 'local') {
+    if (this.effectiveEngine === 'local') {
       const plugin = this.bargeInPlugins.find(p => p.id === s.bargeInPluginId);
       const detector = plugin ? plugin.create() : null;
       if (detector) {
@@ -314,18 +397,17 @@ export class ArionTalk extends LitElement {
     this.controller.setMuted(this.muted);
   }
 
+  private handleMinimize() {
+    this.minimized = true;
+  }
+
+  private handleRestore() {
+    this.minimized = false;
+  }
+
   private handleEnd() {
-    const duration = this.controller.state.elapsedSeconds;
+    this.minimized = false;
     this.controller.endSession();
-    this.active = false;
-    this.muted = false;
-    this.dispatchEvent(
-      new CustomEvent('at-session-end', {
-        detail: { duration, messageCount: 0 },
-        bubbles: true,
-        composed: true,
-      }),
-    );
   }
 }
 

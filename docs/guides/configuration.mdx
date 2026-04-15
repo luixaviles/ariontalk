@@ -1,0 +1,89 @@
+---
+title: Configuration
+description: Widget attributes, settings, and customization options.
+---
+
+## Widget Attributes
+
+Configure `<ariontalk-widget>` using HTML attributes:
+
+| Attribute | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `site-key` | `string` | `""` | Site key for the ArionTalk cloud service. When set, `engine` defaults to `"gemini"` and `service-url` is defaulted automatically. |
+| `service-url` | `string` | auto | Base URL for the ArionTalk cloud service. Defaulted automatically when `site-key` is present. |
+| `lang` | `string` | `"auto"` | BCP-47 language code (e.g. `"en"`, `"es"`). `"auto"` detects from the page's `<html lang>`. |
+| `position` | `string` | `"bottom-right"` | Widget position on screen (`"bottom-right"` or `"bottom-left"`) |
+| `theme` | `string` | `"light"` | Color theme (`"light"` or `"dark"`) |
+| `label` | `string` | `"Voice Chat"` | Text shown on the floating action button. |
+| `variant` | `string` | `"default"` | FAB size variant: `"default"` or `"compact"`. |
+| `icon` | `string` | `"mic"` | FAB icon: `"mic"` or `"wave"`. |
+| `settings` | `boolean` | `false` | Show settings gear icon next to the FAB before a session starts |
+| `force` | `boolean` | `false` | Skip browser support check and always show the widget |
+| `engine` | `string` | `"local"` | Engine type: `"local"` (on-device) or `"gemini"` (cloud). Resolves to `"gemini"` automatically when `site-key` is set. |
+| `token-server` | `string` | `""` | URL of a self-hosted token server. Kept for back-compat; prefer `site-key` + `service-url` for the cloud service. |
+| `gemini-model` | `string` | `""` | Gemini model identifier (e.g. `"gemini-2.5-flash-native-audio-preview-12-2025"`) |
+| `interactive-highlights` | `boolean` | `false` | Enable real-time content highlighting during Gemini conversations |
+| `gemini-voice` | `string` | `""` | Gemini voice name for TTS output (`Kore`, `Puck`, `Charon`, `Aoede`, `Fenrir`, `Leda`, `Orus`, `Zephyr`) |
+| `log-level` | `string` | `"disabled"` | Logging level: `"disabled"`, `"error"`, `"warning"`, `"info"`, or `"debug"` |
+
+## Minimal Example
+
+The shortest possible snippet (local engine, auto-detected language):
+
+```html
+<ariontalk-widget></ariontalk-widget>
+<script
+  type="module"
+  src="https://cdn.jsdelivr.net/npm/@ariontalk/widget@latest/dist/ariontalk.js"
+  async
+></script>
+```
+
+## Cloud Service (recommended)
+
+Using the ArionTalk cloud service with a site key — no token server to run:
+
+```html
+<ariontalk-widget site-key="YOUR_SITE_KEY" interactive-highlights></ariontalk-widget>
+<script
+  type="module"
+  src="https://cdn.jsdelivr.net/npm/@ariontalk/widget@latest/dist/ariontalk.js"
+  async
+></script>
+```
+
+`engine="gemini"` resolves automatically, and the widget points at the cloud service.
+
+## Self-Hosted Token Server
+
+If you run your own token server, point the widget at it with `token-server`:
+
+```html
+<ariontalk-widget
+  position="bottom-right"
+  theme="dark"
+  settings
+  engine="gemini"
+  token-server="https://your-server.com/api/token"
+  interactive-highlights
+  gemini-model="gemini-2.5-flash-native-audio-preview-12-2025"
+  gemini-voice="Kore"
+  log-level="info"
+></ariontalk-widget>
+<script
+  type="module"
+  src="https://cdn.jsdelivr.net/npm/@ariontalk/widget@latest/dist/ariontalk.js"
+  async
+></script>
+```
+
+## Settings Persistence
+
+When the `settings` attribute is enabled, users can configure voice preferences (language, voice, rate, pitch, volume, barge-in) through a settings panel.
+
+These preferences are automatically saved to `localStorage` under the key `ariontalk:settings` and restored on subsequent page loads. The saved settings include:
+
+- Language
+- Voice selection
+- Speech rate, pitch, and volume
+- Barge-in plugin preference

@@ -29,12 +29,51 @@ export class WidgetSession extends LitElement {
         gap: 16px;
       }
 
+      /* Header row: timer left, minimize button right */
+      .header-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        gap: 12px;
+      }
+
       /* Timer */
       .timer {
-        font-size: 28px;
-        font-weight: 700;
+        font-size: 14px;
+        font-weight: 500;
         font-variant-numeric: tabular-nums;
+        color: var(--at-text-secondary);
+        line-height: 1;
+      }
+
+      /* Minimize button */
+      .minimize-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--at-surface-color);
+        border: 1px solid var(--at-border-color);
+        color: var(--at-text-secondary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.15s;
+      }
+
+      .minimize-btn:hover {
+        background: var(--at-surface-hover);
         color: var(--at-text-color);
+      }
+
+      .minimize-btn:active {
+        transform: scale(0.95);
+      }
+
+      .minimize-btn svg {
+        width: 18px;
+        height: 18px;
       }
 
       /* Status indicator */
@@ -227,12 +266,13 @@ export class WidgetSession extends LitElement {
   ];
 
   @property({ type: String }) status: WidgetStatus = 'listening';
-  @property({ type: String }) timerDisplay = '00:00';
-  @property({ type: String }) interimTranscript = '';
+  @property({ type: String, attribute: 'timer-display' }) timerDisplay = '00:00';
+  @property({ type: String, attribute: 'interim-transcript' }) interimTranscript = '';
   @property({ type: String }) error: string | null = null;
-  @property({ type: Number }) downloadProgress = 0;
-  @property({ type: Boolean }) bargeInEnabled = false;
+  @property({ type: Number, attribute: 'download-progress' }) downloadProgress = 0;
+  @property({ type: Boolean, attribute: 'barge-in-enabled' }) bargeInEnabled = false;
   @property({ type: Boolean }) muted = false;
+  @property({ type: Boolean, attribute: 'show-minimize' }) showMinimize = false;
 
   @query('.transcript') private transcriptEl?: HTMLElement;
 
@@ -250,7 +290,21 @@ export class WidgetSession extends LitElement {
   render() {
     return html`
       <div class="panel">
-        <div class="timer" role="timer" aria-label="Session duration">${this.timerDisplay}</div>
+        <div class="header-row">
+          <div class="timer" role="timer" aria-label="Session duration">${this.timerDisplay}</div>
+          ${this.showMinimize ? html`
+            <button
+              class="minimize-btn"
+              @click=${this.handleMinimize}
+              aria-label="Minimize voice chat"
+              title="Minimize"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+          ` : nothing}
+        </div>
 
         <div class="status status-${this.displayStatus}" aria-live="polite" aria-atomic="true">
           ${this.renderStatusIndicator()}
@@ -412,6 +466,10 @@ export class WidgetSession extends LitElement {
 
   private handleEnd() {
     this.dispatchEvent(new CustomEvent('session-end', { bubbles: true, composed: true }));
+  }
+
+  private handleMinimize() {
+    this.dispatchEvent(new CustomEvent('minimize', { bubbles: true, composed: true }));
   }
 }
 

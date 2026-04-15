@@ -30,8 +30,36 @@ function serveOrtWasm(): Plugin {
   };
 }
 
+/**
+ * Vite plugin that serves the pre-built CDN bundle from packages/widget/dist/.
+ * Used by cdn-test.html to load ariontalk.js without going through Vite's
+ * module graph — simulating a real CDN/browser environment.
+ */
+function serveWidgetCdnBundle(): Plugin {
+  const widgetDist = resolve(__dirname, '../packages/widget/dist');
+  return {
+    name: 'serve-widget-cdn-bundle',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (req.url === '/cdn/ariontalk.js') {
+          const filePath = resolve(widgetDist, 'ariontalk.js');
+          try {
+            const content = readFileSync(filePath);
+            res.setHeader('Content-Type', 'text/javascript');
+            res.end(content);
+          } catch {
+            next();
+          }
+          return;
+        }
+        next();
+      });
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [serveOrtWasm()],
+  plugins: [serveOrtWasm(), serveWidgetCdnBundle()],
   resolve: {
     alias: {
       '@ariontalk/core': resolve(__dirname, '../packages/core/src/index.ts'),
@@ -53,6 +81,7 @@ export default defineConfig({
         esAi: resolve(__dirname, 'es-ai.html'),
         gemini: resolve(__dirname, 'gemini.html'),
         astrophotography: resolve(__dirname, 'astrophotography.html'),
+        cdnTest: resolve(__dirname, 'cdn-test.html'),
       },
     },
   },

@@ -34,9 +34,11 @@ export class VoiceSessionController implements ReactiveController {
       const { GeminiEngine } = await import('@ariontalk/engine-gemini');
       this.engine = new GeminiEngine({
         tokenServerUrl: config.tokenServer,
+        siteKey: config.siteKey,
         model: config.model,
         voice: config.voice,
         interactiveHighlights: config.interactiveHighlights,
+        onSessionEnd: config.onSessionEnd,
       });
     } else {
       this.engine = new VoiceEngine({

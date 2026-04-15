@@ -1,0 +1,106 @@
+---
+title: "@ariontalk/engine-gemini"
+description: API reference for the Gemini Live voice engine.
+---
+
+`@ariontalk/engine-gemini` is a cloud-based alternative engine that connects to the [Gemini Live API](https://ai.google.dev/) for real-time, bidirectional voice conversations. Unlike the default local engine, it streams audio directly between the browser and Gemini servers — no on-device model download required.
+
+## Installation
+
+```bash
+pnpm add @ariontalk/engine-gemini
+```
+
+**Peer dependency:** `@ariontalk/core`
+
+## GeminiEngine Class
+
+```typescript
+import { GeminiEngine } from '@ariontalk/engine-gemini';
+
+const engine = new GeminiEngine({
+  tokenServerUrl: 'https://my-server.example.com',
+  model: 'gemini-2.5-flash-native-audio-preview-12-2025',
+  voice: 'Kore',
+});
+```
+
+Implements `VoiceEngineInterface` from `@ariontalk/core`.
+
+### Constructor Options
+
+```typescript
+interface GeminiEngineOptions {
+  /** URL of the token server that mints ephemeral Gemini tokens. Required. */
+  tokenServerUrl: string;
+  /** Gemini model identifier. Defaults to the built-in default model. */
+  model?: string;
+  /** Gemini voice name for audio output. Defaults to 'Kore'. */
+  voice?: string;
+  /** Custom PageExtractorService instance. A new one is created if omitted. */
+  pageExtractor?: PageExtractorService;
+}
+```
+
+### Capabilities
+
+| Capability | Value |
+|---|---|
+| `supportedLanguages` | `['en', 'es', 'ja', 'fr', 'de', 'pt', 'it', 'zh', 'ko', 'hi', 'ar', 'ru']` |
+| `supportsVoiceSelection` | `true` |
+| `supportsRatePitchVolume` | `false` |
+| `supportsBargeInPlugins` | `false` |
+| `supportsOffline` | `false` |
+| `maxSessionDurationSec` | `900` (15 minutes) |
+| `requiresTokenServer` | `true` |
+
+A session-expiry warning is shown at 12 minutes. The session is automatically ended at 15 minutes.
+
+### Reconnection
+
+The engine automatically reconnects on WebSocket disconnection using exponential backoff (2s, 4s, 8s) up to 3 retries. When the server sends a `goAway` message, the engine reconnects immediately. Session resumption handles are preserved across reconnects to maintain conversation context.
+
+### Session lifecycle behavior
+
+- **Scripted greeting via system instruction.** The engine delivers the configured greeting as part of the system instruction rather than as an opening turn.
+- **Silent tool-response scheduling.** Function-call results (e.g. `highlight_and_scroll`) are scheduled with `SILENT`.
+- **Page context as context, not turn.** The page title, URL, and extracted content travel as context metadata rather than as a user-turn instruction.
+
+## Constants
+
+### Default Model
+
+```typescript
+const DEFAULT_MODEL = 'gemini-2.5-flash-native-audio-preview-12-2025';
+```
+
+### Available Voices
+
+```typescript
+const GEMINI_VOICES: VoiceInfo[] = [
+  { id: 'Kore',   name: 'Kore',   lang: 'en', local: false },
+  { id: 'Puck',   name: 'Puck',   lang: 'en', local: false },
+  { id: 'Charon', name: 'Charon', lang: 'en', local: false },
+  { id: 'Aoede',  name: 'Aoede',  lang: 'en', local: false },
+  { id: 'Fenrir', name: 'Fenrir', lang: 'en', local: false },
+  { id: 'Leda',   name: 'Leda',   lang: 'en', local: false },
+  { id: 'Orus',   name: 'Orus',   lang: 'en', local: false },
+  { id: 'Zephyr', name: 'Zephyr', lang: 'en', local: false },
+];
+```
+
+### Supported Languages
+
+```typescript
+['en', 'es', 'ja', 'fr', 'de', 'pt', 'it', 'zh', 'ko', 'hi', 'ar', 'ru']
+```
+
+## Internal Components
+
+These are not exported but are relevant for understanding the engine architecture.
+
+| Component | Description |
+|---|---|
+| `AudioCapture` | Captures microphone audio via `getUserMedia` and an `AudioWorklet`. Outputs 16 kHz mono PCM in 20 ms chunks, base64-encoded, sent to the Gemini session as realtime input. |
+| `AudioPlayback` | Receives base64-encoded PCM audio from the Gemini server, decodes it, and plays it through an `AudioContext`. Tracks buffered duration for transcript synchronization. |
+| `TokenManager` | Requests ephemeral authentication tokens from the token server. Sends page context (title, URL, content) and session configuration (model, voice, language) so the server can bake a system instruction into the token. |

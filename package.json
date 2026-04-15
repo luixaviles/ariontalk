@@ -6,11 +6,8 @@
     "dev": "pnpm --filter @ariontalk/widget dev",
     "demo": "pnpm --filter @ariontalk/demo dev",
     "token-server": "pnpm --filter @ariontalk/token-server dev",
+    "docs": "pnpm --filter @ariontalk/docs-site dev",
     "test": "pnpm -r test",
-    "website": "pnpm --filter @ariontalk/website dev",
-    "website-build": "pnpm --filter @ariontalk/website build",
-    "website-preview": "pnpm --filter @ariontalk/website preview",
-    "deploy-website": "./scripts/deploy-website.sh",
     "deploy-token-server": "./scripts/deploy-token-server.sh",
     "verify-packages": "./scripts/verify-packages.sh",
     "publish-packages": "./scripts/publish-packages.sh"
