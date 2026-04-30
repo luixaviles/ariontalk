@@ -37,7 +37,7 @@
     "@ariontalk/core": "workspace:*"
   },
   "dependencies": {
-    "@google/genai": "^1.x"
+    "@google/genai": "^1.50.1"
   },
   "devDependencies": {
     "@ariontalk/core": "workspace:*",

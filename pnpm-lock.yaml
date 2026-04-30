@@ -52,8 +52,8 @@ importers:
   packages/engine-gemini:
     dependencies:
       '@google/genai':
-        specifier: ^1.x
-        version: 1.45.0
+        specifier: ^1.50.1
+        version: 1.51.0
     devDependencies:
       '@ariontalk/core':
         specifier: workspace:*
@@ -87,8 +87,8 @@ importers:
   packages/token-server:
     dependencies:
       '@google/genai':
-        specifier: ^1.x
-        version: 1.45.0
+        specifier: ^1.50.1
+        version: 1.51.0
       '@hono/node-server':
         specifier: ^1.x
         version: 1.19.11(hono@4.12.7)
@@ -630,8 +630,8 @@ packages:
   '@expressive-code/plugin-text-markers@0.41.7':
     resolution: {integrity: sha512-Ewpwuc5t6eFdZmWlFyeuy3e1PTQC0jFvw2Q+2bpcWXbOZhPLsT7+h8lsSIJxb5mS7wZko7cKyQ2RLYDyK6Fpmw==}
 
-  '@google/genai@1.45.0':
-    resolution: {integrity: sha512-+sNRWhKiRibVgc4OKi7aBJJ0A7RcoVD8tGG+eFkqxAWRjASDW+ktS9lLwTDnAxZICzCVoeAdu8dYLJVTX60N9w==}
+  '@google/genai@1.51.0':
+    resolution: {integrity: sha512-vTZZF3CSimN7cn2zsLpW2p5WF0eZa5Gz69ITMPCNHpPrDlAstOfGifSfi0p/s9Z9400f7xJRkgvkQNrcM7pJ6w==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       '@modelcontextprotocol/sdk': ^1.25.2
@@ -3863,7 +3863,7 @@ snapshots:
     dependencies:
       '@expressive-code/core': 0.41.7
 
-  '@google/genai@1.45.0':
+  '@google/genai@1.51.0':
     dependencies:
       google-auth-library: 10.6.1
       p-retry: 4.6.2

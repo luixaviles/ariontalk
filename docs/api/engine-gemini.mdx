@@ -20,7 +20,7 @@ import { GeminiEngine } from '@ariontalk/engine-gemini';
 
 const engine = new GeminiEngine({
   tokenServerUrl: 'https://my-server.example.com',
-  model: 'gemini-2.5-flash-native-audio-preview-12-2025',
+  model: 'gemini-3.1-flash-live-preview',
   voice: 'Kore',
 });
 ```
@@ -63,7 +63,7 @@ The engine automatically reconnects on WebSocket disconnection using exponential
 ### Session lifecycle behavior
 
 - **Scripted greeting via system instruction.** The engine delivers the configured greeting as part of the system instruction rather than as an opening turn.
-- **Silent tool-response scheduling.** Function-call results (e.g. `highlight_and_scroll`) are scheduled with `SILENT`.
+- **Synchronous tool responses.** Function calls (e.g. `highlight_and_scroll`) pause the model's output until the engine sends a `FunctionResponse`; the model then resumes speaking.
 - **Page context as context, not turn.** The page title, URL, and extracted content travel as context metadata rather than as a user-turn instruction.
 
 ## Constants
@@ -71,7 +71,7 @@ The engine automatically reconnects on WebSocket disconnection using exponential
 ### Default Model
 
 ```typescript
-const DEFAULT_MODEL = 'gemini-2.5-flash-native-audio-preview-12-2025';
+const DEFAULT_MODEL = 'gemini-3.1-flash-live-preview';
 ```
 
 ### Available Voices

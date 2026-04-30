@@ -113,13 +113,13 @@ If you'd rather run your own token server, use the `token-server` attribute:
 | `token-server` | URL of a self-hosted token server. Use this as an alternative to `site-key`. |
 | `interactive-highlights` | Enable real-time content highlighting during conversations |
 | `gemini-voice` | Voice name (e.g., `"Kore"`, `"Puck"`) |
-| `gemini-model` | Model identifier (defaults to `gemini-2.5-flash-native-audio-preview-12-2025`) |
+| `gemini-model` | Model identifier (defaults to `gemini-3.1-flash-live-preview`) |
 | `settings` | Show the settings gear icon for pre-session configuration |
 
 ## Session behavior notes
 
 - **Scripted greeting.** The engine sends the configured greeting via system instruction at session start.
-- **Silent tool responses.** Function-call results (e.g. `highlight_and_scroll`) are scheduled with `SILENT`.
+- **Synchronous tool responses.** Function calls (e.g. `highlight_and_scroll`) pause the model's output until the engine sends a `FunctionResponse`; the model then resumes speaking.
 - **Page context payload.** Page text and image references are delivered as context, not as a user-turn instruction.
 
 ## Setting up the token server (self-hosted)
@@ -166,7 +166,7 @@ The widget sends a JSON request with session parameters:
 
 ```json
 {
-  "model": "gemini-2.5-flash-native-audio-preview-12-2025",
+  "model": "gemini-3.1-flash-live-preview",
   "voice": "Kore",
   "lang": "en",
   "pageTitle": "My Page",
