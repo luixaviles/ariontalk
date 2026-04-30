@@ -1,5 +1,11 @@
 # @ariontalk/token-server
 
+## 0.3.0
+
+### Minor Changes
+
+- Migrate to `gemini-3.1-flash-live-preview`. Drop `Behavior.NON_BLOCKING` from tool config, add `thinkingConfig.thinkingLevel = LOW`. Bumps `@google/genai` to `^1.50.1`.
+
 ## 0.2.0
 
 ### Minor Changes

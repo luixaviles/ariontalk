@@ -54,7 +54,7 @@ All attributes are optional. Attribute names use kebab-case in HTML; the corresp
 | `engine` | `'local' \| 'gemini'` | `'local'` | Engine type. `'local'` uses browser-native APIs; `'gemini'` uses the Gemini Live cloud API. Resolves to `'gemini'` automatically when `site-key` is present and `engine` is not explicitly set. |
 | `token-server` (`tokenServer`) | `string` | `''` | URL of a self-hosted token server. Kept for back-compat; prefer `site-key` + `service-url` for the ArionTalk cloud service. |
 | `interactive-highlights` (`interactiveHighlights`) | `boolean` | `false` | Enable real-time scroll-and-highlight during Gemini conversations. |
-| `gemini-model` (`geminiModel`) | `string` | `''` | Gemini model identifier (e.g. `'gemini-2.5-flash-native-audio-preview-12-2025'`). |
+| `gemini-model` (`geminiModel`) | `string` | `''` | Gemini model identifier (e.g. `'gemini-3.1-flash-live-preview'`). |
 | `gemini-voice` (`geminiVoice`) | `string` | `''` | Gemini voice name for TTS output (e.g. `'Kore'`, `'Puck'`). |
 
 ### `BargeInPlugin` interface

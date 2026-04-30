@@ -1,6 +1,6 @@
 {
   "name": "@ariontalk/core",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Headless voice AI engine with page understanding — services, types, and session logic",
   "license": "MIT",
   "repository": {

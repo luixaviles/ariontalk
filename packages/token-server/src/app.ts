@@ -3,14 +3,14 @@ import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { GoogleGenAI, Modality, Type, Behavior } from '@google/genai';
+import { GoogleGenAI, Modality, Type, ThinkingLevel } from '@google/genai';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROMPT_TEMPLATE = readFileSync(
   resolve(__dirname, './prompts/voice-assistant.md'), 'utf-8',
 );
 
-const DEFAULT_MODEL = 'gemini-2.5-flash-native-audio-preview-12-2025';
+const DEFAULT_MODEL = 'gemini-3.1-flash-live-preview';
 
 const LANG_DISPLAY_NAMES: Record<string, string> = {
   en: 'English', es: 'Spanish', ja: 'Japanese', fr: 'French',
@@ -42,7 +42,6 @@ const HIGHLIGHT_TOOL_DECLARATIONS = [{
       },
       required: ['elementId'],
     },
-    behavior: Behavior.NON_BLOCKING,
   }],
 }];
 
@@ -120,6 +119,7 @@ export function createTokenApp(options: TokenServerOptions = {}): Hono {
               },
               inputAudioTranscription: {},
               outputAudioTranscription: {},
+              thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
               ...(highlights && { tools: HIGHLIGHT_TOOL_DECLARATIONS }),
             },
           },

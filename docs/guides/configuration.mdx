@@ -21,7 +21,7 @@ Configure `<ariontalk-widget>` using HTML attributes:
 | `force` | `boolean` | `false` | Skip browser support check and always show the widget |
 | `engine` | `string` | `"local"` | Engine type: `"local"` (on-device) or `"gemini"` (cloud). Resolves to `"gemini"` automatically when `site-key` is set. |
 | `token-server` | `string` | `""` | URL of a self-hosted token server. Kept for back-compat; prefer `site-key` + `service-url` for the cloud service. |
-| `gemini-model` | `string` | `""` | Gemini model identifier (e.g. `"gemini-2.5-flash-native-audio-preview-12-2025"`) |
+| `gemini-model` | `string` | `""` | Gemini model identifier (e.g. `"gemini-3.1-flash-live-preview"`) |
 | `interactive-highlights` | `boolean` | `false` | Enable real-time content highlighting during Gemini conversations |
 | `gemini-voice` | `string` | `""` | Gemini voice name for TTS output (`Kore`, `Puck`, `Charon`, `Aoede`, `Fenrir`, `Leda`, `Orus`, `Zephyr`) |
 | `log-level` | `string` | `"disabled"` | Logging level: `"disabled"`, `"error"`, `"warning"`, `"info"`, or `"debug"` |
@@ -66,7 +66,7 @@ If you run your own token server, point the widget at it with `token-server`:
   engine="gemini"
   token-server="https://your-server.com/api/token"
   interactive-highlights
-  gemini-model="gemini-2.5-flash-native-audio-preview-12-2025"
+  gemini-model="gemini-3.1-flash-live-preview"
   gemini-voice="Kore"
   log-level="info"
 ></ariontalk-widget>

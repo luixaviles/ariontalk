@@ -1,6 +1,6 @@
 {
   "name": "@ariontalk/engine-gemini",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Gemini Live engine add-on for ArionTalk — real-time voice streaming with function calling",
   "license": "MIT",
   "repository": {
@@ -37,7 +37,7 @@
     "@ariontalk/core": "workspace:*"
   },
   "dependencies": {
-    "@google/genai": "^1.x"
+    "@google/genai": "^1.50.1"
   },
   "devDependencies": {
     "@ariontalk/core": "workspace:*",

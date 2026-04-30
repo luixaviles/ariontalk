@@ -1,6 +1,6 @@
 {
   "name": "@ariontalk/token-server",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "exports": {
@@ -15,7 +15,7 @@
   "dependencies": {
     "hono": "^4.x",
     "@hono/node-server": "^1.x",
-    "@google/genai": "^1.x",
+    "@google/genai": "^1.50.1",
     "dotenv": "^16.x"
   },
   "devDependencies": {

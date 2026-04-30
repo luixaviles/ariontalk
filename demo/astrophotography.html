@@ -50,23 +50,6 @@
     body.dark figure.full-width figcaption {
       color: #a1a1aa;
     }
-    .video-container {
-      position: relative;
-      padding-bottom: 56.25%;
-      height: 0;
-      overflow: hidden;
-      margin: 1.5rem 0;
-      border-radius: 8px;
-    }
-    .video-container iframe {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      border: 0;
-      border-radius: 8px;
-    }
     .equipment-table {
       width: 100%;
       border-collapse: collapse;
@@ -86,9 +69,19 @@
     .equipment-table th {
       font-weight: 600;
     }
+    .tagline {
+      font-size: 1.05rem;
+      color: #4b5563;
+      margin: 0.25rem 0 0.75rem;
+      font-style: italic;
+    }
+    body.dark .tagline {
+      color: #d4d4d8;
+    }
   </style>
 </head>
 <body>
+  <!--
   <header class="toolbar">
     <div class="toolbar-brand"><a href="./index.html" style="color:inherit;text-decoration:none">ArionTalk</a><span>Gemini Demo</span></div>
     <div class="toolbar-controls">
@@ -100,10 +93,15 @@
       <button id="btn-brand" class="toggle-btn" onclick="toggleBrand()">Brand</button>
     </div>
   </header>
+  -->
+  <!-- Toolbar hidden for DevByte recording. Uncomment to restore normal demo mode. -->
 
   <main>
-    <h1>A Beginner's Guide to Astrophotography</h1>
-    <p class="byline">Published on March 15, 2026 by Daniel Reyes</p>
+    <header>
+      <h1>A Beginner's Guide to Astrophotography</h1>
+      <p class="tagline">Capturing the night sky, from your backyard to the edge of the cosmos.</p>
+      <p class="byline">Published on March 15, 2026 by Luis Aviles</p>
+    </header>
 
     <article>
       <h2>What is Astrophotography?</h2>
@@ -118,6 +116,42 @@
         The field spans several categories, each with its own techniques and equipment requirements:
         planetary imaging, deep-sky photography, widefield Milky Way shots, comet tracking, and
         time-lapse star trails.
+      </p>
+
+      <h2>A Brief History</h2>
+      <p>
+        Astrophotography predates most of modern astronomy's biggest discoveries. In 1840, John
+        William Draper captured the first photograph of the Moon, just a year after Louis Daguerre
+        announced his photographic process. A decade later, in 1850, astronomer William Cranch
+        Bond and photographer John Adams Whipple produced the first photograph of a star other
+        than the Sun — Vega, the fifth-brightest star in the night sky.
+      </p>
+      <p>
+        By the late 1800s, long-exposure photography on glass plates began revealing objects far
+        too faint for the human eye. The first photograph of a nebula, the Orion Nebula, came in
+        1880. By the 1920s, Edwin Hubble was using the 100-inch telescope at Mount Wilson to
+        photograph distant galaxies, ultimately proving that the Milky Way was one of billions.
+      </p>
+      <p>
+        Film dominated astrophotography for most of the 20th century. The shift to digital sensors
+        in the 1990s and 2000s changed everything. CCD and later CMOS chips are hundreds of times
+        more sensitive than film, allowing amateurs to capture images in minutes that would once
+        have required hours of exposure. Today, a backyard setup costing a few hundred dollars
+        can rival images produced by professional observatories just thirty years ago.
+      </p>
+
+      <h2>Why the Night Sky Matters</h2>
+      <p>
+        Beyond the technical craft, astrophotography is an act of perspective. A single long
+        exposure of the Andromeda Galaxy is, in a literal sense, a snapshot of light that left
+        its source 2.5 million years ago, before humans existed as a species. Every photograph of
+        a distant object is also a photograph of deep time.
+      </p>
+      <p>
+        This is part of why the hobby has grown so rapidly alongside affordable digital equipment.
+        A clear night, a camera on a tripod, and a few minutes of patience can produce an image of
+        something genuinely ancient and genuinely vast. For many amateurs, that shift in scale is
+        the draw, not the gear.
       </p>
 
       <h2>Planetary Imaging</h2>
@@ -274,23 +308,6 @@
         pulls more detail out of the raw data.
       </p>
 
-      <h2>Video: The Night Sky in Motion</h2>
-      <p>
-        Time-lapse videos reveal the motion of the night sky in a way that still images cannot.
-        Watch as the Milky Way rises over a mountain landscape, stars wheel around the celestial
-        pole, and meteors streak across the frame. This short video captures the beauty and scale
-        of the cosmos.
-      </p>
-
-      <div class="video-container">
-        <iframe
-          src="https://www.youtube.com/embed/nkn2ZXWDl6k"
-          title="Time-lapse sky shows Earth rotating instead of stars"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowfullscreen
-        ></iframe>
-      </div>
-
       <h2>Getting Started Tonight</h2>
       <p>
         You don't need to wait for perfect equipment to start. Go outside on a clear night, point
@@ -302,7 +319,7 @@
     </article>
   </main>
 
-  <ariontalk-widget id="widget" engine="gemini" token-server="http://localhost:3001/api/token" lang="en" interactive-highlights settings log-level="debug"></ariontalk-widget>
+  <ariontalk-widget id="widget" engine="gemini" token-server="http://localhost:3001/api/token" lang="en" interactive-highlights log-level="debug"></ariontalk-widget>
   <script type="module">
     import '@ariontalk/widget';
     import { initToolbar } from './scripts/toolbar.js';

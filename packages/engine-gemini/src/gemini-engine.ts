@@ -10,7 +10,6 @@ import { PageExtractorService, PageIndexerService, SessionTimer, createLogger, b
 import {
   GoogleGenAI,
   Modality,
-  FunctionResponseScheduling,
   type FunctionResponse,
   type LiveServerMessage,
   type Session,
@@ -33,7 +32,7 @@ const GEMINI_VOICES: VoiceInfo[] = [
   { id: 'Zephyr', name: 'Zephyr', lang: 'en', local: false },
 ];
 
-const DEFAULT_MODEL = 'gemini-2.5-flash-native-audio-preview-12-2025';
+const DEFAULT_MODEL = 'gemini-3.1-flash-live-preview';
 const SESSION_MAX_SEC = 15 * 60;
 const SESSION_WARNING_SEC = 12 * 60;
 
@@ -182,14 +181,10 @@ export class GeminiEngine implements VoiceEngineInterface {
       await this.sendPageContext();
       if (!this.sessionActive) return;
 
-      // Trigger initial greeting -- completes the first user turn so the model responds
-      // with a brief greeting (driven by the system instruction in the token).
+      // Trigger initial greeting
       if (this.session) {
         try {
-          this.session.sendClientContent({
-            turns: [{ role: 'user', parts: [{ text: '[Session started]' }] }],
-            turnComplete: true,
-          });
+          this.session.sendRealtimeInput({ text: '[Session started]' });
           log.info('Sent session start trigger for greeting');
         } catch (err) {
           log.error('Failed to send greeting trigger:', err);
@@ -355,9 +350,9 @@ export class GeminiEngine implements VoiceEngineInterface {
       model,
       config: {
         responseModalities: [Modality.AUDIO],
-        sessionResumption: this.savedSessionHandle
-          ? { handle: this.savedSessionHandle }
-          : {},
+        ...(this.savedSessionHandle && {
+          sessionResumption: { handle: this.savedSessionHandle },
+        }),
       },
       callbacks: {
         onopen: () => {
@@ -384,11 +379,7 @@ export class GeminiEngine implements VoiceEngineInterface {
   private handleMessage(message: LiveServerMessage): void {
     const content = message.serverContent;
 
-    // Tool calls. Even though our tools are declared NON_BLOCKING, we MUST send a
-    // tool response so the model marks the call as resolved. SILENT scheduling tells
-    // the model: "add the result to context but do NOT generate any new output in
-    // reaction to it" — exactly the fire-and-forget UI behavior we want for
-    // highlights. Without this, the model will regenerate its previous response.
+    // Tool calls are synchronous: the model pauses output until we send a FunctionResponse.
     if (this.highlightsEnabled && message.toolCall?.functionCalls) {
       const responses: FunctionResponse[] = [];
 
@@ -411,18 +402,13 @@ export class GeminiEngine implements VoiceEngineInterface {
             id: call.id,
             name: call.name,
             response: result,
-            scheduling: FunctionResponseScheduling.SILENT,
           });
         } else {
-          // Defensive: any future tool registered without updating this handler
-          // would silently drop its call and re-trigger the duplicate-response bug.
-          // Always respond, even for unknown tools, so the call is marked resolved.
           log.warn('Unknown tool call, responding with error:', call.name);
           responses.push({
             id: call.id,
             name: call.name ?? 'unknown',
             response: { error: { reason: 'unknown_tool', name: call.name ?? null } },
-            scheduling: FunctionResponseScheduling.SILENT,
           });
         }
       }
@@ -450,6 +436,9 @@ export class GeminiEngine implements VoiceEngineInterface {
           if (this.state.status !== 'speaking') {
             this.updateState({ status: 'speaking' });
           }
+        }
+        if (part.text) {
+          log.debug('Model text part:', part.text);
         }
       }
     }
@@ -496,7 +485,7 @@ export class GeminiEngine implements VoiceEngineInterface {
     }
 
     // Turn complete
-    if (content?.turnComplete) {
+    if (content?.turnComplete || content?.generationComplete) {
       this.audioPlayback.onDrained(() => {
         if (this.sessionActive) {
           this.clearPendingTranscripts();
