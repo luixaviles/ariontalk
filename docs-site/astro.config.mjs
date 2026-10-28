@@ -4,6 +4,8 @@ import starlight from '@astrojs/starlight';
 import { resolve } from 'path';
 
 export default defineConfig({
+	// Docs are published at ariontalk.com/docs; Starlight uses this for its sitemap
+	site: 'https://ariontalk.com',
 	vite: {
 		resolve: {
 			alias: {

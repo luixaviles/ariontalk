@@ -24,7 +24,9 @@
     "lit"
   ],
   "files": [
-    "dist"
+    "dist",
+    "!dist/**/__tests__",
+    "!dist/**/*.test.d.ts"
   ],
   "publishConfig": {
     "access": "public"

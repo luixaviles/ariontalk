@@ -120,8 +120,7 @@ The `/api/token` endpoint uses Hono's `cors()` middleware with default settings,
 The server source is split between `src/app.ts` (the Hono app, exported for testing) and `src/index.ts` (the entry point that binds `@hono/node-server`). It can be deployed as any standard Node.js HTTP server:
 
 - **Local development:** `node dist/index.js` or via the monorepo `pnpm token-server` script
-- **Google Cloud Run:** A Dockerfile and deploy script are included. Run `pnpm deploy-token-server` to build and deploy to Cloud Run with the API key stored in Secret Manager
-- **Docker / cloud:** Set `GEMINI_API_KEY` and `PORT` as environment variables
+- **Docker:** A `Dockerfile` is included in `packages/token-server`. Build it from the repository root (`docker build -f packages/token-server/Dockerfile .`) and run it on any container host with `GEMINI_API_KEY` and `PORT` set as environment variables
 - **Serverless:** Hono supports adapters for Cloudflare Workers, Vercel, Deno Deploy, and others — swap the server adapter if needed
 
 The server is stateless; every token request is independent.

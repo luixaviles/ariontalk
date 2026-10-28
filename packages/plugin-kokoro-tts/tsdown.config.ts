@@ -5,5 +5,7 @@ export default defineConfig({
   format: ['esm'],
   dts: true,
   clean: true,
-  external: ['@ariontalk/core', 'kokoro-js'],
+  deps: {
+    neverBundle: ['@ariontalk/core', 'kokoro-js'],
+  },
 });
