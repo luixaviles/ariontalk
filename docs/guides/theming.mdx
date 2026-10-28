@@ -28,6 +28,10 @@ All colors and design tokens flow through `--at-*` CSS custom properties. Overri
 | `--at-primary-text` | `#FFFFFF` | `#18181B` | Text on accent backgrounds |
 | `--at-primary-ui` | `var(--at-primary-color)` | `var(--at-primary-color)` | Button fill for FAB, primary actions, active segments, and slider fill |
 | `--at-on-primary-ui` | `var(--at-primary-text)` | `var(--at-primary-text)` | Text and icon color on `--at-primary-ui` |
+| `--at-fab-bg` | `var(--at-primary-ui)` | `var(--at-primary-ui)` | Voice button background. Use it to style the button apart from other primary actions |
+| `--at-fab-text` | `var(--at-on-primary-ui)` | `var(--at-on-primary-ui)` | Voice button icon and label |
+| `--at-fab-border` | `none` | `none` | Voice button border |
+| `--at-logo-color` | `var(--at-primary-color)` | `var(--at-primary-color)` | ArionTalk logo in the panel header |
 | `--at-text-color` | `#1F2937` | `#FAFAFA` | Primary text |
 | `--at-text-secondary` | `#6B7280` | `#A1A1AA` | Medium emphasis text |
 | `--at-text-muted` | `#9CA3AF` | `#71717A` | Low emphasis text |
@@ -62,6 +66,24 @@ All colors and design tokens flow through `--at-*` CSS custom properties. Overri
 | `--at-ease-standard` | `cubic-bezier(0.2, 0, 0, 1)` | `cubic-bezier(0.2, 0, 0, 1)` | Standard easing curve |
 | `--at-ease-enter` | `cubic-bezier(0, 0, 0, 1)` | `cubic-bezier(0, 0, 0, 1)` | Entrance easing curve |
 | `--at-ease-exit` | `cubic-bezier(0.3, 0, 1, 1)` | `cubic-bezier(0.3, 0, 1, 1)` | Exit easing curve |
+
+## Highlight Colors
+
+Interactive highlights are drawn on your page, outside the widget, so set their tokens on the page (for example on `:root`), not on `ariontalk-widget`.
+
+| Property | Default | Description |
+|----------|---------|-------------|
+| `--at-highlight-color` | `--at-primary-color` if it's set on the page, otherwise `rgba(99, 102, 241, 0.6)` | Side borders of highlighted sections and the outline of highlighted images |
+| `--at-highlight-bg` | `rgba(99, 102, 241, 0.08)` | Background of highlighted sections |
+
+```css
+:root {
+  --at-highlight-color: #0EA5E9;
+  --at-highlight-bg: rgba(14, 165, 233, 0.1);
+}
+```
+
+Highlighted elements get the `ariontalk-highlight` class while the highlight is shown.
 
 ## Custom Theming Examples
 
@@ -128,6 +150,8 @@ function onThemeChange(isDark) {
   widget.setAttribute('theme', isDark ? 'dark' : 'light');
 }
 ```
+
+If your site switches themes by overriding `--at-*` tokens (for example under a `[data-theme="dark"]` selector), set the `theme` attribute too. Tokens you don't override then use their dark defaults instead of the light ones.
 
 Or use CSS custom properties that your site already defines:
 

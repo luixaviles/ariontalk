@@ -128,21 +128,22 @@ current figures for each artifact.
 
 ## Headless Mode
 
-If you only need the voice engine without the built-in UI, install `@ariontalk/core`:
+If you only need the voice engine without the built-in UI, install the on-device engine and `@ariontalk/core`:
 
 ```bash
-pnpm add @ariontalk/core
+pnpm add @ariontalk/core @ariontalk/engine-local
 ```
 
 ```javascript
-import { VoiceEngine, isVoiceChatSupported } from '@ariontalk/core';
+import { isVoiceChatSupported } from '@ariontalk/core';
+import { VoiceEngine } from '@ariontalk/engine-local';
 
 // Check browser support
 const supported = await isVoiceChatSupported('local');
 
 if (supported) {
   const engine = new VoiceEngine();
-  // Build your own UI on top of the core engine
+  // Build your own UI on top of the engine
 }
 ```
 

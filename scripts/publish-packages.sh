@@ -23,6 +23,7 @@ PACKAGES=(
   "@ariontalk/engine-local"
   "@ariontalk/engine-gemini"
   "@ariontalk/plugin-silero-vad"
+  "@ariontalk/plugin-kokoro-tts"
   "@ariontalk/widget"
 )
 

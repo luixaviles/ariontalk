@@ -44,7 +44,7 @@ All attributes are optional. Attribute names use kebab-case in HTML; the corresp
 | `lang` | `SupportedLang` | `'auto'` | Initial language. `'auto'` reads the page's `<html lang>` on the first session; otherwise pass a BCP-47 code like `'en'`, `'es'`, `'ja'`. |
 | `position` | `'bottom-right' \| 'bottom-left'` | `'bottom-right'` | Screen corner where the widget is anchored. Reflected to attribute. |
 | `theme` | `'light' \| 'dark'` | `'light'` | Color theme. Reflected to attribute. Sets CSS custom property values on the host. |
-| `label` | `string` | `'Voice Chat'` | Text shown on the floating action button. |
+| `label` | `string` | localized `'Ask about this page'` | Text on the voice button (default variant), or its accessible label (compact variant). |
 | `variant` | `'default' \| 'compact'` | `'default'` | FAB size variant. Reflected to attribute. |
 | `icon` | `'mic' \| 'wave'` | `'mic'` | FAB icon. |
 | `force` | `boolean` | `false` | When set, skips the browser-support check and always renders the widget UI. |
@@ -53,10 +53,14 @@ All attributes are optional. Attribute names use kebab-case in HTML; the corresp
 | `log-level` (`logLevel`) | `LogLevel` | `'disabled'` | Console log verbosity: `'disabled'`, `'error'`, `'warning'`, `'info'`, or `'debug'`. |
 | `engine` | `'local' \| 'gemini'` | `'local'` | Engine type. `'local'` uses browser-native APIs; `'gemini'` uses the Gemini Live cloud API. Resolves to `'gemini'` automatically when `site-key` is present and `engine` is not explicitly set. |
 | `token-server` (`tokenServer`) | `string` | `''` | URL of a self-hosted token server. Kept for back-compat; prefer `site-key` + `service-url` for the ArionTalk cloud service. |
-| `interactive-highlights` (`interactiveHighlights`) | `boolean` | `false` | Enable real-time scroll-and-highlight during Gemini conversations. |
+| `interactive-highlights` (`interactiveHighlights`) | `boolean` | `false` | Scroll to and highlight the section or image being discussed. Works on both engines. |
 | `speech-local` (`speechLocal`) | `'prefer' \| 'require' \| 'off'` | `'prefer'` | On-device speech recognition policy for the local engine (`engine="local"`). Chrome 139+. |
-| `gemini-model` (`geminiModel`) | `string` | `''` | Gemini model identifier (e.g. `'gemini-3.1-flash-live-preview'`). |
 | `gemini-voice` (`geminiVoice`) | `string` | `''` | Gemini voice name for TTS output (e.g. `'Kore'`, `'Puck'`). |
+| `ui-lang` (`uiLang`) | `string` | `''` | Language for the widget's own text (buttons, labels, messages). Empty uses the page's `<html lang>`, then the browser language. |
+| `header-title` (`headerTitle`) | `string` | `'ArionTalk'` | Title in the session panel header. |
+| `header-subtitle` (`headerSubtitle`) | `string` | localized `'Ask a question'` | Subtitle in the session panel header. |
+| `show-timer` (`showTimer`) | `boolean` | `false` | Show the session timer in the panel header. |
+| `tts-plugins` (`ttsPlugins`) | `TtsPlugin[]` | `[]` | Voice plugins for the local engine, such as `kokoroTtsPlugin()`. Set via JavaScript property (not HTML attribute). |
 
 ### `BargeInPlugin` interface
 

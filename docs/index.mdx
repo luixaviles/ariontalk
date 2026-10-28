@@ -21,6 +21,7 @@ ArionTalk is a voice AI agent you can embed on any website with a single HTML ta
 | `@ariontalk/engine-local` | On-device engine using the Chrome Prompt API (Gemini Nano) and Web Speech |
 | `@ariontalk/engine-gemini` | Cloud engine add-on using Gemini Live API for real-time voice conversations |
 | `@ariontalk/plugin-silero-vad` | Silero VAD plugin for AI-powered barge-in detection |
+| `@ariontalk/plugin-kokoro-tts` | Kokoro neural voice for the local engine, on-device |
 | `@ariontalk/token-server` | Lightweight Hono server that issues ephemeral Gemini API tokens (not on npm — self-hosted) |
 
 ## Engine Comparison
@@ -29,9 +30,9 @@ ArionTalk supports two engines. Choose the one that fits your use case:
 
 | Feature | Local (On-Device) | Gemini Live (Cloud) |
 |---------|-------------------|---------------------|
-| AI model | Gemini Nano (Chrome built-in) | Gemini 2.5 Flash (cloud) |
+| AI model | Gemini Nano (Chrome built-in) | Gemini Live (cloud) |
 | Interactive highlights | Yes (via inline action tags) | Yes (via function calling) |
-| Image understanding | No | Yes |
+| Image understanding | Yes, with interactive highlights on | Yes |
 | Languages | 2 (en, es) | 12 |
 | Voices | System TTS | 8 Gemini voices |
 | Privacy | Page content and AI stay on-device; speech recognition on-device when available | Audio and page context sent to Google |
@@ -44,6 +45,6 @@ ArionTalk supports two engines. Choose the one that fits your use case:
 | Engine | Browser | Notes |
 |--------|---------|-------|
 | Gemini Live | Any modern browser | Requires WebSocket + microphone access |
-| Local | Chrome 139+ | Requires Prompt API origin trial |
+| Local | Chrome 148+ | Uses the Prompt API, stable since Chrome 148 |
 
 The widget automatically hides itself on unsupported browsers (unless `force` is set).

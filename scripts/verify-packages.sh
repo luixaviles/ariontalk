@@ -3,8 +3,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-PACKAGES=("core" "engine-local" "engine-gemini" "plugin-silero-vad" "widget")
-SCOPED_PACKAGES=("@ariontalk/core" "@ariontalk/engine-local" "@ariontalk/engine-gemini" "@ariontalk/plugin-silero-vad" "@ariontalk/widget")
+PACKAGES=("core" "engine-local" "engine-gemini" "plugin-silero-vad" "plugin-kokoro-tts" "widget")
+SCOPED_PACKAGES=("@ariontalk/core" "@ariontalk/engine-local" "@ariontalk/engine-gemini" "@ariontalk/plugin-silero-vad" "@ariontalk/plugin-kokoro-tts" "@ariontalk/widget")
 SKIP_BUILD=false
 for arg in "$@"; do
   case $arg in
@@ -118,7 +118,8 @@ for i in "${!PACKAGES[@]}"; do
 
   # Check LICENSE present
   if [ ! -f "${PKG_DIR}/package/LICENSE" ]; then
-    echo "WARN: LICENSE missing from tarball"
+    echo "FAIL: LICENSE missing from tarball"
+    ERRORS=$((ERRORS + 1))
   else
     echo "  OK: LICENSE present"
   fi

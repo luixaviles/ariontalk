@@ -1,6 +1,6 @@
 {
   "name": "@ariontalk/widget",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "module",
   "main": "./dist/ariontalk.esm.js",
   "module": "./dist/ariontalk.esm.js",
@@ -58,7 +58,7 @@
   },
   "peerDependencies": {
     "lit": "^3.2.0",
-    "@ariontalk/engine-gemini": "workspace:*"
+    "@ariontalk/engine-gemini": "workspace:>=0.4.0"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.x",

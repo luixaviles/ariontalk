@@ -1,6 +1,6 @@
 {
   "name": "@ariontalk/plugin-kokoro-tts",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Kokoro TTS plugin for ArionTalk — high-quality on-device neural voice synthesis",
   "license": "MIT",
   "repository": {
@@ -35,7 +35,7 @@
     "test": "tsc --noEmit && vitest run --passWithNoTests"
   },
   "peerDependencies": {
-    "@ariontalk/core": "workspace:*"
+    "@ariontalk/core": "workspace:>=0.4.0"
   },
   "dependencies": {
     "@huggingface/transformers": "^3.8.1",

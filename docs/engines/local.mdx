@@ -9,19 +9,22 @@ The local engine runs the entire voice conversation pipeline on-device using Chr
 
 The local engine chains three browser APIs into a real-time conversation loop:
 
-1. **Speech Recognition (WebSpeech API)** — Captures the user's voice through the microphone and converts it to text using Chrome 139+ on-device recognition (`processLocally`) or cloud recognition fallback.
-2. **AI Processing (Prompt API / Gemini Nano)** — Sends the transcribed text to the on-device Gemini Nano model, which generates a contextual response based on the page content.
-3. **Speech Synthesis (WebSpeech API)** — Converts the AI response back into spoken audio using the browser's local text-to-speech voices.
+1. **Speech Recognition (WebSpeech API)**: Captures the user's voice through the microphone and converts it to text using Chrome 139+ on-device recognition (`processLocally`) or cloud recognition fallback.
+2. **AI Processing (Prompt API / Gemini Nano)**: Sends the transcribed text to the on-device Gemini Nano model, which generates a contextual response based on the page content.
+3. **Speech Synthesis (WebSpeech API)**: Converts the AI response back into spoken audio using the browser's local text-to-speech voices.
 
-The AI response is streamed sentence-by-sentence — the widget starts speaking the first sentence as soon as it is ready, while the model continues generating the rest.
+The AI response is streamed sentence by sentence: the widget starts speaking the first sentence as soon as it is ready, while the model continues generating the rest.
 
 ## Browser requirements
 
 | Requirement | Details |
 |-------------|---------|
-| Browser | Chrome 139+ |
-| API | Prompt API origin trial enabled |
-| Model | Gemini Nano (~1.7 GB, downloaded and cached automatically) |
+| Browser | Chrome 148+ |
+| API | Prompt API, stable for web pages since Chrome 148 |
+| Model | Chrome's built-in model (Gemini Nano), downloaded and cached by Chrome on first use |
+| Hardware | Windows 10 or 11, macOS 13+, or Linux; at least 22 GB of free disk space; a GPU with more than 4 GB of VRAM, or 16 GB of RAM and 4 CPU cores |
+
+See Chrome's [Prompt API documentation](https://developer.chrome.com/docs/ai/prompt-api) for the current requirements.
 
 The widget automatically hides itself on unsupported browsers unless the `force` attribute is set.
 
@@ -51,35 +54,35 @@ Language can be set via the `lang` attribute and switched mid-session through th
 
 The local engine is designed to work offline after initial setup:
 
-- **AI responses** — Fully on-device via Gemini Nano. The model is downloaded once (~1.7 GB) and cached by Chrome. Subsequent sessions use the cached model with no network requests.
-- **Speech synthesis** — Uses local TTS voices bundled with the operating system. No network required.
-- **Speech recognition** — Configurable via the `speech-local` attribute (`prefer` by default, `require`, or `off`):
-  - `prefer` (default) — Attempts Chrome 139+ on-device speech recognition (`processLocally: true`), falling back to cloud-backed recognition if unavailable.
-  - `require` — Enforces strictly on-device speech recognition. Reports an error if the on-device language model is unavailable or missing.
-  - `off` — Uses standard cloud-backed speech recognition.
+- **AI responses**: Fully on-device via Gemini Nano. Chrome downloads the model once and caches it. Subsequent sessions use the cached model with no network requests.
+- **Speech synthesis**: Uses local TTS voices bundled with the operating system. No network required.
+- **Speech recognition**: Configurable via the `speech-local` attribute (`prefer` by default, `require`, or `off`):
+  - `prefer` (default): Attempts Chrome 139+ on-device speech recognition (`processLocally: true`), falling back to cloud-backed recognition if unavailable.
+  - `require`: Enforces strictly on-device speech recognition. Reports an error if the on-device language model is unavailable or missing.
+  - `off`: Uses standard cloud-backed speech recognition.
 
 ## Page context extraction
 
 When a session starts, the engine automatically extracts content from the current page:
 
-- **Text content** — Up to 6,000 characters of visible page text
-- **Images** — Not sent. The local engine is text-only; image context is a Gemini engine feature
+- **Text content**: Up to 6,000 characters of visible page text
+- **Images**: Not sent. The local engine is text-only; image context is a Gemini engine feature
 
-This context is passed to Gemini Nano so the AI can answer questions about what the visitor is looking at. All extraction happens locally — no data is sent to external servers.
+This context is passed to Gemini Nano so the AI can answer questions about what the visitor is looking at. All extraction happens locally, and no data is sent to external servers.
 
 ## Barge-in detection
 
 Barge-in lets users interrupt the AI while it is speaking. The local engine supports pluggable barge-in strategies:
 
-- **Off** — No interruption detection. The user must wait for the AI to finish speaking.
-- **Energy** — Built-in RMS energy detector that monitors microphone volume to detect when the user starts talking. Uses `echoCancellation` to filter out speaker output. Triggers after 250ms of sustained speech above the energy threshold.
-- **Plugin-based** — Register third-party detectors like [Silero VAD](/docs/plugins/silero-vad) for more accurate, AI-powered voice activity detection.
+- **Off**: No interruption detection. The user must wait for the AI to finish speaking.
+- **Energy**: Built-in RMS energy detector that monitors microphone volume to detect when the user starts talking. Uses `echoCancellation` to filter out speaker output. Triggers after 250ms of sustained speech above the energy threshold.
+- **Plugin-based**: Register third-party detectors like [Silero VAD](/docs/plugins/silero-vad) for more accurate, AI-powered voice activity detection.
 
 See the [Plugins](/docs/plugins/overview) documentation for details on registering barge-in plugins.
 
 ## Limitations
 
-- **Chrome-only** — Firefox and Safari do not support the Prompt API or WebSpeech Recognition.
-- **Limited languages** — Only English and Spanish are currently supported for the full pipeline.
-- **Smaller model** — Gemini Nano is optimized for on-device performance, so responses may be less detailed than cloud-based models like Gemini Live.
-- **Initial download** — The first session requires downloading the ~1.7 GB Gemini Nano model, which may take time on slower connections.
+- **Chrome-only**: Firefox and Safari do not support the Prompt API or WebSpeech Recognition.
+- **Limited languages**: Only English and Spanish are currently supported for the full pipeline.
+- **Smaller model**: Gemini Nano is optimized for on-device performance, so responses may be less detailed than cloud-based models like Gemini Live.
+- **Initial download**: The first session downloads the model, which can take a few minutes on slower connections.

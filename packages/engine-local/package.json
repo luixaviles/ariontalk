@@ -1,6 +1,6 @@
 {
   "name": "@ariontalk/engine-local",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "On-device engine for ArionTalk — Chrome Prompt API (Gemini Nano) with Web Speech",
   "license": "MIT",
   "repository": {
@@ -35,7 +35,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "peerDependencies": {
-    "@ariontalk/core": "workspace:*"
+    "@ariontalk/core": "workspace:>=0.4.0"
   },
   "devDependencies": {
     "@ariontalk/core": "workspace:*",

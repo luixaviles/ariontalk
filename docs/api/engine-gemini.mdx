@@ -20,7 +20,6 @@ import { GeminiEngine } from '@ariontalk/engine-gemini';
 
 const engine = new GeminiEngine({
   tokenServerUrl: 'https://my-server.example.com',
-  model: 'gemini-3.1-flash-live-preview',
   voice: 'Kore',
 });
 ```
@@ -33,14 +32,31 @@ Implements `VoiceEngineInterface` from `@ariontalk/core`.
 interface GeminiEngineOptions {
   /** URL of the token server that mints ephemeral Gemini tokens. Required. */
   tokenServerUrl: string;
-  /** Gemini model identifier. Defaults to the built-in default model. */
-  model?: string;
+  /** Extra fields sent with every token request (for example a model name for a self-hosted token server). */
+  tokenRequestExtras?: Record<string, unknown>;
   /** Gemini voice name for audio output. Defaults to 'Kore'. */
   voice?: string;
   /** Custom PageExtractorService instance. A new one is created if omitted. */
   pageExtractor?: PageExtractorService;
+  /** Scroll to and highlight the content being discussed. */
+  interactiveHighlights?: boolean;
+  /** Called when a session ends. */
+  onSessionEnd?: (detail: SessionEndDetail) => void;
+  /** Visitor-facing message overrides for localization. English defaults apply per key. */
+  messages?: {
+    connectionLost?: string;
+    sessionEndingSoon?: string;
+    failedToStart?: string;
+    couldNotConnect?: string;
+    connectionError?: string;
+    invalidResponse?: string;
+  };
 }
 ```
+
+The token server chooses the Gemini Live model and returns it with the token. To request a specific model from a self-hosted token server, pass it in `tokenRequestExtras`, for example `{ model: 'gemini-3.1-flash-live-preview' }`.
+
+**Advanced hooks.** `GeminiEngineOptions` also accepts `onTokenResponse`, `onUnknownToolCall`, `customImageSource`, `getInitialSessionHandle` and `onSessionHandleChange`, for wrappers that extend the engine. See the type definitions in the package for their signatures.
 
 ### Capabilities
 
@@ -70,8 +86,10 @@ The engine automatically reconnects on WebSocket disconnection using exponential
 
 ### Default Model
 
+Used only when the token response doesn't name a model:
+
 ```typescript
-const DEFAULT_MODEL = 'gemini-3.1-flash-live-preview';
+const DEFAULT_MODEL = 'gemini-3.8-live';
 ```
 
 ### Available Voices
