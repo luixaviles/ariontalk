@@ -3,8 +3,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-PACKAGES=("core" "engine-gemini" "plugin-silero-vad" "widget")
-SCOPED_PACKAGES=("@ariontalk/core" "@ariontalk/engine-gemini" "@ariontalk/plugin-silero-vad" "@ariontalk/widget")
+PACKAGES=("core" "engine-local" "engine-gemini" "plugin-silero-vad" "widget")
+SCOPED_PACKAGES=("@ariontalk/core" "@ariontalk/engine-local" "@ariontalk/engine-gemini" "@ariontalk/plugin-silero-vad" "@ariontalk/widget")
 SKIP_BUILD=false
 for arg in "$@"; do
   case $arg in

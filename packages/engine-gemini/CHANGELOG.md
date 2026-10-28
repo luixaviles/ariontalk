@@ -1,5 +1,11 @@
 # @ariontalk/engine-gemini
 
+## 0.3.1
+
+### Patch Changes
+
+- Upgrade `@google/genai` dependency to `^2.15.0`.
+
 ## 0.3.0
 
 ### Minor Changes

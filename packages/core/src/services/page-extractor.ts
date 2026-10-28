@@ -1,4 +1,5 @@
 import type { ImageContext } from '../types.js';
+import { makeVisibilityChecker } from './dom-visibility.js';
 
 const MAX_TEXT_CHARS = 6000; // ~1,500 tokens
 const DEFAULT_MAX_IMAGES = 6;
@@ -6,7 +7,7 @@ const IMG_MAX_SIZE = 512;
 const MIN_IMG_DIMENSION = 50; // skip tiny icons/trackers
 
 const SKIP_TAGS = new Set([
-  'NAV', 'HEADER', 'FOOTER', 'ASIDE', 'SCRIPT', 'STYLE', 'NOSCRIPT',
+  'NAV', 'ASIDE', 'SCRIPT', 'STYLE', 'NOSCRIPT',
   'SVG', 'IFRAME', 'FORM', 'INPUT', 'BUTTON', 'SELECT', 'TEXTAREA',
 ]);
 
@@ -109,6 +110,11 @@ export class PageExtractorService {
     return results;
   }
 
+  /** Manually invalidates cached text and image extractions. */
+  invalidate(): void {
+    this.invalidateCache();
+  }
+
   destroy(): void {
     this.observer?.disconnect();
     this.observer = null;
@@ -116,29 +122,14 @@ export class PageExtractorService {
   }
 
   private extractTextFromElement(root: Element): string {
+    const isVisible = makeVisibilityChecker();
     const chunks: string[] = [];
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
       acceptNode(node) {
         const parent = node.parentElement;
         if (!parent) return NodeFilter.FILTER_REJECT;
         if (SKIP_TAGS.has(parent.tagName)) return NodeFilter.FILTER_REJECT;
-
-        // Check for hidden attributes (faster than getComputedStyle)
-        if (parent.hasAttribute('hidden') || parent.getAttribute('aria-hidden') === 'true') {
-          return NodeFilter.FILTER_REJECT;
-        }
-
-        // Skip hidden classes and ad containers (common class patterns)
-        const cls = parent.className;
-        if (typeof cls === 'string') {
-           if (/\b(hidden|invisible|d-none)\b/i.test(cls)) {
-             return NodeFilter.FILTER_REJECT;
-           }
-           if (/\b(ad[s-]?|sponsor|promo)\b/i.test(cls)) {
-             return NodeFilter.FILTER_REJECT;
-           }
-        }
-
+        if (!isVisible(parent)) return NodeFilter.FILTER_REJECT;
         return NodeFilter.FILTER_ACCEPT;
       },
     });

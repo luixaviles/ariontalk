@@ -9,3 +9,11 @@ dist/
 # Copied VAD/ONNX assets for dev server
 demo/public/
 demo/.ort-wasm/
+.antigravitycli/
+.claude/
+.home/
+.playwright/
+.playwright-cli/
+# macOS
+.DS_Store
+.agents/

@@ -2,7 +2,8 @@ import { createLogger } from '@ariontalk/core';
 
 const log = createLogger('audio-capture');
 
-const CAPTURE_WORKLET_CODE = `
+/** Exported for tests; the worklet is registered from this source at runtime. */
+export const CAPTURE_WORKLET_CODE = `
 class CaptureProcessor extends AudioWorkletProcessor {
   constructor() {
     super();
@@ -23,7 +24,7 @@ class CaptureProcessor extends AudioWorkletProcessor {
       i += toCopy;
 
       if (this.offset >= this.buffer.length) {
-        this.port.postMessage({ audio: this.buffer.slice() });
+        this.port.postMessage(this.buffer.slice());
         this.offset = 0;
       }
     }
@@ -82,15 +83,19 @@ export class AudioCapture {
 
     this.workletNode.port.onmessage = (event: MessageEvent) => {
       if (this._muted) return;
-      const float32: Float32Array = event.data.audio;
+      const float32: Float32Array = event.data;
       const base64 = float32ToInt16Base64(float32);
       this.onAudioData?.(base64);
     };
 
     this.sourceNode.connect(this.workletNode);
-    // Do NOT connect workletNode to destination — we only capture, not play
-    // back the mic. process() is called as long as sourceNode provides active
-    // input to the worklet, so no destination connection is needed.
+
+    // Give the capture worklet a sink so its process() is reliably pulled by the
+    // audio-rendering graph. Gain is 0, so nothing reaches the speaker (no feedback).
+    const silence = this.audioContext.createGain();
+    silence.gain.value = 0;
+    this.workletNode.connect(silence);
+    silence.connect(this.audioContext.destination);
 
     log.info('Audio capture started at 16kHz');
   }

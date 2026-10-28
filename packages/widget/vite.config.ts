@@ -6,7 +6,13 @@ const isCDN = process.env.BUILD_TARGET === 'cdn';
 export default defineConfig({
   build: {
     lib: {
-      entry: resolve(__dirname, 'src/index.ts'),
+      // Rollup allows inlineDynamicImports with a single entry only.
+      entry: isCDN
+        ? resolve(__dirname, 'src/index.ts')
+        : {
+            'ariontalk.esm': resolve(__dirname, 'src/index.ts'),
+            primitives: resolve(__dirname, 'src/primitives.ts'),
+          },
       formats: ['es'],
       fileName: isCDN ? 'ariontalk' : 'ariontalk.esm',
     },
@@ -16,17 +22,22 @@ export default defineConfig({
     rollupOptions: {
       ...(isCDN
         ? {
-            // CDN: bundle everything into a single file
+            // CDN: multi-chunk ES modules with relative specifiers
             output: {
               entryFileNames: 'ariontalk.js',
-              inlineDynamicImports: true,
+              chunkFileNames: 'chunk-[name].js',
+              manualChunks: {
+                'engine-gemini': ['@ariontalk/engine-gemini'],
+                'engine-local': ['@ariontalk/engine-local'],
+                core: ['@ariontalk/core'],
+              },
             },
           }
         : {
-            // NPM: externalize lit for tree-shaking with bundlers
-            external: ['lit', /^lit\//, /^@lit\//],
+            // NPM: left for the consumer's bundler to resolve.
+            external: ['lit', /^lit\//, /^@lit\//, '@ariontalk/engine-gemini'],
             output: {
-              entryFileNames: 'ariontalk.esm.js',
+              entryFileNames: '[name].js',
             },
           }),
     },

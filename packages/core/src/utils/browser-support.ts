@@ -11,7 +11,7 @@ export async function isVoiceChatSupported(
         && !!(window.AudioContext || (window as any).webkitAudioContext);
   }
 
-  // 1. Check SpeechRecognition
+  // 1. Check SpeechRecognition (processLocally is optional; cloud fallback works under speech-local="prefer")
   const SpeechRecognition =
     (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
   if (!SpeechRecognition) return false;

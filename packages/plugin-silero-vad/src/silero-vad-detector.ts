@@ -50,6 +50,11 @@ export class SileroVadDetector implements BargeInDetector {
   private onBargeInCallback: (() => void) | null = null;
   private monitoring = false;
   private options: SileroVadOptions;
+  private stream: MediaStream | null = null;
+
+  private static readonly MIC_CONSTRAINTS: MediaStreamConstraints = {
+    audio: { channelCount: 1, echoCancellation: true, autoGainControl: true, noiseSuppression: true },
+  };
 
   constructor(options?: SileroVadOptions) {
     this.options = options ?? {};
@@ -70,6 +75,14 @@ export class SileroVadDetector implements BargeInDetector {
         // Only pass asset paths when explicitly set — the library defaults to './'
         ...(this.options.baseAssetPath != null && { baseAssetPath: this.options.baseAssetPath }),
         ...(this.options.onnxWASMBasePath != null && { onnxWASMBasePath: this.options.onnxWASMBasePath }),
+        getStream: async () => {
+          this.stream = await navigator.mediaDevices.getUserMedia(SileroVadDetector.MIC_CONSTRAINTS);
+          return this.stream;
+        },
+        // The library default stops the tracks here, which restarts echo cancellation
+        // from scratch on every turn and leaks our own voice into the first frames.
+        pauseStream: async () => {},
+        resumeStream: async (stream: MediaStream) => stream,
         // Use onSpeechRealStart instead of onSpeechStart — it only fires after
         // sustained speech exceeding minSpeechMs, filtering out transient noises.
         onSpeechRealStart: () => {
@@ -79,9 +92,17 @@ export class SileroVadDetector implements BargeInDetector {
           }
         },
       });
+
+      // Acquire the mic and load the worklet now, so the first arm is instant and the
+      // echo canceller has already converged when our own audio starts playing.
+      await this.vad.start();
+      await this.vad.pause();
     } catch (err) {
       log.warn('init failed, barge-in disabled', err);
+      this.vad?.destroy().catch(() => {});
       this.vad = null;
+      this.stream?.getTracks().forEach((track) => track.stop());
+      this.stream = null;
     }
   }
 
@@ -99,9 +120,9 @@ export class SileroVadDetector implements BargeInDetector {
 
   destroy(): void {
     this.stopMonitoring();
-    // MicVAD.destroy() is async and throws when called before start()
-    // because its internal audio resources (stream, context) are still null.
     this.vad?.destroy().catch(() => {});
     this.vad = null;
+    this.stream?.getTracks().forEach((track) => track.stop());
+    this.stream = null;
   }
 }

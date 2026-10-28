@@ -3,7 +3,10 @@ import { defineConfig } from 'tsdown';
 export default defineConfig({
   entry: ['src/index.ts'],
   format: ['esm'],
-  dts: true,
+  dts: { eager: true },
   clean: true,
-  external: ['@ariontalk/core'],
+  deps: {
+    neverBundle: ['@ariontalk/core'],
+    alwaysBundle: ['@ariontalk/engine-cloud-ws'],
+  },
 });
