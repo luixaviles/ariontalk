@@ -1,0 +1,210 @@
+* { box-sizing: border-box; margin: 0; }
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  line-height: 1.6;
+  color: #1f2937;
+  background: #fff;
+  transition: background 0.3s, color 0.3s;
+}
+body.dark {
+  background: #111827;
+  color: #f3f4f6;
+}
+
+/* ── Toolbar ── */
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid #e5e7eb;
+  transition: background 0.3s, border-color 0.3s;
+}
+body.dark .toolbar {
+  background: rgba(17, 24, 39, 0.85);
+  border-bottom-color: #27272a;
+}
+body.clean .toolbar {
+  display: none;
+}
+
+.toolbar-brand {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #111827;
+}
+body.dark .toolbar-brand {
+  color: #fafafa;
+}
+/* Page label next to the logo, as a pill */
+.toolbar-brand .toolbar-logo + span {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(255, 15, 123, 0.08);
+  color: #D6005F;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+body.dark .toolbar-brand .toolbar-logo + span {
+  background: rgba(255, 15, 123, 0.14);
+  color: #FF0F7B;
+}
+.toolbar-brand {
+  display: flex;
+  align-items: center;
+}
+.toolbar .toolbar-logo {
+  display: flex;
+  align-items: center;
+  margin-left: 0;
+}
+.toolbar .toolbar-logo img {
+  display: block;
+  height: 26px;
+  width: auto;
+  margin: 0;
+  border-radius: 0;
+}
+/* Swap the logo variant with the toolbar theme */
+.toolbar .toolbar-logo .logo-dark { display: none; }
+body.dark .toolbar .toolbar-logo .logo-light { display: none; }
+body.dark .toolbar .toolbar-logo .logo-dark { display: block; }
+.toolbar .toolbar-logo + span { margin-left: 10px; }
+
+.toolbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ── Theme toggle ── */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: transparent;
+  color: #4b5563;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.theme-toggle:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+.theme-toggle:focus-visible {
+  outline: 2px solid #6b7280;
+  outline-offset: 2px;
+}
+body.dark .theme-toggle {
+  border-color: #3f3f46;
+  color: #a1a1aa;
+}
+body.dark .theme-toggle:hover {
+  background: #27272a;
+  color: #fafafa;
+}
+.theme-toggle svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+/* Show the theme the button switches to */
+.theme-toggle .icon-sun { display: none; }
+body.dark .theme-toggle .icon-moon { display: none; }
+body.dark .theme-toggle .icon-sun { display: block; }
+
+/* ── Content ── */
+main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: #111827;
+  margin-bottom: 0.25rem;
+}
+body.dark h1 { color: #fafafa; }
+
+h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-top: 2rem;
+  margin-bottom: 0.5rem;
+  color: #111827;
+}
+body.dark h2 { color: #fafafa; }
+
+.byline {
+  font-size: 14px;
+  color: #9ca3af;
+  margin-bottom: 2rem;
+}
+body.dark .byline { color: #71717a; }
+
+p {
+  margin-bottom: 1rem;
+}
+
+img {
+  max-width: 100%;
+  border-radius: 10px;
+  margin: 1.25rem 0;
+}
+
+.note {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  padding: 1rem 1.25rem;
+  margin: 1.5rem 0;
+  border-radius: 10px;
+  font-size: 14px;
+}
+body.dark .note {
+  background: #1e1e22;
+  border-color: #27272a;
+}
+
+/* ── Custom brand theme overrides ── */
+/* Pages with data-brand define --brand-* tokens per theme; map them onto the widget and highlights. */
+body[data-brand] {
+  --at-highlight-color: var(--brand-highlight);
+  --at-highlight-bg: var(--brand-highlight-bg);
+}
+body[data-brand] ariontalk-widget {
+  --at-primary-color: var(--brand-primary);
+  --at-primary-text: var(--brand-on-primary);
+  --at-success-color: var(--brand-primary);
+  --at-focus-ring: var(--brand-highlight-bg);
+  --at-bg-color: var(--brand-panel);
+  --at-surface-color: var(--brand-surface);
+  --at-surface-hover: var(--brand-surface-hover);
+  --at-border-color: var(--brand-border);
+  --at-text-color: var(--brand-text);
+  --at-text-secondary: var(--brand-muted);
+  --at-font-family: var(--brand-font);
+  --at-border-radius: var(--brand-radius);
+}

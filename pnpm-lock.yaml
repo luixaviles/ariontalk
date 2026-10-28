@@ -12,6 +12,25 @@ importers:
         specifier: ^2.27.0
         version: 2.30.0(@types/node@25.3.5)
 
+  demo:
+    dependencies:
+      '@ariontalk/plugin-kokoro-tts':
+        specifier: workspace:*
+        version: link:../packages/plugin-kokoro-tts
+      '@ariontalk/plugin-silero-vad':
+        specifier: workspace:*
+        version: link:../packages/plugin-silero-vad
+      '@ariontalk/widget':
+        specifier: workspace:*
+        version: link:../packages/widget
+      lit:
+        specifier: ^3.2.0
+        version: 3.3.2
+    devDependencies:
+      vite:
+        specifier: ^6.0.0
+        version: 6.4.1(@types/node@25.3.5)(tsx@4.21.0)
+
   docs-site:
     dependencies:
       '@astrojs/starlight':

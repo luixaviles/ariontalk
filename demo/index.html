@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Talk to the Web - ArionTalk Demo</title>
+  <link rel="stylesheet" href="./styles/shared.css" />
+  <style>
+    /* Brand look from ariontalk.com, scoped to the demo index */
+    @font-face {
+      font-family: 'Lexend';
+      font-weight: 600;
+      font-display: swap;
+      src: url('./assets/fonts/Lexend-SemiBold.ttf') format('truetype');
+    }
+    :root {
+      --brand-pink: #FF0F7B;
+      --accent: #D6005F;
+      --card-border: #E6E6EA;
+      --card-hover-border: rgba(255, 15, 123, 0.35);
+      --card-hover-shadow: 0 8px 24px rgba(15, 15, 18, 0.06), 0 0 0 1px rgba(255, 15, 123, 0.08);
+      --icon-bg: rgba(255, 15, 123, 0.08);
+      --muted: #55555E;
+    }
+    body.dark {
+      --accent: #FF0F7B;
+      --card-border: #3f3f46;
+      --card-hover-border: rgba(255, 15, 123, 0.5);
+      --card-hover-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      --icon-bg: rgba(255, 15, 123, 0.14);
+      --muted: #a1a1aa;
+    }
+    main h1 {
+      font-family: 'Lexend', system-ui, -apple-system, sans-serif;
+      font-weight: 600;
+      font-size: clamp(2.25rem, 6vw, 3rem);
+      line-height: 1.1;
+      letter-spacing: -0.01em;
+    }
+    main h1 .hl { color: var(--brand-pink); }
+    main .byline {
+      margin-top: 0.75rem;
+      font-size: 17px;
+      color: var(--muted);
+    }
+    .demo-section {
+      margin-top: 2.5rem;
+    }
+    .demo-section h2,
+    body.dark .demo-section h2 {
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+    }
+    .section-blurb {
+      color: var(--muted);
+      font-size: 15px;
+      margin-top: 0.25rem;
+      margin-bottom: 1rem;
+    }
+    .demo-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .demo-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 1.25rem 1.5rem;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      text-decoration: none;
+      color: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+    }
+    .demo-card:hover {
+      border-color: var(--card-hover-border);
+      box-shadow: var(--card-hover-shadow);
+      transform: translateY(-2px);
+    }
+    .demo-card:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    .card-icon {
+      flex: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: var(--icon-bg);
+      color: var(--accent);
+    }
+    .card-icon svg {
+      width: 20px;
+      height: 20px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .demo-card h3 {
+      margin-top: 0;
+      margin-bottom: 0.25rem;
+      font-size: 17px;
+      font-weight: 600;
+    }
+    .demo-card p {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .demo-card { transition: none; }
+      .demo-card:hover { transform: none; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Apply the tab's stored theme before first paint -->
+  <script>try { if (sessionStorage.getItem('ariontalk-demo-theme') === 'dark') document.body.classList.add('dark'); } catch (e) {}</script>
+  <header class="toolbar">
+    <div class="toolbar-brand"><span class="toolbar-logo"><img class="logo-light" src="./assets/brand/logo-horizontal-light.svg" alt="ArionTalk" /><img class="logo-dark" src="./assets/brand/logo-horizontal-dark.svg" alt="ArionTalk" /></span><span>Demo</span></div>
+    <div class="toolbar-controls">
+      <button id="btn-theme" class="theme-toggle" type="button" aria-label="Switch to dark theme" title="Switch to dark theme">
+        <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <h1>Talk to the <span class="hl">Web</span></h1>
+    <p class="byline">Pick a page, click the mic and ask about what's on it.</p>
+
+    <section class="demo-section">
+      <h2>On your device</h2>
+      <p class="section-blurb">Runs on-device with Chrome's built-in AI. No server, no API key.</p>
+      <div class="demo-nav">
+        <a href="./en-moon.html" class="demo-card">
+          <span class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg></span>
+          <div>
+            <h3>How to Photograph the Moon (English)</h3>
+            <p>A short, two-image guide to shooting the Moon, with on-device voice AI.</p>
+          </div>
+        </a>
+      </div>
+    </section>
+  </main>
+  <script type="module">
+    import { initToolbar } from './scripts/toolbar.js';
+    initToolbar();
+  </script>
+</body>
+</html>

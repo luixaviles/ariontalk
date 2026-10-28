@@ -1,0 +1,18 @@
+{
+  "name": "@ariontalk/demo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "predev": "node scripts/copy-vad-assets.js",
+    "dev": "vite"
+  },
+  "dependencies": {
+    "@ariontalk/widget": "workspace:*",
+    "@ariontalk/plugin-silero-vad": "workspace:*",
+    "@ariontalk/plugin-kokoro-tts": "workspace:*",
+    "lit": "^3.2.0"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0"
+  }
+}

@@ -9,7 +9,7 @@ The local engine runs the entire voice conversation pipeline on-device using Chr
 
 The local engine chains three browser APIs into a real-time conversation loop:
 
-1. **Speech Recognition (WebSpeech API)** — Captures the user's voice through the microphone and converts it to text using Chrome's speech recognizer.
+1. **Speech Recognition (WebSpeech API)** — Captures the user's voice through the microphone and converts it to text using Chrome 139+ on-device recognition (`processLocally`) or cloud recognition fallback.
 2. **AI Processing (Prompt API / Gemini Nano)** — Sends the transcribed text to the on-device Gemini Nano model, which generates a contextual response based on the page content.
 3. **Speech Synthesis (WebSpeech API)** — Converts the AI response back into spoken audio using the browser's local text-to-speech voices.
 
@@ -33,6 +33,7 @@ The widget automatically hides itself on unsupported browsers unless the `force`
 | Voice selection | Yes |
 | Rate / Pitch / Volume | Yes |
 | Barge-in plugins | Yes |
+| TTS plugins | Yes |
 | Offline | Yes |
 | Max session duration | Unlimited |
 | Token server required | No |
@@ -52,14 +53,17 @@ The local engine is designed to work offline after initial setup:
 
 - **AI responses** — Fully on-device via Gemini Nano. The model is downloaded once (~1.7 GB) and cached by Chrome. Subsequent sessions use the cached model with no network requests.
 - **Speech synthesis** — Uses local TTS voices bundled with the operating system. No network required.
-- **Speech recognition** — Partial offline support. Chrome 128+ offers on-device recognition via `processLocally`, but may fall back to server-based recognition on older builds.
+- **Speech recognition** — Configurable via the `speech-local` attribute (`prefer` by default, `require`, or `off`):
+  - `prefer` (default) — Attempts Chrome 139+ on-device speech recognition (`processLocally: true`), falling back to cloud-backed recognition if unavailable.
+  - `require` — Enforces strictly on-device speech recognition. Reports an error if the on-device language model is unavailable or missing.
+  - `off` — Uses standard cloud-backed speech recognition.
 
 ## Page context extraction
 
 When a session starts, the engine automatically extracts content from the current page:
 
 - **Text content** — Up to 6,000 characters of visible page text
-- **Images** — Extracted from the page for multimodal context
+- **Images** — Not sent. The local engine is text-only; image context is a Gemini engine feature
 
 This context is passed to Gemini Nano so the AI can answer questions about what the visitor is looking at. All extraction happens locally — no data is sent to external servers.
 

@@ -80,7 +80,7 @@ There are two ways to authenticate against Gemini Live:
 
 ### Option 1 — ArionTalk cloud service (recommended)
 
-Register your site at [ariontalk.com](https://ariontalk.com) to get a site key — no server to run.
+Request early access at [ariontalk.com](https://ariontalk.com) to get a site key. No server to run.
 
 ```html
 <ariontalk-widget
@@ -219,5 +219,5 @@ When the server sends a `goAway` message (requesting disconnect), the engine aut
 | API key required | No | Yes (via token server) |
 | Initial download | ~1.7 GB model | None |
 | Response quality | Good (smaller model) | Higher (cloud model) |
-| Privacy | Fully on-device | Audio sent to Google servers |
+| Privacy | Page content and AI stay on-device; speech-to-text uses Chrome's service | Audio and page context sent to Google |
 | Browser support | Chrome 139+ only | Any modern browser with WebSocket + mic |

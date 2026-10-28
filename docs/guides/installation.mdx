@@ -40,6 +40,10 @@ For production, pin to a specific version instead of `@latest`:
 
 Using `@latest` always fetches the newest release, which is convenient during development but may introduce breaking changes without warning.
 
+### Self-Hosting the CDN Build
+
+The CDN build ships an entry file (`ariontalk.js`) alongside sibling chunks (`chunk-*.js`) in the same directory. If you self-host the CDN assets rather than serving from a public CDN, copy the entire `dist/` directory to your web server so the browser can resolve dynamic engine chunks. Standard script tags pointing to public CDNs like jsDelivr and unpkg resolve sibling chunks automatically without extra configuration.
+
 ## Package Manager
 
 <Tabs>
@@ -110,7 +114,17 @@ ArionTalk is a standard Web Component. It works in any framework — just import
 
 ## Bundle Size
 
-The full widget including Lit weighs approximately **12-16 KB gzipped**.
+The widget loads its voice engine on demand. A page that embeds ArionTalk but is never
+used downloads only the idle bundle: the floating button, the session UI, and Lit. No
+engine code is fetched until a visitor starts a conversation, so embedding the widget
+has no meaningful effect on your page's load performance.
+
+When a session starts, the widget fetches the chunk for the configured engine and
+nothing else. A site on the cloud engine never downloads the on-device engine, and
+vice versa.
+
+Every build prints a size report. Run `pnpm build` in `packages/widget` to see the
+current figures for each artifact.
 
 ## Headless Mode
 
