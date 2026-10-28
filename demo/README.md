@@ -4,8 +4,9 @@ A short guide to photographing the Moon that you can talk to. Click the mic, ask
 
 ## Setup
 
-- Chrome 139 or later, with the Prompt API (Gemini Nano) available. See [Local Engine](../docs/engines/local.mdx) for the browser requirements.
-- The first session downloads Gemini Nano (about 1.7 GB). Later sessions start right away.
+- Chrome 148 or later. The demo uses Chrome's built-in [Prompt API](https://developer.chrome.com/docs/ai/prompt-api), which runs an on-device model.
+- A computer that meets Chrome's requirements for built-in AI: Windows 10 or 11, macOS 13+, or Linux; at least 22 GB of free disk space; and either a GPU with more than 4 GB of VRAM, or 16 GB of RAM and 4 CPU cores.
+- The first session downloads the model, which can take a few minutes. Later sessions start right away.
 - Allow microphone access when Chrome asks.
 
 ## Run it
