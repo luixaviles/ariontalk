@@ -8,12 +8,7 @@
     "demo": "pnpm --filter @ariontalk/demo dev",
     "token-server": "pnpm --filter @ariontalk/token-server dev",
     "docs": "pnpm --filter @ariontalk/docs-site dev",
-    "test": "pnpm -r test",
-    "deploy-token-server": "./scripts/deploy-token-server.sh",
-    "verify-packages": "./scripts/verify-packages.sh",
-    "publish-packages:dry-run": "./scripts/publish-packages.sh --dry-run --no-git-checks",
-    "prepublish-packages": "./scripts/verify-packages.sh",
-    "publish-packages": "./scripts/publish-packages.sh"
+    "test": "pnpm -r test"
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.0"

@@ -1,13 +1,6 @@
-# Exclude everything not needed for the token-server Docker build
-.git
-website
-demo
-notes
-.changeset
-packages/core
-packages/widget
-packages/engine-gemini
-packages/plugin-silero-vad
-**/node_modules
-**/dist
-**/.env
+# The token-server image only needs its own package and the shared tsconfig
+*
+!packages/token-server/package.json
+!packages/token-server/tsconfig.json
+!packages/token-server/src
+!tsconfig.base.json

@@ -5,5 +5,7 @@ export default defineConfig({
   format: ['esm'],
   dts: true,
   clean: true,
-  external: ['@ariontalk/core'],
+  deps: {
+    neverBundle: ['@ariontalk/core'],
+  },
 });
