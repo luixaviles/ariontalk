@@ -1,0 +1,111 @@
+---
+title: Kokoro TTS
+description: Opt-in, high-quality on-device text-to-speech synthesis using an 82M neural model.
+---
+
+The `@ariontalk/plugin-kokoro-tts` plugin adds high-quality on-device neural voice synthesis to ArionTalk. It uses the [Kokoro 82M](https://huggingface.co/hexgrad/Kokoro-82M) open-weight model running locally in the browser via `kokoro-js` on ONNX Runtime WebGPU, giving your widget natural-sounding speech without sending text to an external server.
+
+## Installation
+
+```bash
+pnpm add @ariontalk/plugin-kokoro-tts kokoro-js
+```
+
+The package exports `kokoroTtsPlugin`, `KokoroSynthesizer`, and `KokoroTtsOptions`.
+
+## Usage with the widget
+
+Register the Kokoro TTS plugin by passing `kokoroTtsPlugin()` to the `ttsPlugins` array on the widget element:
+
+```html
+<ariontalk-widget id="widget" settings></ariontalk-widget>
+
+<script type="module">
+  import '@ariontalk/widget';
+  import { kokoroTtsPlugin } from '@ariontalk/plugin-kokoro-tts';
+
+  document.querySelector('#widget').ttsPlugins = [
+    kokoroTtsPlugin()
+  ];
+</script>
+```
+
+When registered, a **Speech** toggle row appears in the widget settings panel allowing users to switch between **System** voices and **Kokoro** neural voices.
+
+## Preloading and lazy downloading
+
+The Kokoro model file is ~325 MB, and the plugin requires WebGPU (see below). To keep initial page loads fast, downloading only happens when requested:
+
+- **Opt-in download**: The model is NOT downloaded when the page loads. It is downloaded lazily when the user selects Kokoro in the settings panel and clicks **Apply**.
+- **Model cache**: Once downloaded, the model instance is cached in memory. Subsequent sessions start immediately without re-downloading.
+- **Automatic fallback**: If model loading fails (e.g. network error or memory limit), the engine automatically falls back to system speech synthesis without interrupting the user.
+
+## Curated voices
+
+Kokoro TTS includes 9 curated voices across American and British English:
+
+| Voice ID | Name | Language | Accent |
+|----------|------|----------|--------|
+| `af_heart` | Heart | `en-US` | American English |
+| `af_bella` | Bella | `en-US` | American English |
+| `af_nicole` | Nicole | `en-US` | American English |
+| `bf_emma` | Emma | `en-GB` | British English |
+| `am_michael` | Michael | `en-US` | American English |
+| `am_fenrir` | Fenrir | `en-US` | American English |
+| `am_puck` | Puck | `en-US` | American English |
+| `bm_george` | George | `en-GB` | British English |
+| `bm_fable` | Fable | `en-GB` | British English |
+
+## Configuration options
+
+Pass a `KokoroTtsOptions` object to `kokoroTtsPlugin()` to customize model loading and voice exposure:
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `modelId` | `string` | `'onnx-community/Kokoro-82M-v1.0-ONNX'` | Hugging Face model identifier for Kokoro ONNX model weights. |
+| `dtype` | `'fp32' \| 'fp16' \| 'q8' \| 'q4' \| 'q4f16'` | `'fp32'` on webgpu, `'q8'` on wasm | Model precision. Forced to `fp32` on WebGPU, the only pairing the model supports there. |
+| `device` | `'wasm' \| 'webgpu'` | `'webgpu'` | Inference backend. `'wasm'` is roughly 17x slower and cannot keep up with live conversation. See below. |
+
+### WebGPU is required
+
+The plugin runs on WebGPU with `fp32` weights. On a browser without WebGPU it declines to load, nothing is downloaded, the settings panel shows "Kokoro unavailable, using system voices", and the conversation continues on the browser's own voices.
+
+Two measurements explain why there is no WebAssembly fallback. Both are real-time factors: synthesis time divided by the duration of audio produced, so below 1.0 means synthesis keeps ahead of playback.
+
+| Backend | Download | Real-time factor | Longest wait before speech |
+|---|---|---|---|
+| WebGPU + `fp32` | ~325 MB | 0.16 | 1.5 s |
+| WebAssembly + `q8` | ~86 MB | 2.66 | 31 s |
+
+At 2.66 the queue never catches up: gaps open between sentences and grow through a reply. WebAssembly is not a slower option here, it is one that cannot hold a conversation, so falling back to it would trade a clear failure for a confusing one.
+
+Quantized weights cannot be used to shrink the WebGPU download either. They do not fail on that backend, they return a waveform whose samples are wrong, so playback becomes near-silence broken by bursts of unrelated phonemes. `kokoro-js` sanctions only `fp32` there, and the plugin coerces `dtype` accordingly with a warning.
+
+`device: 'wasm'` remains available for non-interactive use, such as pre-generating audio, where a 17x slowdown does not matter and the smaller download does. It is not supported for live conversation.
+| `voices` | `string[]` | 9 curated voices | List of voice IDs to expose in the settings UI. |
+| `defaultVoice` | `string` | `'af_heart'` | Default voice ID used when none is selected. |
+| `lookahead` | `number` | `2` | Number of upcoming utterances synthesized ahead during streaming playback. |
+
+### Custom configuration example
+
+```javascript
+document.querySelector('#widget').ttsPlugins = [
+  kokoroTtsPlugin({
+    dtype: 'q8',
+    lookahead: 2,
+    defaultVoice: 'bf_emma',
+    voices: ['af_heart', 'bf_emma', 'am_michael', 'bm_george'],
+  }),
+];
+```
+
+## System vs. Kokoro comparison
+
+| Aspect | System TTS (default) | Kokoro TTS Plugin |
+|--------|----------------------|-------------------|
+| Engine | Browser Web Speech API (`speechSynthesis`) | On-device 82M neural model via ONNX |
+| Sound quality | Basic OS voices (varies by OS/browser) | High-quality, natural-sounding neural voice |
+| Languages | All OS-supported languages | English (`en-US`, `en-GB`) |
+| Network download | 0 MB (built into OS) | ~325 MB model download on first activation |
+| WebGPU | Not applicable | Required. Falls back to system voices when unavailable |
+| Offline support | Yes | Yes (once cached by browser) |

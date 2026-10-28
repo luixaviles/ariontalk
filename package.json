@@ -5,6 +5,7 @@
   "scripts": {
     "build": "pnpm -r build",
     "dev": "pnpm --filter @ariontalk/widget dev",
+    "demo": "pnpm --filter @ariontalk/demo dev",
     "token-server": "pnpm --filter @ariontalk/token-server dev",
     "docs": "pnpm --filter @ariontalk/docs-site dev",
     "test": "pnpm -r test",

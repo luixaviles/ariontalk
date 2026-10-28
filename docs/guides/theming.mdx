@@ -24,8 +24,10 @@ All colors and design tokens flow through `--at-*` CSS custom properties. Overri
 
 | Property | Light Default | Dark Default | Description |
 |----------|--------------|--------------|-------------|
-| `--at-primary-color` | `#111827` | `#FAFAFA` | Accent / FAB background |
+| `--at-primary-color` | `#111827` | `#FAFAFA` | Brand accent color |
 | `--at-primary-text` | `#FFFFFF` | `#18181B` | Text on accent backgrounds |
+| `--at-primary-ui` | `var(--at-primary-color)` | `var(--at-primary-color)` | Button fill for FAB, primary actions, active segments, and slider fill |
+| `--at-on-primary-ui` | `var(--at-primary-text)` | `var(--at-primary-text)` | Text and icon color on `--at-primary-ui` |
 | `--at-text-color` | `#1F2937` | `#FAFAFA` | Primary text |
 | `--at-text-secondary` | `#6B7280` | `#A1A1AA` | Medium emphasis text |
 | `--at-text-muted` | `#9CA3AF` | `#71717A` | Low emphasis text |
@@ -33,14 +35,33 @@ All colors and design tokens flow through `--at-*` CSS custom properties. Overri
 | `--at-surface-color` | `#F3F4F6` | `#27272A` | Button / chip backgrounds |
 | `--at-surface-hover` | `#E5E7EB` | `#3F3F46` | Hover states |
 | `--at-border-color` | `#D1D5DB` | `#3F3F46` | Input borders, progress tracks |
+| `--at-divider-color` | `rgba(127, 127, 127, 0.14)` | `rgba(255, 255, 255, 0.07)` | Header divider line |
 | `--at-border-radius` | `16px` | `16px` | Panel border radius |
 | `--at-font-family` | `system-ui, sans-serif` | `system-ui, sans-serif` | Font stack |
 | `--at-shadow-color` | `rgba(0,0,0,0.12)` | `rgba(0,0,0,0.4)` | Box shadows |
 | `--at-shadow-hover` | `rgba(0,0,0,0.18)` | `rgba(0,0,0,0.5)` | Hover shadows |
 | `--at-focus-ring` | `rgba(17,24,39,0.2)` | `rgba(250,250,250,0.25)` | Focus outlines |
-| `--at-success-color` | `#10B981` | `#34D399` | Listening indicator |
-| `--at-error-color` | `#EF4444` | `#F87171` | Error text, end button |
-| `--at-error-hover` | `#DC2626` | `#EF4444` | End button hover |
+| `--at-success-color` | `#10B981` | `#34D399` | Success accent |
+| `--at-error-color` | `#DC2626` | `#F87171` | Error accent |
+| `--at-error-hover` | `#B91C1C` | `#EF4444` | Error hover accent |
+| `--at-state-listening` | `var(--at-primary-color)` | `var(--at-primary-color)` | Listening indicator dot |
+| `--at-state-voice` | `#DB7609` | `#F89B29` | Voice-detected indicator accent |
+| `--at-state-thinking` | `#FF0F7B` | `#FF0F7B` | Thinking indicator dots |
+| `--at-state-speaking` | `#FF0F7B` | `#FF0F7B` | Speaking waveform bars |
+| `--at-state-muted` | `#6B7280` | `#A1A1AA` | Muted indicator, active mute button, and badge |
+| `--at-state-error` | `#DC2626` | `#F87171` | Error icon, badge, and End button icon |
+| `--at-caption-label` | `#4B5563` | `#A1A1AA` | "You" label in the user transcript pill |
+| `--at-voice-deep` | `#DB7609` | `#E8850F` | Visitor-speaking wave inner radial stop |
+| `--at-voice-mid` | `#F89B29` | `#F89B29` | Visitor-speaking wave outer radial stop |
+| `--at-voice-light` | `#FFC46B` | `#FFD08A` | Visitor-speaking wave highlight |
+| `--at-voice-rim-a` | `#FF0F7B` | `#FF0F7B` | Visitor-speaking wave rim start |
+| `--at-voice-rim-b` | `#FFD166` | `#FFD166` | Visitor-speaking wave rim end |
+| `--at-dur-fast` | `120ms` | `120ms` | Fast transition duration |
+| `--at-dur-base` | `200ms` | `200ms` | Standard transition duration |
+| `--at-dur-slow` | `320ms` | `320ms` | Entrance transition duration |
+| `--at-ease-standard` | `cubic-bezier(0.2, 0, 0, 1)` | `cubic-bezier(0.2, 0, 0, 1)` | Standard easing curve |
+| `--at-ease-enter` | `cubic-bezier(0, 0, 0, 1)` | `cubic-bezier(0, 0, 0, 1)` | Entrance easing curve |
+| `--at-ease-exit` | `cubic-bezier(0.3, 0, 1, 1)` | `cubic-bezier(0.3, 0, 1, 1)` | Exit easing curve |
 
 ## Custom Theming Examples
 
