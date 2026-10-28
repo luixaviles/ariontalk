@@ -1,3 +1,5 @@
+import { isElementVisible, makeVisibilityChecker } from './dom-visibility.js';
+
 const MAX_TEXT_CHARS = 6000;
 const MIN_IMG_DIMENSION = 50;
 
@@ -6,9 +8,28 @@ const SKIP_TAGS = new Set([
   'SVG', 'IFRAME', 'FORM', 'INPUT', 'BUTTON', 'SELECT', 'TEXTAREA',
 ]);
 
+const DEFAULT_IMAGE_HEADER = 'Images on this page (actual image data is sent separately):';
+
+export interface IndexedImage {
+  id: string;
+  element: HTMLImageElement;
+  /** Alt text, else title, aria-label, or figcaption. Null when none. */
+  caption: string | null;
+}
+
 export interface PageIndex {
   annotatedText: string;
   elementMap: Map<string, Element[]>;
+  images: IndexedImage[];
+}
+
+export interface PageIndexerOptions {
+  /** Include [img-N] entries in the annotated text. Default: true. */
+  includeImages?: boolean;
+  /** Header line above the image list. Default keeps the cloud engine's wording. */
+  imageHeader?: string;
+  /** Text after "[img-N] " for each image. Default: alt text / caption / "(no alt text)". */
+  describeImage?: (image: IndexedImage) => string;
 }
 
 /**
@@ -18,9 +39,28 @@ export interface PageIndex {
 export class PageIndexerService {
   private cachedIndex: PageIndex | null = null;
   private observer: MutationObserver | null = null;
+  private includeImages: boolean;
+  private imageHeader: string;
+  private describeImage?: (image: IndexedImage) => string;
 
-  constructor() {
+  constructor(options?: PageIndexerOptions) {
+    this.includeImages = options?.includeImages ?? true;
+    this.imageHeader = options?.imageHeader ?? DEFAULT_IMAGE_HEADER;
+    this.describeImage = options?.describeImage;
     this.setupMutationObserver();
+  }
+
+  /** Set header and per-image describer; a key set to undefined restores the default. */
+  setImageFormat(format: { header?: string; describeImage?: PageIndexerOptions['describeImage'] }): void {
+    let changed = false;
+    if ('header' in format) {
+      const next = format.header ?? DEFAULT_IMAGE_HEADER;
+      if (next !== this.imageHeader) { this.imageHeader = next; changed = true; }
+    }
+    if ('describeImage' in format) {
+      if (format.describeImage !== this.describeImage) { this.describeImage = format.describeImage; changed = true; }
+    }
+    if (changed) this.invalidate();
   }
 
   /** Build (or return cached) annotated index of the page. */
@@ -28,13 +68,14 @@ export class PageIndexerService {
     if (this.cachedIndex !== null) return this.cachedIndex;
 
     const elementMap = new Map<string, Element[]>();
-    const parts: string[] = [];
+    const sections: Array<{ id: string; headingText: string; bodyText: string }> = [];
 
     const mainEl = this.findRoot();
 
     // Index sections by headings
     const headings = mainEl.querySelectorAll('h1, h2, h3, h4, h5, h6');
     let secIdx = 0;
+    let capturedBodyChars = 0;
 
     for (const heading of headings) {
       if (!this.isVisible(heading)) continue;
@@ -47,51 +88,110 @@ export class PageIndexerService {
 
       const headingText = (heading.textContent || '').trim();
       const bodyText = this.extractSectionBody(heading);
+      capturedBodyChars += bodyText.length;
 
-      parts.push(`[${id}] ${headingText}`);
-      if (bodyText) parts.push(bodyText);
-      parts.push('');
+      sections.push({ id, headingText, bodyText });
     }
+
+    const fullText = this.extractTextFromElement(mainEl);
+    const MIN_SECTION_COVERAGE = 0.5;
+    let fallbackContent = '';
 
     // If no headings found, extract body text as sec-1
     if (secIdx === 0) {
-      const bodyText = this.extractTextFromElement(mainEl);
-      if (bodyText) {
+      if (fullText) {
         elementMap.set('sec-1', [mainEl]);
-        parts.push('[sec-1] Main content');
-        parts.push(bodyText);
-        parts.push('');
+        sections.push({
+          id: 'sec-1',
+          headingText: 'Main content',
+          bodyText: fullText,
+        });
       }
+    } else if (fullText.length > 0 && capturedBodyChars < MIN_SECTION_COVERAGE * fullText.length) {
+      // Headings found but sectioning captured a minority of the visible text
+      // (page builders, deeply nested / partial-capture layouts). Keep the
+      // [sec-N] heading anchors already emitted (for highlights); append the
+      // full visible text so the model has the actual content.
+      fallbackContent = fullText;
     }
 
     // Index images
-    const imgs = Array.from(mainEl.querySelectorAll('img'));
-    const candidates = imgs.filter((img) => {
-      if (img.naturalWidth < MIN_IMG_DIMENSION || img.naturalHeight < MIN_IMG_DIMENSION) return false;
-      if (!img.src || img.src.startsWith('data:')) return false;
-      return true;
-    });
+    const imageParts: string[] = [];
+    const images: IndexedImage[] = [];
+    if (this.includeImages) {
+      const imgs = Array.from(mainEl.querySelectorAll('img'));
+      const candidates = imgs.filter((img) => {
+        if (!this.imageMeetsMinSize(img)) return false;
+        if (!img.src || img.src.startsWith('data:')) return false;
+        return true;
+      });
 
-    if (candidates.length > 0) {
-      parts.push('Images on this page (actual image data is sent separately):');
-      let imgIdx = 0;
-      for (const img of candidates) {
-        imgIdx++;
-        const id = `img-${imgIdx}`;
-        elementMap.set(id, [img]);
-        const altNote = img.alt
-          ? `alt text: "${img.alt}"`
-          : '(no alt text)';
-        parts.push(`[${id}] ${altNote}`);
+      if (candidates.length > 0) {
+        imageParts.push(this.imageHeader);
+        let imgIdx = 0;
+        for (const img of candidates) {
+          imgIdx++;
+          const id = `img-${imgIdx}`;
+          elementMap.set(id, [img]);
+          const caption = this.extractImageCaption(img);
+          const indexedImg: IndexedImage = { id, element: img, caption };
+          images.push(indexedImg);
+
+          const desc = this.describeImage
+            ? this.describeImage(indexedImg)
+            : this.defaultDescribeImage(indexedImg);
+          imageParts.push(`[${id}] ${desc}`);
+        }
       }
     }
 
-    let annotatedText = parts.join('\n');
-    if (annotatedText.length > MAX_TEXT_CHARS) {
-      annotatedText = annotatedText.slice(0, MAX_TEXT_CHARS) + '...';
+    const formatIndexText = (bodyCap?: number): string => {
+      const parts: string[] = [];
+      for (const s of sections) {
+        parts.push(`[${s.id}] ${s.headingText}`);
+        if (s.bodyText) {
+          const body = bodyCap !== undefined && s.bodyText.length > bodyCap
+            ? s.bodyText.slice(0, bodyCap) + '...'
+            : s.bodyText;
+          parts.push(body);
+        }
+        parts.push('');
+      }
+
+      if (fallbackContent) {
+        parts.push('[content] Full page text');
+        const fb = bodyCap !== undefined && fallbackContent.length > bodyCap
+          ? fallbackContent.slice(0, bodyCap) + '...'
+          : fallbackContent;
+        parts.push(fb);
+        parts.push('');
+      }
+
+      if (imageParts.length > 0) {
+        parts.push(...imageParts);
+      }
+
+      return parts.join('\n');
+    };
+
+    let annotatedText = formatIndexText();
+
+    if (annotatedText.length > MAX_TEXT_CHARS && sections.length > 0) {
+      // Allocate available character budget across sections with body text.
+      // Minimum cap of 120 chars ensures every section has meaningful context.
+      const sectionsWithBody = sections.filter((s) => s.bodyText.length > 0).length + (fallbackContent ? 1 : 0);
+      const overhead = formatIndexText(0).length;
+      const availableBodyBudget = Math.max(0, MAX_TEXT_CHARS - overhead);
+      const perSectionCap = Math.max(120, Math.floor(availableBodyBudget / Math.max(1, sectionsWithBody)));
+      annotatedText = formatIndexText(perSectionCap);
+
+      // Guardrail if headers alone or minimum caps exceed limit
+      if (annotatedText.length > MAX_TEXT_CHARS) {
+        annotatedText = annotatedText.slice(0, MAX_TEXT_CHARS) + '...';
+      }
     }
 
-    this.cachedIndex = { annotatedText, elementMap };
+    this.cachedIndex = { annotatedText, elementMap, images };
     return this.cachedIndex;
   }
 
@@ -115,34 +215,34 @@ export class PageIndexerService {
     );
   }
 
-  /** Collect the heading and all sibling elements until the next heading of same or higher level. */
+  /** Collect the heading and all sibling elements until the next heading or heading container. */
   private collectSectionElements(heading: Element): Element[] {
-    const level = parseInt(heading.tagName[1], 10);
     const siblingRoot = this.getSiblingRoot(heading);
 
     const els: Element[] = [siblingRoot];
     let sibling = siblingRoot.nextElementSibling;
 
     while (sibling) {
-      if (this.isHeadingBoundary(sibling, level)) break;
-      els.push(sibling);
+      if (this.isHeadingBoundary(sibling)) break;
+      if (!SKIP_TAGS.has(sibling.tagName) && this.isVisible(sibling)) {
+        els.push(sibling);
+      }
       sibling = sibling.nextElementSibling;
     }
 
     return els;
   }
 
-  /** Extract text between this heading and the next sibling heading of same or higher level. */
+  /** Extract text between this heading and the next heading or heading container. */
   private extractSectionBody(heading: Element): string {
-    const level = parseInt(heading.tagName[1], 10);
     const siblingRoot = this.getSiblingRoot(heading);
     const chunks: string[] = [];
     let sibling = siblingRoot.nextElementSibling;
 
     while (sibling) {
-      if (this.isHeadingBoundary(sibling, level)) break;
-      if (!SKIP_TAGS.has(sibling.tagName)) {
-        const text = (sibling.textContent || '').trim();
+      if (this.isHeadingBoundary(sibling)) break;
+      if (!SKIP_TAGS.has(sibling.tagName) && this.isVisible(sibling)) {
+        const text = this.extractTextFromElement(sibling);
         if (text.length > 1) chunks.push(text);
       }
       sibling = sibling.nextElementSibling;
@@ -152,15 +252,14 @@ export class PageIndexerService {
   }
 
   private extractTextFromElement(root: Element): string {
+    const isVisible = makeVisibilityChecker();
     const chunks: string[] = [];
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
       acceptNode(node) {
         const parent = node.parentElement;
         if (!parent) return NodeFilter.FILTER_REJECT;
         if (SKIP_TAGS.has(parent.tagName)) return NodeFilter.FILTER_REJECT;
-        if (parent.hasAttribute('hidden') || parent.getAttribute('aria-hidden') === 'true') {
-          return NodeFilter.FILTER_REJECT;
-        }
+        if (!isVisible(parent)) return NodeFilter.FILTER_REJECT;
         return NodeFilter.FILTER_ACCEPT;
       },
     });
@@ -175,7 +274,7 @@ export class PageIndexerService {
   }
 
   /**
-   * Check whether a div is a "thin wrapper" around a heading — a container
+   * Check whether a div is a "thin wrapper" around a heading: a container
    * added by doc frameworks (Starlight, Docusaurus, etc.) for anchor links.
    *
    * A thin wrapper contains only the heading itself plus decorative elements
@@ -218,38 +317,66 @@ export class PageIndexerService {
   }
 
   /**
-   * Check whether an element represents a heading boundary at or above
-   * the given level. Handles both bare headings and wrapped headings
-   * (e.g. `<div class="sl-heading-wrapper"><h2>...</h2></div>`).
-   *
-   * For wrapped headings, the div must be a thin wrapper (same heuristic
-   * as getSiblingRoot). Content divs that happen to contain headings
-   * (cards, panels, etc.) are NOT treated as boundaries.
+   * Check whether an element represents a heading boundary.
+   * Direct headings, thin heading wrappers, and containers that introduce
+   * subsequent headings are treated as section boundaries.
    */
-  private isHeadingBoundary(el: Element, level: number): boolean {
+  private isHeadingBoundary(el: Element): boolean {
     if (/^H[1-6]$/.test(el.tagName)) {
-      return parseInt(el.tagName[1], 10) <= level;
+      return true;
     }
 
     if (this.isHeadingWrapper(el)) {
-      const children = el.children;
-      for (let i = 0; i < children.length; i++) {
-        const child = children[i];
-        if (/^H[1-6]$/.test(child.tagName)) {
-          return parseInt(child.tagName[1], 10) <= level;
-        }
-      }
+      return true;
+    }
+
+    if (el.querySelector && el.querySelector('h1, h2, h3, h4, h5, h6')) {
+      return true;
     }
 
     return false;
   }
 
   private isVisible(el: Element): boolean {
-    if ((el as HTMLElement).hidden) return false;
-    if (el.getAttribute('aria-hidden') === 'true') return false;
-    const cls = el.className;
-    if (typeof cls === 'string' && /\b(hidden|invisible|d-none)\b/i.test(cls)) return false;
-    return true;
+    return isElementVisible(el);
+  }
+
+  private imageMeetsMinSize(img: HTMLImageElement): boolean {
+    if (img.naturalWidth > 0 || img.naturalHeight > 0) {
+      return img.naturalWidth >= MIN_IMG_DIMENSION && img.naturalHeight >= MIN_IMG_DIMENSION;
+    }
+    const widthAttr = parseInt(img.getAttribute('width') || '0', 10);
+    const heightAttr = parseInt(img.getAttribute('height') || '0', 10);
+    if (widthAttr > 0 && heightAttr > 0) {
+      return widthAttr >= MIN_IMG_DIMENSION && heightAttr >= MIN_IMG_DIMENSION;
+    }
+    if (typeof img.getBoundingClientRect === 'function') {
+      const rect = img.getBoundingClientRect();
+      return rect.width >= MIN_IMG_DIMENSION && rect.height >= MIN_IMG_DIMENSION;
+    }
+    return false;
+  }
+
+  private extractImageCaption(img: HTMLImageElement): string | null {
+    const alt = (img.alt || '').trim();
+    if (alt) return alt;
+    const title = (img.title || '').trim();
+    if (title) return title;
+    const ariaLabel = (img.getAttribute('aria-label') || '').trim();
+    if (ariaLabel) return ariaLabel;
+    const figcaption = img.closest('figure')?.querySelector('figcaption')?.textContent?.trim();
+    if (figcaption) return figcaption;
+    return null;
+  }
+
+  private defaultDescribeImage(image: IndexedImage): string {
+    if (image.element.alt) {
+      return `alt text: "${image.element.alt}"`;
+    }
+    if (image.caption) {
+      return `caption: "${image.caption}"`;
+    }
+    return '(no alt text)';
   }
 
   private setupMutationObserver(): void {

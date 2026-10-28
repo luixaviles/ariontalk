@@ -15,8 +15,18 @@ const LEVEL_PRIORITY: Record<LogLevel, number> = {
 };
 
 const REGISTRY_KEY = '__ariontalk_loggers__';
+const LEVEL_KEY = '__ariontalk_log_level__';
 const loggers: Logger[] = ((globalThis as any)[REGISTRY_KEY] ??= []);
-let currentLevel = LogLevel.Disabled;
+// Backed by globalThis so multiple bundle instances of this module
+// (e.g., the main bundle + a dynamically-imported engine chunk) share
+// the same log level. Without this, loggers created in a second module
+// instance would default to Disabled even after setLogLevel ran.
+function getCurrentLevel(): LogLevel {
+  return ((globalThis as any)[LEVEL_KEY] ?? LogLevel.Disabled) as LogLevel;
+}
+function setCurrentLevel(level: LogLevel): void {
+  (globalThis as any)[LEVEL_KEY] = level;
+}
 
 class Logger {
   private _level: LogLevel = LogLevel.Disabled;
@@ -52,13 +62,13 @@ class Logger {
 
 export function createLogger(scope: string): Logger {
   const logger = new Logger(scope);
-  logger.level = currentLevel;
+  logger.level = getCurrentLevel();
   loggers.push(logger);
   return logger;
 }
 
 export function setLogLevel(level: LogLevel): void {
-  currentLevel = level;
+  setCurrentLevel(level);
   for (const logger of loggers) {
     logger.level = level;
   }

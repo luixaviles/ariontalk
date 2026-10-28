@@ -66,7 +66,7 @@ class PlaybackProcessor extends AudioWorkletProcessor {
 registerProcessor('playback-processor', PlaybackProcessor);
 `;
 
-function base64ToFloat32(base64: string): Float32Array {
+export function base64ToFloat32(base64: string): Float32Array {
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) {
@@ -85,7 +85,12 @@ const SAMPLE_RATE = 24000;
 export class AudioPlayback {
   private audioContext: AudioContext | null = null;
   private workletNode: AudioWorkletNode | null = null;
-  private drainedCallback: (() => void) | null = null;
+  private drainedCallbacks: Set<() => void> = new Set();
+  private drainTimers: Set<ReturnType<typeof setTimeout>> = new Set();
+  /**
+   * _playing is the authoritative worklet state (via the drained message);
+   * bufferedSeconds is a drifting estimate. Both are reset by handleDrained/clear/destroy.
+   */
   private _playing = false;
   private _playbackEndTime = 0;
 
@@ -100,19 +105,28 @@ export class AudioPlayback {
     this.workletNode = new AudioWorkletNode(this.audioContext, 'playback-processor');
 
     this.workletNode.port.onmessage = (event: MessageEvent) => {
-      if (event.data.type === 'drained') {
-        this._playing = false;
-        log.debug('Playback queue drained');
-        if (this.drainedCallback) {
-          const cb = this.drainedCallback;
-          this.drainedCallback = null;
-          cb();
-        }
-      }
+      if (event.data.type === 'drained') this.handleDrained();
     };
 
     this.workletNode.connect(this.audioContext.destination);
     log.info('Audio playback initialized at 24kHz');
+  }
+
+  /** Dispatches all registered drained callbacks. Called by the worklet
+   *  'drained' message; also the single place drain state is reset. */
+  private handleDrained(): void {
+    this._playing = false;
+    this._playbackEndTime = 0;
+    log.debug('Playback queue drained');
+    const callbacks = Array.from(this.drainedCallbacks);
+    this.drainedCallbacks.clear();
+    for (const cb of callbacks) {
+      try {
+        cb();
+      } catch (err) {
+        log.error('Error in drained callback:', err);
+      }
+    }
   }
 
   get playing(): boolean {
@@ -123,14 +137,16 @@ export class AudioPlayback {
     return Math.max(0, this._playbackEndTime - performance.now() / 1000);
   }
 
-  enqueue(base64Pcm: string): void {
-    if (!this.workletNode) return;
+  /** Returns the duration of the enqueued audio in seconds, or 0 if dropped. */
+  enqueue(base64Pcm: string): number {
+    if (!this.workletNode) return 0;
     const samples = base64ToFloat32(base64Pcm);
     const duration = samples.length / SAMPLE_RATE;
     const now = performance.now() / 1000;
     this._playbackEndTime = Math.max(now, this._playbackEndTime) + duration;
     this.workletNode.port.postMessage({ type: 'enqueue', samples });
     this._playing = true;
+    return duration;
   }
 
   clear(): void {
@@ -138,16 +154,40 @@ export class AudioPlayback {
     this.workletNode.port.postMessage({ type: 'clear' });
     this._playing = false;
     this._playbackEndTime = 0;
-    this.drainedCallback = null;
+    for (const t of this.drainTimers) clearTimeout(t);
+    this.drainTimers.clear();
+    this.drainedCallbacks.clear();
     log.debug('Playback cleared');
   }
 
-  onDrained(callback: () => void): void {
+  /**
+   * Run `callback` when playback drains. If `timeoutMs` is given, it is a
+   * bounded wait: the callback fires on the real drain OR after `timeoutMs`
+   * if the drain is never delivered (suspended context, backgrounded tab,
+   * underrun) — whichever comes first, exactly once. Without `timeoutMs`,
+   * it waits indefinitely for the drain.
+   */
+  onDrained(callback: () => void, timeoutMs?: number): void {
     if (!this._playing) {
       callback();
       return;
     }
-    this.drainedCallback = callback;
+    if (timeoutMs === undefined) {
+      this.drainedCallbacks.add(callback);
+      return;
+    }
+    let fired = false;
+    const run = () => {
+      if (fired) return;
+      fired = true;
+      clearTimeout(timer);
+      this.drainTimers.delete(timer);
+      this.drainedCallbacks.delete(run);
+      callback();
+    };
+    const timer = setTimeout(run, timeoutMs);
+    this.drainTimers.add(timer);
+    this.drainedCallbacks.add(run);
   }
 
   async resume(): Promise<void> {
@@ -165,7 +205,9 @@ export class AudioPlayback {
       this.audioContext.close().catch(() => {});
       this.audioContext = null;
     }
-    this.drainedCallback = null;
+    for (const t of this.drainTimers) clearTimeout(t);
+    this.drainTimers.clear();
+    this.drainedCallbacks.clear();
     this._playing = false;
     log.info('Audio playback destroyed');
   }

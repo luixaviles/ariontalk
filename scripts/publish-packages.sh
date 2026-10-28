@@ -20,6 +20,7 @@ cd "${ROOT_DIR}"
 # Dependency-ordered list — core first, widget last
 PACKAGES=(
   "@ariontalk/core"
+  "@ariontalk/engine-local"
   "@ariontalk/engine-gemini"
   "@ariontalk/plugin-silero-vad"
   "@ariontalk/widget"

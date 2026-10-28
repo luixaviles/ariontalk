@@ -6,12 +6,17 @@ export class SessionTimer {
   private _elapsed = 0;
   private onTick: ((seconds: number) => void) | null = null;
 
-  constructor(onTick?: (seconds: number) => void) {
+  constructor(onTick?: (seconds: number) => void, initialSeconds: number = 0) {
     this.onTick = onTick ?? null;
+    this._elapsed = initialSeconds;
   }
 
   get elapsed(): number {
     return this._elapsed;
+  }
+
+  setElapsed(seconds: number): void {
+    this._elapsed = seconds;
   }
 
   get formatted(): string {
@@ -40,8 +45,8 @@ export class SessionTimer {
     }
   }
 
-  reset(): void {
+  reset(initialSeconds: number = 0): void {
     this.stop();
-    this._elapsed = 0;
+    this._elapsed = initialSeconds;
   }
 }

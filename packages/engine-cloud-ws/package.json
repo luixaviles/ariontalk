@@ -1,0 +1,29 @@
+{
+  "name": "@ariontalk/engine-cloud-ws",
+  "version": "0.3.0",
+  "description": "Provider-neutral WebSocket client and Gemini Live frame codec for ArionTalk",
+  "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/luixaviles/ariontalk.git",
+    "directory": "packages/engine-cloud-ws"
+  },
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "test": "vitest run --passWithNoTests"
+  },
+  "peerDependencies": {
+    "@ariontalk/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@ariontalk/core": "workspace:*",
+    "tsdown": "^0.x",
+    "typescript": "^5.6.0",
+    "vitest": "^3.2.4"
+  }
+}

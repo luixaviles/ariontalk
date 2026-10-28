@@ -31,7 +31,7 @@
   },
   "scripts": {
     "build": "tsdown",
-    "test": "vitest run"
+    "test": "vitest run --passWithNoTests"
   },
   "peerDependencies": {
     "@ariontalk/core": "workspace:*"

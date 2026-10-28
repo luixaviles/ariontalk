@@ -1,0 +1,50 @@
+{
+  "name": "@ariontalk/plugin-kokoro-tts",
+  "version": "0.3.0",
+  "description": "Kokoro TTS plugin for ArionTalk — high-quality on-device neural voice synthesis",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/luixaviles/ariontalk.git",
+    "directory": "packages/plugin-kokoro-tts"
+  },
+  "homepage": "https://ariontalk.com",
+  "keywords": [
+    "voice",
+    "tts",
+    "text-to-speech",
+    "kokoro",
+    "onnx",
+    "webgpu"
+  ],
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "test": "tsc --noEmit && vitest run --passWithNoTests"
+  },
+  "peerDependencies": {
+    "@ariontalk/core": "workspace:*"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^3.8.1",
+    "kokoro-js": "^1.1.1"
+  },
+  "devDependencies": {
+    "@ariontalk/core": "workspace:*",
+    "tsdown": "^0.x",
+    "typescript": "^5.6.0",
+    "vitest": "^3.x"
+  }
+}

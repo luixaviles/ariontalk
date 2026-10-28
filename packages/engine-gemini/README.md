@@ -8,7 +8,7 @@ Gemini Live engine add-on for ArionTalk — real-time voice streaming with funct
 npm install @ariontalk/engine-gemini
 ```
 
-`@ariontalk/core` is a peer dependency.
+`@ariontalk/core` is a peer dependency. `@google/genai` is no longer a dependency — the engine uses an inlined, lightweight WebSocket client for direct Gemini Live streaming.
 
 ## Usage
 
@@ -27,7 +27,11 @@ await engine.startSession('en');
 ### Key exports
 
 - **`GeminiEngine`** — cloud-based voice engine powered by Gemini Live API
-- **`HighlightManager`** — manages interactive scroll-and-highlight during speech
+- **Types** — `GeminiEngineOptions`, `EnginePart`, `ToolCallContext`, `FunctionResponse`
+
+### Interactive highlights
+
+With `interactiveHighlights: true`, the model calls a `highlight_and_scroll` function to scroll to and highlight the section it is discussing. Section anchors come from `PageIndexerService` and the highlighting from `HighlightManager`, both in `@ariontalk/core` and both shared with `@ariontalk/engine-local`.
 
 ### Supported voices
 
