@@ -17,7 +17,7 @@
 </p>
 
 <p align="center">
-  <a href="https://ariontalk.com/?utm_source=github&utm_medium=readme&utm_content=try-live">Try it live</a> ·
+  <a href="https://ariontalk.com/?utm_source=github&utm_medium=readme&utm_content=website">Website</a> ·
   <a href="https://ariontalk.com/docs/getting-started/?utm_source=github&utm_medium=readme&utm_content=docs">Docs</a> ·
   <a href="https://tally.so/r/lbPLEX?src=github-readme">Early access</a>
 </p>
@@ -28,8 +28,8 @@ Add one tag to a page and visitors can ask about it by voice. The agent answers 
 
 - **Page understanding.** Reads the text, headings and images on the page before the first question.
 - **Interactive highlights.** Scrolls to and highlights what it's discussing.
-- **Natural turn-taking.** Interrupt it any time and it stops to listen. An optional Silero VAD plugin makes interruptions more accurate.
-- **Two engines, one API.** Run on-device with Chrome's built-in AI (the Prompt API), with no server or API key, or in the cloud with the Gemini Live API for more languages and any modern browser.
+- **Natural turn-taking.** Interrupt it and it stops to listen. Built in on the cloud engine; on-device, add an interruption plugin: a lightweight energy detector or Silero VAD for more accuracy.
+- **Two engines, one API.** Run on-device with Chrome's built-in AI (the Prompt API), with no server or API key and an optional Kokoro neural voice, or in the cloud with the Gemini Live API for more languages and any modern browser.
 
 ## Quick start
 
@@ -137,7 +137,7 @@ pnpm build
 
 ## Contributing
 
-Bug reports, ideas and pull requests are welcome. Please run `pnpm test` before opening a PR, and add a changeset (`pnpm changeset`) when you change a package.
+Bug reports and ideas are welcome: please [open an issue](https://github.com/luixaviles/ariontalk/issues). If you'd like to contribute code, open an issue first so we can agree on the change before you spend time on a pull request.
 
 ## License
 
