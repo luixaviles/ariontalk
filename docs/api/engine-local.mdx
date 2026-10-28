@@ -1,0 +1,75 @@
+---
+title: "@ariontalk/engine-local"
+description: API reference for the on-device voice engine.
+---
+
+`@ariontalk/engine-local` is the on-device engine. It uses Chrome's built-in Prompt API (Gemini Nano) for answers and the Web Speech API for recognition and synthesis, so it needs no server or API key. The widget uses it when `engine="local"`, which is the default.
+
+## Installation
+
+```bash
+pnpm add @ariontalk/core @ariontalk/engine-local
+```
+
+`@ariontalk/core` is a peer dependency.
+
+## `VoiceEngine`
+
+```typescript
+import { VoiceEngine } from '@ariontalk/engine-local';
+
+const engine = new VoiceEngine({ interactiveHighlights: true });
+await engine.startSession('en');
+```
+
+Implements `VoiceEngineInterface` from `@ariontalk/core`.
+
+### Constructor options
+
+```typescript
+interface VoiceEngineOptions {
+  /** Detects when the visitor starts talking over the agent. Without one, interruptions are off. */
+  bargeInDetector?: BargeInDetector;
+  /** Replaces the browser's speech synthesis, for example with kokoroTtsPlugin(). */
+  synthesizer?: SpeechSynthesizer;
+  /** Scroll to and highlight the section or image being discussed. */
+  interactiveHighlights?: boolean;
+  /** On-device speech recognition policy: 'prefer' (default), 'require' or 'off'. */
+  speechLocal?: SpeechLocalMode;
+  /** Share page images with the model when the browser supports it. Requires interactiveHighlights. Default: true. */
+  imageContext?: boolean;
+}
+```
+
+### Capabilities
+
+| Capability | Value |
+|---|---|
+| `supportedLanguages` | `['auto', 'en', 'es']` |
+| `supportsVoiceSelection` | `true` |
+| `supportsRatePitchVolume` | `true` |
+| `supportsBargeInPlugins` | `true` |
+| `supportsTtsPlugins` | `true` |
+| `supportsOffline` | `true` |
+| `maxSessionDurationSec` | `null` (unlimited) |
+| `requiresTokenServer` | `false` |
+
+## Services
+
+Lower-level building blocks, exported for advanced use.
+
+| Service | Description |
+|---|---|
+| `AISessionService` | Wraps Chrome's Prompt API (`LanguageModel`): availability, model download progress and streaming responses. |
+| `SpeechRecognitionService` | Wraps the Web Speech API's `SpeechRecognition` for continuous voice input, with on-device recognition when available. |
+| `SpeechSynthesisService` | Wraps the Speech Synthesis API with language-aware voice selection. Prefers local voices. |
+| `InputLevelMeter` | Samples the microphone input level with the Web Audio API, for voice-reactive visuals. |
+
+## Types
+
+```typescript
+type SpeechLocalMode = 'prefer' | 'require' | 'off';
+type SpeechLocalStatus = 'on-device' | 'cloud' | 'downloading' | 'unavailable';
+```
+
+See [Local Engine](/docs/engines/local/) for browser requirements and how the pipeline works.

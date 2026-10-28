@@ -1,6 +1,6 @@
 {
   "name": "@ariontalk/plugin-silero-vad",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Silero VAD barge-in plugin for ArionTalk — AI-powered voice activity detection",
   "license": "MIT",
   "repository": {
@@ -34,7 +34,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "peerDependencies": {
-    "@ariontalk/core": "workspace:*"
+    "@ariontalk/core": "workspace:>=0.4.0"
   },
   "dependencies": {
     "@ricky0123/vad-web": "^0.0.30"

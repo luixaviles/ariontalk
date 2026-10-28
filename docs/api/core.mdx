@@ -1,9 +1,9 @@
 ---
 title: "@ariontalk/core"
-description: API reference for the headless voice engine package.
+description: API reference for the shared types, page understanding and highlights used by both engines.
 ---
 
-`@ariontalk/core` is the headless voice engine that powers ArionTalk. It provides speech recognition, speech synthesis, on-device AI (Gemini Nano), and page-context extraction with no UI dependency. Use it directly when you need full programmatic control or want to build a custom interface.
+`@ariontalk/core` holds what both engines share: the engine interface and types, page understanding, highlights and utilities. It has no engine implementation and no UI. The engines live in [`@ariontalk/engine-local`](/docs/api/engine-local/) (on-device) and [`@ariontalk/engine-gemini`](/docs/api/engine-gemini/) (cloud).
 
 ## Installation
 
@@ -15,7 +15,7 @@ pnpm add @ariontalk/core
 
 ### `VoiceEngineInterface`
 
-The contract every engine must implement. Both the built-in `VoiceEngine` (local) and `GeminiEngine` (cloud) conform to this interface.
+The contract every engine must implement. Both `VoiceEngine` from `@ariontalk/engine-local` and `GeminiEngine` from `@ariontalk/engine-gemini` conform to this interface.
 
 ```typescript
 interface VoiceEngineInterface {
@@ -146,51 +146,18 @@ interface ImageContext {
 }
 ```
 
-## Classes
-
-### `VoiceEngine`
-
-The default, browser-native engine. Uses the Web Speech API for recognition and synthesis and the on-device Prompt API (Gemini Nano) for AI responses.
-
-```typescript
-import { VoiceEngine } from '@ariontalk/core';
-
-const engine = new VoiceEngine({ bargeInDetector });
-```
-
-**Constructor options:**
-
-```typescript
-interface VoiceEngineOptions {
-  bargeInDetector?: BargeInDetector;
-}
-```
-
-Implements `VoiceEngineInterface`.
-
-**Capabilities (default values):**
-
-| Capability | Value |
-|---|---|
-| `supportedLanguages` | `['en', 'es']` |
-| `supportsVoiceSelection` | `true` |
-| `supportsRatePitchVolume` | `true` |
-| `supportsBargeInPlugins` | `true` |
-| `supportsOffline` | `true` |
-| `maxSessionDurationSec` | `null` (unlimited) |
-| `requiresTokenServer` | `false` |
-
 ## Services
 
 These lower-level services are exported for advanced consumers who want to compose their own engine or extend individual capabilities.
 
 | Service | Description |
 |---|---|
-| `SpeechRecognitionService` | Wraps the Web Speech Recognition API with start/stop/pause/resume and interim/final result callbacks. |
-| `SpeechSynthesisService` | Queues utterances via the Web Speech Synthesis API with per-utterance voice, rate, pitch, and volume overrides. |
-| `AISessionService` | Manages the on-device Prompt API (Gemini Nano) session — availability check, model download progress, streaming prompt responses. |
 | `PageExtractorService` | Extracts visible text and image context from the host page for use as AI grounding context. |
-| `EnergyBargeInDetector` | A `BargeInDetector` implementation that uses microphone audio energy levels to detect when the user speaks during AI playback. |
+| `PageIndexerService` | Assigns stable IDs to page sections and images (`sec-1`, `img-2`) so the model can reference them for highlights. |
+| `HighlightManager` | Scrolls to and highlights elements on the host page. Shared by both engines. |
+| `EnergyBargeInDetector` | A `BargeInDetector` that uses microphone energy levels to detect when the user speaks during playback. |
+
+The on-device speech and Prompt API services (`SpeechRecognitionService`, `SpeechSynthesisService`, `AISessionService`) are in [`@ariontalk/engine-local`](/docs/api/engine-local/).
 
 ## Utilities
 

@@ -50,12 +50,14 @@ export default defineConfig({
 					items: [
 						{ label: 'Overview', slug: 'docs/plugins/overview' },
 						{ label: 'Silero VAD', slug: 'docs/plugins/silero-vad' },
+						{ label: 'Kokoro TTS', slug: 'docs/plugins/kokoro-tts' },
 					],
 				},
 				{
 					label: 'API Reference',
 					items: [
 						{ label: '@ariontalk/core', slug: 'docs/api/core' },
+						{ label: '@ariontalk/engine-local', slug: 'docs/api/engine-local' },
 						{ label: '@ariontalk/widget', slug: 'docs/api/widget' },
 						{ label: '@ariontalk/engine-gemini', slug: 'docs/api/engine-gemini' },
 						{ label: '@ariontalk/token-server', slug: 'docs/api/token-server' },

@@ -4,8 +4,6 @@ On-device engine for ArionTalk: Chrome Prompt API (Gemini Nano) with Web Speech.
 
 ## Install
 
-Note: This package is not on npm yet; build from source until the next release.
-
 ```bash
 npm install @ariontalk/engine-local
 ```

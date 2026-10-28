@@ -63,8 +63,6 @@ Uses the Gemini Live engine without running a server. [Request early access](htt
 
 You can run the included token server with your own Gemini API key instead of the hosted service. See [Token Server](https://ariontalk.com/docs/api/token-server/) in the docs.
 
-The CDN script loads the latest npm release (0.3.0). Some features on `main`, such as highlights on the on-device engine, ship in the next release.
-
 ## Try the demo
 
 The [`demo/`](./demo) folder has a page you can talk to, running on-device:
@@ -89,8 +87,6 @@ Setup and sample questions are in [`demo/README.md`](./demo/README.md).
 | [`@ariontalk/token-server`](./packages/token-server) | Small Hono server that issues short-lived Gemini tokens for self-hosting. Not published to npm. |
 
 Both engines implement the same `VoiceEngineInterface` from `@ariontalk/core`, and the widget picks one from the `engine` attribute.
-
-`main` is ahead of the latest npm release (0.3.0). `@ariontalk/engine-local` and `@ariontalk/plugin-kokoro-tts` aren't on npm yet; build from source until the next release.
 
 ## Configuration
 
