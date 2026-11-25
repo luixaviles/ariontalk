@@ -3,14 +3,18 @@ import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { GoogleGenAI, Modality, Type, ThinkingLevel } from '@google/genai';
+import { GoogleGenAI, Modality, Type, Behavior } from '@google/genai';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROMPT_TEMPLATE = readFileSync(
   resolve(__dirname, './prompts/voice-assistant.md'), 'utf-8',
 );
 
-const DEFAULT_MODEL = 'gemini-3.1-flash-live-preview';
+const DEFAULT_MODEL = 'gemini-3.8-live';
+
+function getDefaultModel(): string {
+  return process.env.GEMINI_LIVE_MODEL || DEFAULT_MODEL;
+}
 
 const LANG_DISPLAY_NAMES: Record<string, string> = {
   en: 'English', es: 'Spanish', ja: 'Japanese', fr: 'French',
@@ -42,6 +46,7 @@ const HIGHLIGHT_TOOL_DECLARATIONS = [{
       },
       required: ['elementId'],
     },
+    behavior: Behavior.BLOCKING,
   }],
 }];
 
@@ -66,10 +71,12 @@ function buildSystemPrompt(
 
 export interface TokenServerOptions {
   corsOrigin?: string | string[];
+  createClient?: (apiKey: string) => Pick<GoogleGenAI, 'authTokens'>;
 }
 
 export function createTokenApp(options: TokenServerOptions = {}): Hono {
   const app = new Hono();
+  const createClient = options.createClient ?? ((apiKey: string) => new GoogleGenAI({ apiKey, apiVersion: 'v1alpha' }));
 
   app.use('/api/token', cors({
     origin: options.corsOrigin ?? '*',
@@ -100,7 +107,9 @@ export function createTokenApp(options: TokenServerOptions = {}): Hono {
         ? buildSystemPrompt(pageContent as string, (lang as string) || 'en', (pageTitle as string) || '', (pageUrl as string) || '', highlights)
         : undefined;
 
-      const client = new GoogleGenAI({ apiKey, apiVersion: 'v1alpha' });
+      const model = (reqModel as string) || getDefaultModel();
+
+      const client = createClient(apiKey);
 
       const token = await client.authTokens.create({
         config: {
@@ -108,7 +117,7 @@ export function createTokenApp(options: TokenServerOptions = {}): Hono {
           expireTime: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
           newSessionExpireTime: new Date(Date.now() + 2 * 60 * 1000).toISOString(),
           liveConnectConstraints: {
-            model: (reqModel as string) || DEFAULT_MODEL,
+            model,
             config: {
               ...(systemInstruction && { systemInstruction }),
               responseModalities: [Modality.AUDIO],
@@ -119,14 +128,13 @@ export function createTokenApp(options: TokenServerOptions = {}): Hono {
               },
               inputAudioTranscription: {},
               outputAudioTranscription: {},
-              thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
               ...(highlights && { tools: HIGHLIGHT_TOOL_DECLARATIONS }),
             },
           },
         },
       });
 
-      return c.json({ token: token.name });
+      return c.json({ token: token.name, model });
     } catch (err) {
       console.error('Token creation failed:', err);
       return c.json({ error: 'Token creation failed', message: 'Connection error. Please try again.' }, 500);

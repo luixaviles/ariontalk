@@ -54,7 +54,7 @@ interface GeminiEngineOptions {
 }
 ```
 
-The token server chooses the Gemini Live model and returns it with the token. To request a specific model from a self-hosted token server, pass it in `tokenRequestExtras`, for example `{ model: 'gemini-3.1-flash-live-preview' }`.
+The token server chooses the Gemini Live model and returns it with the token. To request a specific model from a self-hosted token server, pass it in `tokenRequestExtras`, for example `{ model: 'gemini-3.8-live' }`.
 
 **Advanced hooks.** `GeminiEngineOptions` also accepts `onTokenResponse`, `onUnknownToolCall`, `customImageSource`, `getInitialSessionHandle` and `onSessionHandleChange`, for wrappers that extend the engine. See the type definitions in the package for their signatures.
 
